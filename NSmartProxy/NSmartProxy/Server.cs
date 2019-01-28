@@ -96,7 +96,7 @@ namespace NSmartProxy
                 {
                    // var msg = Encoding.ASCII.GetBytes("consumer timed out");
                     Console.WriteLine("consumer timed out");
-                   // await consumerStream.WriteAsync(msg, 0, msg.Length);
+                   
                     break;
                 }
 
