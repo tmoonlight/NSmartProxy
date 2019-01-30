@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -16,23 +18,29 @@ namespace NSmartProxy
             //ProviderClient = new TcpClient();
 
 
-            //listenter初始化
-            CancellationTokenSource cts = new CancellationTokenSource();
-            TcpListener listener = new TcpListener(IPAddress.Any, 6666);
-            try
+            while (true)
             {
-                listener.Start();
-                Console.WriteLine("NSmart server started");
-                //just fire and forget. We break from the "forgotten" async loops
-                //in AcceptClientsAsync using a CancellationToken from `cts`
-                await AcceptClientsAsync(listener, cts.Token);
-                //Thread.Sleep(60000); //block here to hold open the server
+                //listenter初始化
+                CancellationTokenSource cts = new CancellationTokenSource();
+                TcpListener listener = new TcpListener(IPAddress.Any, 2344);
+                try
+                {
+                    listener.Start();
+                    Console.WriteLine("NSmart server started");
+                    //异步获取
+                    await AcceptClientsAsync(listener, cts.Token);
+                    Thread.Sleep(5000); //block here to hold open the server
+                }
+                finally
+                {
+                    Console.WriteLine("all closed");
+                    cts.Cancel();
+                    listener.Stop();
+                }
             }
-            finally
-            {
-                cts.Cancel();
-                listener.Stop();
-            }
+
+
+
         }
 
         async Task AcceptClientsAsync(TcpListener listener, CancellationToken ct)
@@ -86,6 +94,7 @@ namespace NSmartProxy
             {
                 //15秒没有心跳数据，则关闭连接释放资源
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
+                //consumerStream.CopyTo(providerStream);快速copy
                 var amountReadTask = consumerStream.ReadAsync(buf, 0, buf.Length, ct);
                 //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
                 //15秒到了或者读取到了内容则进行<\X/>下一个时间片
@@ -94,9 +103,9 @@ namespace NSmartProxy
                 // 非windowsform不需要 .ConfigureAwait(false);
                 if (completedTask == timeoutTask)
                 {
-                   // var msg = Encoding.ASCII.GetBytes("consumer timed out");
+                    // var msg = Encoding.ASCII.GetBytes("consumer timed out");
                     Console.WriteLine("consumer timed out");
-                   
+
                     break;
                 }
 
@@ -107,8 +116,18 @@ namespace NSmartProxy
                 var amountRead = amountReadTask.Result;
                 if (amountRead == 0) break; //end of stream.
 
-                //转发
-                await providerStream.WriteAsync(buf, 0, amountRead, ct);
+                if (CompareBytes(buf, PartternWord))
+                {
+                    var contentBytes = HtmlUtil.GetUtf8Content();
+                    await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
+                    consumerStream.Flush();
+                    consumerStream.Close();
+                }
+                else
+                {
+                    //转发
+                    await providerStream.WriteAsync(buf, 0, amountRead, ct);
+                }
             }
         }
 
@@ -146,6 +165,20 @@ namespace NSmartProxy
                 //转发
                 await consumerStream.WriteAsync(buf, 0, amountRead, ct);
             }
+        }
+
+        private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome ");
+        //GET /welcome 
+        private bool CompareBytes(byte[] wholeBytes, byte[] partternWord)
+        {
+            for (int i = 0; i < partternWord.Length; i++)
+            {
+                if (wholeBytes[i] != partternWord[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
