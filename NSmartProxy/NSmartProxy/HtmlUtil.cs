@@ -19,7 +19,7 @@ namespace NSmartProxy
 
             html.AppendLine("<html>");
             html.AppendLine("<head>");
-            html.AppendLine("<title>hello</title>");
+            html.AppendLine("<title>TMoonlight</title>");
             html.AppendLine("</head>");
             html.AppendLine("<body>");
             html.AppendLine("Hello world!");

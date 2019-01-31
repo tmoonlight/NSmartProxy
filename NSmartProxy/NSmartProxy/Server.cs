@@ -65,7 +65,8 @@ namespace NSmartProxy
         {
             Console.WriteLine("New client ({0}) connected", clientIndex);
             //转发buffer
-            proxyClient.Connect("172.20.66.84", 80);
+            //连接C端
+            proxyClient.Connect("172.20.66.84", 21);
             //using (client)
             //using (proxyClient)
             //{
@@ -94,7 +95,7 @@ namespace NSmartProxy
             {
                 //15秒没有心跳数据，则关闭连接释放资源
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
-                //consumerStream.CopyTo(providerStream);快速copy
+                //consumerStream.CopyTo(providerStream);//快速copy
                 var amountReadTask = consumerStream.ReadAsync(buf, 0, buf.Length, ct);
                 //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
                 //15秒到了或者读取到了内容则进行<\X/>下一个时间片
@@ -168,6 +169,8 @@ namespace NSmartProxy
         }
 
         private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome ");
+        private byte[] PartternWord_manage_ = System.Text.Encoding.ASCII.GetBytes("GET /manage ");
+        private byte[] PartternWord_manage_etc = System.Text.Encoding.ASCII.GetBytes("GET /manage/");
         //GET /welcome 
         private bool CompareBytes(byte[] wholeBytes, byte[] partternWord)
         {
