@@ -9,8 +9,31 @@ using System.Threading.Tasks;
 
 namespace NSmartProxy
 {
+    //+------------------------+
+    //| NAT                    |
+    //|                        |
+    //|                        |
+    //|    +----------+        |   +-----------+
+    //|    |          |        |   |           |
+    //|    |  server  <------------+   proxy   |
+    //|    |          |        |   |           |
+    //|    +----------+        |   +------^----+
+    //|                        |          |
+    //|                        |          |
+    //|                        |          |
+    //|    +----------+        |          |
+    //|    |          |        |          |
+    //|    |   IIS    |        |          |
+    //|    |          |        |          |
+    //|    +----------+        |   +------+-------+
+    //|                        |   |              |
+    //|                        |   |   consumer   |
+    //|                        |   |              |
+    //+------------------------+   +--------------+
     public class Server
     {
+
+
         //private TcpClient ProviderClient;
         public async Task Start()
         {
@@ -67,9 +90,6 @@ namespace NSmartProxy
             //转发buffer
             //连接C端
             proxyClient.Connect("172.20.66.84", 21);
-            //using (client)
-            //using (proxyClient)
-            //{
 
             var providerStream = proxyClient.GetStream();
             var consumerStream = client.GetStream();
@@ -78,8 +98,6 @@ namespace NSmartProxy
 
 
             //循环接受A并写入C
-
-            //}
             var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
             //comletedTask.
             Console.WriteLine("Client ({0}) disconnected", clientIndex);
