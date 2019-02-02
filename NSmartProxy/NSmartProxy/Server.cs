@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -39,19 +40,23 @@ namespace NSmartProxy
         {
             //privider初始化
             //ProviderClient = new TcpClient();
+            // List<TcpListener> serverClientListeners = new List<TcpListener>();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            TcpListener listener = new TcpListener(IPAddress.Any, 2344);
 
-
+            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, 9973);
             while (true)
             {
                 //listenter初始化
-                CancellationTokenSource cts = new CancellationTokenSource();
-                TcpListener listener = new TcpListener(IPAddress.Any, 2344);
                 try
                 {
+                    //一起打开listener，后面会先后进行accept
+                    listenerServiceClient.Start();
                     listener.Start();
+
                     Console.WriteLine("NSmart server started");
                     //异步获取
-                    await AcceptClientsAsync(listener, cts.Token);
+                    await AcceptClientsAsync(listener, listenerServiceClient, cts.Token);
                     Thread.Sleep(5000); //block here to hold open the server
                 }
                 finally
@@ -59,25 +64,40 @@ namespace NSmartProxy
                     Console.WriteLine("all closed");
                     cts.Cancel();
                     listener.Stop();
+                    listenerServiceClient.Stop();
                 }
             }
-
-
-
         }
 
-        async Task AcceptClientsAsync(TcpListener listener, CancellationToken ct)
+        /// <summary>
+        /// 同时侦听来自consumer的链接和到provider的链接
+        /// </summary>
+        /// <param name="listener"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        async Task AcceptClientsAsync(TcpListener listener, TcpListener serviceClientListener,CancellationToken ct)
         {
             var clientCounter = 0;
             while (!ct.IsCancellationRequested)
             {
+                //目标的代理服务联通了，才去处理consumer端的请求。
+                Console.WriteLine("listening serviceClient....");
+                TcpClient serviceClient = await serviceClientListener.AcceptTcpClientAsync()
+                    .ConfigureAwait(false);
+                Console.WriteLine("serviceclient server connected");
+                Console.WriteLine("listening consumer....");
                 TcpClient client = await listener.AcceptTcpClientAsync()
                     .ConfigureAwait(false);
+                Console.WriteLine("consumer connected");
+                //TcpClient serviceClient = 
+                //检测是否已通
+                //if(serviceClientListener.)
+
                 //连接成功 连接provider端
                 clientCounter++;
                 //once again, just fire and forget, and use the CancellationToken
                 //to signal to the "forgotten" async invocation.
-                EchoAsync(client, new TcpClient(), clientCounter, ct);
+                EchoAsync(client, serviceClient, clientCounter, ct);
             }
 
         }
@@ -89,12 +109,23 @@ namespace NSmartProxy
             Console.WriteLine("New client ({0}) connected", clientIndex);
             //转发buffer
             //连接C端
-            proxyClient.Connect("172.20.66.84", 21);
+            //proxyClient.Connect("172.20.66.84", 80);
 
             var providerStream = proxyClient.GetStream();
             var consumerStream = client.GetStream();
-            Task taskC2PLooping = C2PLooping(ct, consumerStream, providerStream);
-            Task taskP2CLooping = P2CLooping(ct, consumerStream, providerStream);
+            Task taskC2PLooping = StreamTransfer(ct, consumerStream, providerStream,  async (transbuf) =>
+            {
+                if (CompareBytes(transbuf, PartternWord))
+                {
+                    var contentBytes = HtmlUtil.GetUtf8Content(transbuf);
+                    await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
+                    consumerStream.Flush();
+                    consumerStream.Close();
+                    return false;
+                }
+                else return true;
+            });
+            Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream);
 
 
             //循环接受A并写入C
@@ -103,7 +134,7 @@ namespace NSmartProxy
             Console.WriteLine("Client ({0}) disconnected", clientIndex);
         }
 
-        private async Task C2PLooping(CancellationToken ct, NetworkStream consumerStream, NetworkStream providerStream)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, Func<byte[],Task<bool>>  beforeTransfer = null)
         {
 
             var buf = new byte[4096];
@@ -112,9 +143,9 @@ namespace NSmartProxy
             while (!ct.IsCancellationRequested)
             {
                 //15秒没有心跳数据，则关闭连接释放资源
-                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(3600));
                 //consumerStream.CopyTo(providerStream);//快速copy
-                var amountReadTask = consumerStream.ReadAsync(buf, 0, buf.Length, ct);
+                var amountReadTask = fromStream.ReadAsync(buf, 0, buf.Length, ct);
                 //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
                 //15秒到了或者读取到了内容则进行<\X/>下一个时间片
                 var completedTask = await Task.WhenAny(timeoutTask, amountReadTask);
@@ -123,72 +154,35 @@ namespace NSmartProxy
                 if (completedTask == timeoutTask)
                 {
                     // var msg = Encoding.ASCII.GetBytes("consumer timed out");
-                    Console.WriteLine("consumer timed out");
+                    Console.WriteLine("proxy transfer timed out");
 
                     break;
                 }
 
                 //在接收到信息之后可以立即发送一些消息给客户端。
-                //
-                //now we know that the amountTask is complete so
-                //we can ask for its Result without blocking
+                //获取read之后返回结果（结果串长度）
                 var amountRead = amountReadTask.Result;
                 if (amountRead == 0) break; //end of stream.
 
-                if (CompareBytes(buf, PartternWord))
+                bool continueWrite = true;
+                if (beforeTransfer != null)
                 {
-                    var contentBytes = HtmlUtil.GetUtf8Content();
-                    await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
-                    consumerStream.Flush();
-                    consumerStream.Close();
+                    continueWrite = await beforeTransfer(buf);
                 }
-                else
+
+                if (continueWrite)
                 {
                     //转发
-                    await providerStream.WriteAsync(buf, 0, amountRead, ct);
+                    await toStream.WriteAsync(buf, 0, amountRead, ct);
                 }
             }
+            Console.WriteLine("END WHILE???");
         }
 
-        private async Task P2CLooping(CancellationToken ct, NetworkStream consumerStream, NetworkStream providerStream)
-        {
 
-            var buf = new byte[4096];
+        private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome/");
+        private byte[] PartternPostWord = System.Text.Encoding.ASCII.GetBytes("POST /welcome/");
 
-            //循环接收C并且写入A
-            while (!ct.IsCancellationRequested)
-            {
-                //15秒没有心跳数据，则关闭连接释放资源
-                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
-                var amountReadTask = providerStream.ReadAsync(buf, 0, buf.Length, ct);
-                //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
-                //15秒到了或者读取到了内容则进行<\X/>下一个时间片
-                var completedTask = await Task.WhenAny(timeoutTask, amountReadTask);
-
-                // 非windowsform不需要 .ConfigureAwait(false);
-                if (completedTask == timeoutTask)
-                {
-                    //var msg = Encoding.ASCII.GetBytes("provider timed out");
-                    Console.WriteLine("provider timed out");
-                    //await consumerStream.WriteAsync(msg, 0, msg.Length);
-                    break;
-                }
-
-                //在接收到信息之后可以立即发送一些消息给客户端。
-                //
-                //now we know that the amountTask is complete so
-                //we can ask for its Result without blocking
-                var amountRead = amountReadTask.Result;
-                if (amountRead == 0) break; //end of stream.
-
-                //转发
-                await consumerStream.WriteAsync(buf, 0, amountRead, ct);
-            }
-        }
-
-        private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome ");
-        private byte[] PartternWord_manage_ = System.Text.Encoding.ASCII.GetBytes("GET /manage ");
-        private byte[] PartternWord_manage_etc = System.Text.Encoding.ASCII.GetBytes("GET /manage/");
         //GET /welcome 
         private bool CompareBytes(byte[] wholeBytes, byte[] partternWord)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace NSmartProxy.Client
 {
@@ -21,6 +22,10 @@ namespace NSmartProxy.Client
            // netStream.Flush();
 
            // tc.Close();
+            Thread.Sleep(3000);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            ClientRouter clientRouter = new ClientRouter();
+            clientRouter.ConnectToProvider();
             Console.Read();
         }
     }
