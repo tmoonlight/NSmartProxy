@@ -49,8 +49,8 @@ namespace NSmartProxy.Client
 
             Console.WriteLine("Looping start.");
             //创建相互转发流
-            Task taskT2PLooping = StreamTransfer(CANCELTOKEN.Token, targetServceStream, providerStream);
-            Task taskP2TLooping = StreamTransfer(CANCELTOKEN.Token, providerStream, targetServceStream);
+            Task taskT2PLooping = StreamTransfer(CANCELTOKEN.Token, targetServceStream, providerStream,"T2P");
+            Task taskP2TLooping = StreamTransfer(CANCELTOKEN.Token, providerStream, targetServceStream,"P2T");
 
 
             //循环接受A并写入C
@@ -69,7 +69,7 @@ namespace NSmartProxy.Client
         /// <param name="toStream"></param>
         /// <param name="beforeTransfer"></param>
         /// <returns></returns>
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
 
@@ -112,6 +112,7 @@ namespace NSmartProxy.Client
                 }
                 Console.WriteLine("Data written");
             }
+            Console.WriteLine("serviceclient END+++" + signal);
 
         }
     }

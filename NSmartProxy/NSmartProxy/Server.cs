@@ -75,7 +75,7 @@ namespace NSmartProxy
         /// <param name="listener"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        async Task AcceptClientsAsync(TcpListener listener, TcpListener serviceClientListener,CancellationToken ct)
+        async Task AcceptClientsAsync(TcpListener listener, TcpListener serviceClientListener, CancellationToken ct)
         {
             var clientCounter = 0;
             while (!ct.IsCancellationRequested)
@@ -113,7 +113,7 @@ namespace NSmartProxy
 
             var providerStream = proxyClient.GetStream();
             var consumerStream = client.GetStream();
-            Task taskC2PLooping = StreamTransfer(ct, consumerStream, providerStream,  async (transbuf) =>
+            Task taskC2PLooping = StreamTransfer(ct, consumerStream, providerStream, "C2P", async (transbuf) =>
             {
                 if (CompareBytes(transbuf, PartternWord))
                 {
@@ -125,7 +125,7 @@ namespace NSmartProxy
                 }
                 else return true;
             });
-            Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream);
+            Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, "P2C");
 
 
             //循环接受A并写入C
@@ -134,7 +134,7 @@ namespace NSmartProxy
             Console.WriteLine("Client ({0}) disconnected", clientIndex);
         }
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, Func<byte[],Task<bool>>  beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
             var buf = new byte[4096];
@@ -176,7 +176,7 @@ namespace NSmartProxy
                     await toStream.WriteAsync(buf, 0, amountRead, ct);
                 }
             }
-            Console.WriteLine("END WHILE???");
+            Console.WriteLine("END WHILE???+++" + signal);
         }
 
 
