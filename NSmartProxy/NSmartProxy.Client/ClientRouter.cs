@@ -10,6 +10,10 @@ namespace NSmartProxy.Client
 {
     public class ClientRouter
     {
+        public const string TARGET_SERVICE_ADDRESS="192.168.0.106";
+        public const int TARGET_SERVICE_ADDRESS_PORT = 80;
+        public const string PROVIDER_ADDRESS = "192.168.0.106";
+        public const int PROVIDER_ADDRESS_PORT = 9973;
         CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
         public async Task ConnectToProvider()
         {
@@ -18,7 +22,7 @@ namespace NSmartProxy.Client
             TcpClient targetServiceClient = new TcpClient();        //目标服务
 
             ///该端口是一个随机端口，通过url获取
-            tcpClient.Connect("172.20.66.84", 9973);
+            tcpClient.Connect(PROVIDER_ADDRESS, PROVIDER_ADDRESS_PORT);
             Console.WriteLine("Provider connected.");
             NetworkStream providerStream = tcpClient.GetStream();
             NetworkStream targetServceStream = null;
@@ -29,7 +33,7 @@ namespace NSmartProxy.Client
             //服务端主动断开连接时，会收到0字节，此时关闭连接
             if (firstResult == 0) return;
 
-            targetServiceClient.Connect("172.20.66.84", 80);
+            targetServiceClient.Connect(TARGET_SERVICE_ADDRESS, TARGET_SERVICE_ADDRESS_PORT);
             Console.WriteLine("TargetServer connected(1st time).");
             targetServceStream = targetServiceClient.GetStream();
 

@@ -34,7 +34,8 @@ namespace NSmartProxy
     public class Server
     {
 
-
+        public const int CLIENT_SERVER_PORT = 9973;
+        public const int CONSUMER_PORT = 2344;
         //private TcpClient ProviderClient;
         public async Task Start()
         {
@@ -42,9 +43,9 @@ namespace NSmartProxy
             //ProviderClient = new TcpClient();
             // List<TcpListener> serverClientListeners = new List<TcpListener>();
             CancellationTokenSource cts = new CancellationTokenSource();
-            TcpListener listener = new TcpListener(IPAddress.Any, 2344);
+            TcpListener listener = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
-            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, 9973);
+            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
             while (true)
             {
                 //listenter初始化
