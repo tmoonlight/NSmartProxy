@@ -10,8 +10,8 @@ namespace NSmartProxy.Client
 {
     public class ClientRouter
     {
-        public const string TARGET_SERVICE_ADDRESS="192.168.0.168";
-        public const int TARGET_SERVICE_ADDRESS_PORT = 80;
+        public const string TARGET_SERVICE_ADDRESS = "192.168.0.168";
+        public const int TARGET_SERVICE_ADDRESS_PORT = 81;
         public const string PROVIDER_ADDRESS = "192.168.0.168";
         public const int PROVIDER_ADDRESS_PORT = 9973;
         CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
@@ -37,7 +37,7 @@ namespace NSmartProxy.Client
             Console.WriteLine("TargetServer connected(1st time).");
             targetServceStream = targetServiceClient.GetStream();
 
-            await targetServceStream.WriteAsync(buf, 0, buf.Length);
+            await targetServceStream.WriteAsync(buf, 0, firstResult);
 
             ////读取provider的tcp流
             ////ps：需要每隔一分钟发送一次心跳包，否则服务会自动断开
@@ -53,14 +53,14 @@ namespace NSmartProxy.Client
 
             Console.WriteLine("Looping start.");
             //创建相互转发流
-            Task taskT2PLooping = StreamTransfer(CANCELTOKEN.Token, targetServiceClient,providerClient, targetServceStream, providerStream,"T2P");
-            Task taskP2TLooping = StreamTransfer(CANCELTOKEN.Token, providerClient, targetServiceClient, providerStream, targetServceStream,"P2T");
+            var taskT2PLooping = StreamTransfer(CANCELTOKEN.Token, targetServiceClient, providerClient, targetServceStream, providerStream, "T2P");
+            var taskP2TLooping = StreamTransfer(CANCELTOKEN.Token, providerClient, targetServiceClient, providerStream, targetServceStream, "P2T");
 
 
             //循环接受A并写入C
             var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
             //comletedTask.
-            Console.WriteLine("Some Client disconnected");
+            Console.WriteLine(comletedTask.Result + "disconnected");
 
         }
 
@@ -73,20 +73,20 @@ namespace NSmartProxy.Client
         /// <param name="toStream"></param>
         /// <param name="beforeTransfer"></param>
         /// <returns></returns>
-        private async Task StreamTransfer(CancellationToken ct,TcpClient sourceClient,TcpClient toClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task<string> StreamTransfer(CancellationToken ct, TcpClient sourceClient, TcpClient toClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
 
             var buf = new byte[4096];
             //循环接收C并且写入A
             //while (!ct.IsCancellationRequested)
-            while (1==1)
+            while (1 == 1)
             {
-               
+
                 //15秒没有心跳数据，则关闭连接释放资源
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(3600));
                 var amountReadTask = fromStream.ReadAsync(buf, 0, buf.Length, ct);
-                
+
                 //15秒到了或者读取到了内容则进行<\X/>下一个时间片
                 var completedTask = await Task.WhenAny(timeoutTask, amountReadTask);
 
@@ -100,8 +100,18 @@ namespace NSmartProxy.Client
 
                 //在接收到信息之后可以立即发送一些消息给客户端。
                 //获取read之后返回结果（结果串长度）
-                var amountRead = amountReadTask.Result;
-                Console.WriteLine("read "+ amountRead.ToString() +" ");
+                var amountRead = 0;
+               
+                try
+                {
+                    Console.WriteLine("read " + amountRead.ToString() + " ");
+                    amountRead = amountReadTask.Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
                 if (amountRead == 0)
                 {
                     //end of stream.流关闭之后需要保留serviceclient到provider的连接。。重新连接
@@ -125,8 +135,8 @@ namespace NSmartProxy.Client
                 }
                 Console.WriteLine("Data written");
             }
-            Console.WriteLine("serviceclient END+++" + signal+" ++++SourceClientConnecting:"+sourceClient.Connected.ToString());
-
+            Console.WriteLine("serviceclient END+++" + signal + " ++++SourceClientConnecting:" + sourceClient.Connected.ToString());
+            return signal;
         }
     }
 

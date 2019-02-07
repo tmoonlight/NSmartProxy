@@ -52,15 +52,19 @@ namespace NSmartProxy
             try
             {
                 //一起打开listener，后面会先后进行accept
-                listenerServiceClient.Start();
-                listener.Start();
+                listenerServiceClient.Start(1000);
+                listener.Start(1000);
 
                 Console.WriteLine("NSmart server started");
                 var taskResultClientService = AcceptClientServiceAsync(listenerServiceClient, cts.Token);
                 //异步获取
                 var taskResultConsumer = AcceptConsumeAsync(listener, cts.Token);
 
-                Thread.Sleep(60000); //block here to hold open the server
+                await Task.Delay(6000000); //block here to hold open the server
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
             finally
             {
@@ -69,6 +73,7 @@ namespace NSmartProxy
                 listener.Stop();
                 listenerServiceClient.Stop();
             }
+
             //}
         }
 
@@ -80,8 +85,9 @@ namespace NSmartProxy
             while (1 == 1)
             {
 
-                 TcpClient tempS2PClient =await serviceClientListener.AcceptTcpClientAsync();
-              
+                TcpClient tempS2PClient = await serviceClientListener.AcceptTcpClientAsync();
+
+                Console.WriteLine("传入新的clientserver连接");
                 if (S2PClient.Connected == false)
                 {
                     S2PClient = tempS2PClient;
@@ -100,10 +106,6 @@ namespace NSmartProxy
         {
 
             //给两个listen，同时监听3端
-            //
-            //// TcpClient serviceClient = serviceClientListener.AcceptTcpClient();
-            // f (S2PClient)
-            // EchoAsync()
             var clientCounter = 0;
             while (!ct.IsCancellationRequested)
             {
@@ -119,19 +121,11 @@ namespace NSmartProxy
                 }
                 Console.WriteLine("consumer已连接");
 
-                // Console.WriteLine("serviceclient server connected");
-                // Console.WriteLine("listening consumer....");
-                // Task<TcpClient> client = listener.AcceptTcpClientAsync();
 
-                //Console.WriteLine("consumer connected");
-                //TcpClient serviceClient = 
-                //检测是否已通
-                //if(serviceClientListener.)
 
                 //连接成功 连接provider端
                 clientCounter++;
-                //once again, just fire and forget, and use the CancellationToken
-                //to signal to the "forgotten" async invocation.
+
 
                 Task transferResult = EchoAsync(consumerClient, S2PClient, clientCounter, ct);
 
@@ -199,7 +193,18 @@ namespace NSmartProxy
 
                 //在接收到信息之后可以立即发送一些消息给客户端。
                 //获取read之后返回结果（结果串长度）
-                var amountRead = amountReadTask.Result;
+
+                var amountRead = 0;
+                try
+                {
+                    amountRead = amountReadTask.Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+              
                 if (amountRead == 0) break; //end of stream.
 
                 bool continueWrite = true;
