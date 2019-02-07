@@ -37,12 +37,15 @@ namespace NSmartProxy
         public const int CLIENT_SERVER_PORT = 9973;
         public const int CONSUMER_PORT = 2344;
         //private TcpClient ProviderClient;
+        //侦听serviceclient的端，始终存在
+        private TcpClient S2PClient = new TcpClient();
         public async Task Start()
         {
             //privider初始化
             //ProviderClient = new TcpClient();
             // List<TcpListener> serverClientListeners = new List<TcpListener>();
-            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationTokenSource accepting = new CancellationTokenSource();
+           
             TcpListener listener = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
             TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
@@ -56,9 +59,9 @@ namespace NSmartProxy
                 listener.Start(1000);
 
                 Console.WriteLine("NSmart server started");
-                var taskResultClientService = AcceptClientServiceAsync(listenerServiceClient, cts.Token);
+                var taskResultClientService = AcceptClientServiceAsync(listenerServiceClient, accepting.Token);
                 //异步获取
-                var taskResultConsumer = AcceptConsumeAsync(listener, cts.Token);
+                var taskResultConsumer = AcceptConsumeAsync(listener, accepting.Token);
 
                 await Task.Delay(6000000); //block here to hold open the server
             }
@@ -69,7 +72,7 @@ namespace NSmartProxy
             finally
             {
                 Console.WriteLine("all closed");
-                cts.Cancel();
+                accepting.Cancel();
                 listener.Stop();
                 listenerServiceClient.Stop();
             }
@@ -77,7 +80,7 @@ namespace NSmartProxy
             //}
         }
 
-        private TcpClient S2PClient = new TcpClient();
+        
 
         //刷出serviceclient到provider这一条通道
         async Task AcceptClientServiceAsync(TcpListener serviceClientListener, CancellationToken ct)
@@ -139,13 +142,15 @@ namespace NSmartProxy
             CancellationToken ct)
         {
             Console.WriteLine("New client ({0}) connected", clientIndex);
+
+            CancellationTokenSource transfering = new CancellationTokenSource();
             //转发buffer
             //连接C端
             //proxyClient.Connect("172.20.66.84", 80);
 
             var providerStream = providerClient.GetStream();
             var consumerStream = consumerClient.GetStream();
-            Task taskC2PLooping = StreamTransfer(ct, consumerStream, providerStream, "C2P", async (transbuf) =>
+            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, "C2P", async (transbuf) =>
             {
                 if (CompareBytes(transbuf, PartternWord))
                 {
@@ -157,16 +162,16 @@ namespace NSmartProxy
                 }
                 else return true;
             });
-            Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, "P2C");
+            Task taskP2CLooping = StreamTransfer(transfering.Token, consumerClient, providerStream, consumerStream, "P2C");
 
-
-            //循环接受A并写入C
+            //任何一端传输中断或者故障，则关闭所有连接，回到上层重新accept
             var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
             //comletedTask.
-            Console.WriteLine("Client ({0}) disconnected", clientIndex);
+            Console.WriteLine("Transfering ({0}) STOPPED", clientIndex);
+            transfering.Cancel();
         }
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct,TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
             var buf = new byte[4096];
@@ -202,10 +207,79 @@ namespace NSmartProxy
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    throw;
+                    //throw;
                 }
-              
-                if (amountRead == 0) break; //end of stream.
+
+                // //※接收到来自iis的中断请求，切断consume的连接※
+                if (amountRead == 0)
+                {
+                    //接收到0，则转发这个0给to端，并且中断这次传输
+                    //await toStream.WriteAsync(buf, 0, amountRead, ct);
+                    consumerClient.Close();
+                    break;
+                }//end of stream.
+
+                bool continueWrite = true;
+                if (beforeTransfer != null)
+                {
+                    continueWrite = await beforeTransfer(buf);
+                }
+
+                if (continueWrite)
+                {
+                    //转发
+                    await toStream.WriteAsync(buf, 0, amountRead, ct);
+                }
+            }
+            Console.WriteLine("END WHILE???+++" + signal);
+        }
+
+        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        {
+
+            var buf = new byte[4096];
+
+            //循环接收C并且写入A
+            while (!ct.IsCancellationRequested)
+            {
+                //15秒没有心跳数据，则关闭连接释放资源
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(3600));
+                //consumerStream.CopyTo(providerStream);//快速copy
+                var amountReadTask = fromStream.ReadAsync(buf, 0, buf.Length, ct);
+                //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
+                //15秒到了或者读取到了内容则进行<\X/>下一个时间片
+                var completedTask = await Task.WhenAny(timeoutTask, amountReadTask);
+
+                // 非windowsform不需要 .ConfigureAwait(false);
+                if (completedTask == timeoutTask)
+                {
+                    // var msg = Encoding.ASCII.GetBytes("consumer timed out");
+                    Console.WriteLine("proxy transfer timed out");
+
+                    break;
+                }
+
+                //在接收到信息之后可以立即发送一些消息给客户端。
+                //获取read之后返回结果（结果串长度）
+
+                var amountRead = 0;
+                try
+                {
+                    amountRead = amountReadTask.Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    //throw;
+                }
+
+                //※接收到来自浏览器的中断请求，转发这个请求，终止当前传输（不关闭prover-serviceclient的连接）※
+                if (amountRead == 0)
+                {
+                    //接收到0，则转发这个0给to端，并且中断这次传输
+                    await toStream.WriteAsync(buf, 0, amountRead, ct);
+                    break;
+                }//end of stream.
 
                 bool continueWrite = true;
                 if (beforeTransfer != null)
