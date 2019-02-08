@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NSmartProxy.Client\NSmartProxy.Client.csproj" />
+    <ProjectReference Include="..\NSmartProxy.Client\NSmartProxy.ClientServer.csproj" />
     <ProjectReference Include="..\NSmartProxy\NSmartProxy.csproj" />
   </ItemGroup>
 

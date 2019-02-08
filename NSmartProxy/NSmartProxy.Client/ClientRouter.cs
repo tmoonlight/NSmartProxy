@@ -20,7 +20,7 @@ namespace NSmartProxy.Client
         TcpClient providerClient = new TcpClient();
         public async Task ConnectToProvider()
         {
-           
+
             TcpClient targetServiceClient = new TcpClient();        //目标服务
 
             ///该端口是一个随机端口，通过url获取（始终连接）
@@ -39,7 +39,7 @@ namespace NSmartProxy.Client
                 if (firstResult == 0) return;
 
                 targetServiceClient.Connect(TARGET_SERVICE_ADDRESS, TARGET_SERVICE_ADDRESS_PORT);
-                Console.WriteLine("TargetServer connected(1st time).");
+                Console.WriteLine("TargetServer connected(1st time).readed +" + firstResult.ToString());
                 targetServceStream = targetServiceClient.GetStream();
 
                 await targetServceStream.WriteAsync(buf, 0, firstResult);
@@ -108,7 +108,7 @@ namespace NSmartProxy.Client
                 //在接收到信息之后可以立即发送一些消息给客户端。
                 //获取read之后返回结果（结果串长度）
                 var amountRead = 0;
-               
+
                 try
                 {
                     amountRead = amountReadTask.Result;
@@ -117,7 +117,7 @@ namespace NSmartProxy.Client
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    throw;
+                    //throw;
                 }
                 //※接收到来自浏览器的中断请求,关闭iis的连接※
                 if (amountRead == 0)
@@ -206,6 +206,7 @@ namespace NSmartProxy.Client
                     //fromStream = sourceClient.GetStream();
                     //Console.WriteLine("reconnected");
                     //continue;
+                    SendZero(TARGET_SERVICE_ADDRESS_PORT);
                     await toStream.WriteAsync(buf, 0, amountRead, ct);
                     break;
                 }
@@ -225,6 +226,13 @@ namespace NSmartProxy.Client
             }
             Console.WriteLine("serviceclient END+++" + signal + " ++++SourceClientConnecting:" + sourceClient.Connected.ToString());
             return signal;
+        }
+
+        private void SendZero(int port)
+        {
+            TcpClient tc = new TcpClient();
+            tc.Connect("127.0.0.1", port);
+            tc.Client.Send(new byte[] { 0 });
         }
     }
 

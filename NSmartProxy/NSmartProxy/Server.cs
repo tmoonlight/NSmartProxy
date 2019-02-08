@@ -45,7 +45,7 @@ namespace NSmartProxy
             //ProviderClient = new TcpClient();
             // List<TcpListener> serverClientListeners = new List<TcpListener>();
             CancellationTokenSource accepting = new CancellationTokenSource();
-           
+
             TcpListener listener = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
             TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
@@ -80,7 +80,7 @@ namespace NSmartProxy
             //}
         }
 
-        
+
 
         //刷出serviceclient到provider这一条通道
         async Task AcceptClientServiceAsync(TcpListener serviceClientListener, CancellationToken ct)
@@ -130,14 +130,14 @@ namespace NSmartProxy
                 clientCounter++;
 
 
-                Task transferResult = EchoAsync(consumerClient, S2PClient, clientCounter, ct);
+                Task transferResult = EchoAsync(consumerlistener, consumerClient, S2PClient, clientCounter, ct);
 
             }
 
         }
 
         //3端互相传输数据
-        async Task EchoAsync(TcpClient consumerClient, TcpClient providerClient,
+        async Task EchoAsync(TcpListener consumerlistener, TcpClient consumerClient, TcpClient providerClient,
             int clientIndex,
             CancellationToken ct)
         {
@@ -150,28 +150,29 @@ namespace NSmartProxy
 
             var providerStream = providerClient.GetStream();
             var consumerStream = consumerClient.GetStream();
-            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, "C2P", async (transbuf) =>
-            {
-                if (CompareBytes(transbuf, PartternWord))
-                {
-                    var contentBytes = HtmlUtil.GetUtf8Content(transbuf);
-                    await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
-                    consumerStream.Flush();
-                    consumerStream.Close();
-                    return false;
-                }
-                else return true;
-            });
-            Task taskP2CLooping = StreamTransfer(transfering.Token, consumerClient, providerStream, consumerStream, "P2C");
+            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerlistener, consumerClient, consumerStream, providerStream, "C2P", async (transbuf) =>
+             {
+                 if (CompareBytes(transbuf, PartternWord))
+                 {
+                     var contentBytes = HtmlUtil.GetUtf8Content(transbuf);
+                     await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
+                     consumerStream.Flush();
+                     consumerStream.Close();
+                     return false;
+                 }
+                 else return true;
+             });
+            Task taskP2CLooping = StreamTransfer(transfering.Token, providerClient, consumerClient, providerStream, consumerStream, "P2C", clientIndex);
 
             //任何一端传输中断或者故障，则关闭所有连接，回到上层重新accept
             var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
             //comletedTask.
             Console.WriteLine("Transfering ({0}) STOPPED", clientIndex);
+            consumerClient.Close();
             transfering.Cancel();
         }
 
-        private async Task StreamTransfer(CancellationToken ct,TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct, TcpClient providerClient, TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, int clientIndex, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
             var buf = new byte[4096];
@@ -182,10 +183,15 @@ namespace NSmartProxy
                 //15秒没有心跳数据，则关闭连接释放资源
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(3600));
                 //consumerStream.CopyTo(providerStream);//快速copy
+                //2019-2-8 多端连接时，这里read出来的字符如何返回到相应的客户端
                 var amountReadTask = fromStream.ReadAsync(buf, 0, buf.Length, ct);
                 //var providerReadTask = stream.ReadAsync(providBuf, 0, providBuf.Length, ct);
                 //15秒到了或者读取到了内容则进行<\X/>下一个时间片
                 var completedTask = await Task.WhenAny(timeoutTask, amountReadTask);
+
+                Console.WriteLine("clientIndex:" + clientIndex + ",token:" + ct.IsCancellationRequested.ToString()+",consuClientHash:"+consumerClient.GetHashCode()+",consuStreamHash:"+toStream.GetHashCode());
+                //if (ct.IsCancellationRequested)
+                //{ Console.WriteLine("强行终止，read了也不要");}
 
                 // 非windowsform不需要 .ConfigureAwait(false);
                 if (completedTask == timeoutTask)
@@ -234,7 +240,7 @@ namespace NSmartProxy
             Console.WriteLine("END WHILE???+++" + signal);
         }
 
-        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task ToStaticTransfer(CancellationToken ct, TcpListener consumerlistener, TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
             var buf = new byte[4096];
@@ -276,7 +282,12 @@ namespace NSmartProxy
                 //※接收到来自浏览器的中断请求，转发这个请求，终止当前传输（不关闭prover-serviceclient的连接）※
                 if (amountRead == 0)
                 {
-                    //接收到0，则转发这个0给to端，并且中断这次传输
+                    //接收到0，则中断consumer连接，转发这个0给to端，并且中断这次传输
+                    fromStream.Close();
+                    consumerClient.Close();
+                    SendZero(CONSUMER_PORT);
+                    // consumerlistener.Stop();
+
                     await toStream.WriteAsync(buf, 0, amountRead, ct);
                     break;
                 }//end of stream.
@@ -311,6 +322,13 @@ namespace NSmartProxy
                 }
             }
             return true;
+        }
+
+        private void SendZero(int port)
+        {
+            TcpClient tc = new TcpClient();
+            tc.Connect("127.0.0.1", port);
+            tc.Client.Send(new byte[] { 0 });
         }
     }
 }

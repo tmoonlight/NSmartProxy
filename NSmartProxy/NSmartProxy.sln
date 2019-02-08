@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy", "NSmartProxy\NSmartProxy.csproj", "{AAB4283A-6A0F-4258-A86F-CDABA316556B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy", "NSmartProxy\NSmartProxy.csproj", "{AAB4283A-6A0F-4258-A86F-CDABA316556B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Client", "NSmartProxy.Client\NSmartProxy.Client.csproj", "{2C4FBCEC-5EAB-4DC5-830D-C8E62C1F5AA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ClientServer", "NSmartProxy.Client\NSmartProxy.ClientServer.csproj", "{2C4FBCEC-5EAB-4DC5-830D-C8E62C1F5AA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Test", "NSmartProxy.Test\NSmartProxy.Test.csproj", "{C347375A-49D0-4320-9AA7-94731EB3509B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Test", "NSmartProxy.Test\NSmartProxy.Test.csproj", "{C347375A-49D0-4320-9AA7-94731EB3509B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
