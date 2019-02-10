@@ -8,6 +8,7 @@ namespace NSmartProxy
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("***Provider***");
             Server srv = new Server();
             srv.Start();
             Console.Read();

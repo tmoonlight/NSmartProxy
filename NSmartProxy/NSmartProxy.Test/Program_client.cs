@@ -20,7 +20,11 @@ namespace NSmartProxy.Test
             //byte[] buf = new byte[1024];
 
             //client.GetStream().Read(buf, 0, buf.Length);
-            
+            ClientConnectionManager ccm = ClientConnectionManager.GetInstance();
+            ClientConnectionManager ccm1 = ClientConnectionManager.GetInstance();
+            ClientConnectionManager ccm2 = ClientConnectionManager.GetInstance();
+
+            Console.Read();
         }
     }
 }
