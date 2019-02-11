@@ -15,12 +15,22 @@ namespace NSmartProxy
 
     public class ServerConnnectionManager
     {
-
-
         private int MAX_CONNECT_SIZE = 10;
         private ServerConnnectionManager()
         {
             Console.WriteLine("ServerConnnectionManager initialized.");
+            //获取服务端配置信息
+            //测试 ，暂时设置为3
+            //int length = Apps.Length
+            TcpClient configClient = new TcpClient();
+            configClient.Connect(ClientRouter.PROVIDER_ADDRESS, ClientRouter.PROVIDER_CONFIG_SERVICE_PORT);
+            var configStream = configClient.GetStream();
+            byte[] fourBytes = new byte[4] { 0, 0, 3, 0 };
+            configStream.Write(fourBytes);
+            byte[] config = new byte[256];
+            configStream.Read(config);
+            //※要求服务端分配资源并获取服务端配置※，待完善
+            Console.WriteLine(config[0]+"!!!!!!!!!");
             Task.Run(PollingToProvider);
         }
 

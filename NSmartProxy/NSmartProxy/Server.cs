@@ -36,34 +36,31 @@ namespace NSmartProxy
 
         public const int CLIENT_SERVER_PORT = 9973;
         public const int CONSUMER_PORT = 2344;
-        //private TcpClient ProviderClient;
-        //侦听serviceclient的端，始终存在
-        //private List<TcpClient> S2PClients = new List<TcpClient>();
+        public const int CONFIG_SERVICE_PORT = 12307;
+
         public ClientConnectionManager ConnectionManager = null;
         public async Task Start()
         {
             ConnectionManager = ClientConnectionManager.GetInstance();
-            //privider初始化
-            //ProviderClient = new TcpClient();
-            // List<TcpListener> serverClientListeners = new List<TcpListener>();
             CancellationTokenSource accepting = new CancellationTokenSource();
 
             TcpListener listenerConsumer = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
             TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
-            //while (true)
-            //{
-            //listenter初始化
+
+            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, CONFIG_SERVICE_PORT);
+
             try
             {
-                //一起打开listener，后面会先后进行accept
-                //listenerServiceClient.Start(1000);
-                listenerConsumer.Start(1000);
+
 
                 Console.WriteLine("NSmart server started");
-                // var taskResultClientService = AcceptClientServiceAsync(listenerServiceClient);
-                //异步获取
+                var taskResultConfig = AcceptConfigRequest(listenerConfigService);
+
+                //get consumer client first.
                 var taskResultConsumer = AcceptConsumeAsync(listenerConsumer, accepting.Token);
+
+
 
                 await Task.Delay(6000000); //block here to hold open the server
             }
@@ -81,6 +78,35 @@ namespace NSmartProxy
         }
 
 
+        //accept a config request.
+        //request:
+        //   2          1       1
+        //  clientid    appid   nouse
+        //
+        //response:
+        //   2          1       1  ...N
+        //  clientid    appid   port
+        private async Task AcceptConfigRequest(TcpListener listenerConfigService)
+        {
+            while (1 == 1)
+            {
+                byte[] fourBytes = new byte[4];
+                listenerConfigService.Start(100);
+                var listener = await listenerConfigService.AcceptTcpClientAsync();
+                var nstream = listener.GetStream();
+                int resultByte = await nstream.ReadAsync(fourBytes);
+
+                if (resultByte == 0)
+                {
+                    Console.WriteLine("invalid request");
+                }
+               
+                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(fourBytes);
+                await nstream.WriteAsync(arrangedIds);
+            }
+        }
+
+
 
         /// <summary>
         /// 同时侦听来自consumer的链接和到provider的链接
@@ -90,7 +116,7 @@ namespace NSmartProxy
         /// <returns></returns>
         async Task AcceptConsumeAsync(TcpListener consumerlistener, CancellationToken ct)
         {
-
+            consumerlistener.Start(1000);
             //给两个listen，同时监听3端
             var clientCounter = 0;
             while (!ct.IsCancellationRequested)
@@ -98,22 +124,13 @@ namespace NSmartProxy
                 //目标的代理服务联通了，才去处理consumer端的请求。
                 Console.WriteLine("listening serviceClient....");
                 TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                //if (S2PClient.Connected == false)
-                //{
-                //    consumerClient.Close();
-                //    // throw new Exception("未找到任何代理服务客户端。")
-                //    Console.WriteLine("未找到对应的服务客户端,连接抛弃");
-                //    continue;
-                //}
                 Console.WriteLine("consumer已连接");
                 //连接成功 连接provider端
                 clientCounter++;
                 TcpClient s2pClient = ConnectionManager.GetClient();
 
                 Task transferResult = TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
-
             }
-
         }
 
         //3端互相传输数据
@@ -124,25 +141,22 @@ namespace NSmartProxy
             Console.WriteLine("New client ({0}) connected", clientIndex);
 
             CancellationTokenSource transfering = new CancellationTokenSource();
-            //转发buffer
-            //连接C端
-            //proxyClient.Connect("172.20.66.84", 80);
 
             var providerStream = providerClient.GetStream();
             var consumerStream = consumerClient.GetStream();
-            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerlistener, consumerClient, consumerStream, providerStream, "C2P", async (transbuf) =>
-             {
-                 if (CompareBytes(transbuf, PartternWord))
-                 {
-                     var contentBytes = HtmlUtil.GetUtf8Content(transbuf);
-                     await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
-                     consumerStream.Flush();
-                     consumerStream.Close();
-                     return false;
-                 }
-                 else return true;
-             });
-            Task taskP2CLooping = StreamTransfer(transfering.Token, providerClient, consumerClient, providerStream, consumerStream, "P2C", clientIndex);
+            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, async (transbuf) =>
+            {
+                if (CompareBytes(transbuf, PartternWord))
+                {
+                    var contentBytes = HtmlUtil.GetUtf8Content(transbuf);
+                    await consumerStream.WriteAsync(contentBytes, 0, contentBytes.Length, ct);
+                    consumerStream.Flush();
+                    consumerStream.Close();
+                    return false;
+                }
+                else return true;
+            });
+            Task taskP2CLooping = StreamTransfer(transfering.Token, providerStream, consumerStream);
 
             //任何一端传输中断或者故障，则关闭所有连接，回到上层重新accept
             var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
@@ -153,26 +167,14 @@ namespace NSmartProxy
             transfering.Cancel();
         }
 
-        private async Task StreamTransfer(CancellationToken ct, TcpClient providerClient, TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, int clientIndex, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream)
         {
-
-            var buf = new byte[4096];
-
-
             await fromStream.CopyToAsync(toStream, ct);
-
-            Console.WriteLine("END WHILE???+++" + signal);
         }
 
-        private async Task ToStaticTransfer(CancellationToken ct, TcpListener consumerlistener, TcpClient consumerClient, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, Func<byte[], Task<bool>> beforeTransferHandle = null)
         {
-
-            var buf = new byte[4096];
-
-
             await fromStream.CopyToAsync(toStream, ct);
-
-            Console.WriteLine("END WHILE???+++" + signal);
         }
 
 

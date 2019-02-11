@@ -11,20 +11,19 @@ namespace NSmartProxy.Client
 {
     public class ClientRouter
     {
-        public const string TARGET_SERVICE_ADDRESS = "192.168.1.2";
+        public const string TARGET_SERVICE_ADDRESS = "127.0.0.1";
         public const int TARGET_SERVICE_ADDRESS_PORT = 80;
-        public const string PROVIDER_ADDRESS = "192.168.1.2";
+        public const string PROVIDER_ADDRESS = "192.168.1.2";//<-important 服务器ip
         public const int PROVIDER_ADDRESS_PORT = 9973;
+        public const int PROVIDER_CONFIG_SERVICE_PORT = 12307;
+
+        public string TargetServices = "127.0.0.1:80,127.0.0.1:3389,127.0.0.1:21";
         CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
-        //连接server的client，始终存在
-        //Queue<TcpClient> providerClients = new Queue<TcpClient>();
-        //TcpClient providerClient = new TcpClient();
+      
         public async Task ConnectToProvider()
         {
-
-
             ServerConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
             ConnnectionManager = ServerConnnectionManager.GetInstance();
         }
@@ -53,7 +52,7 @@ namespace NSmartProxy.Client
             NetworkStream targetServerStream = toTargetServer.GetStream();
             targetServerStream.Write(buffer, 0, readByteCount);
             await TcpTransferAsync(providerClientStream, targetServerStream);
-            //关闭连接
+            //close connection
             providerClient.Close();
             Console.WriteLine("关闭一条连接");
         }
@@ -61,45 +60,26 @@ namespace NSmartProxy.Client
 
         private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream)
         {
-            //while (!CANCELTOKEN.Token.IsCancellationRequested)
-            //{
-                Console.WriteLine("Looping start.");
-                //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
-                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
+            Console.WriteLine("Looping start.");
+            //创建相互转发流
+            var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
+            var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
 
 
-                //循环接受A并写入C
-                var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
-                //comletedTask.
-                Console.WriteLine(comletedTask.Result + "传输关闭，重新读取字节");
-            //    TRANSFERING_TOKEN.Cancel();
-            //}
+            //close connnection,whether client or server stopped transferring.
+            var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
+            Console.WriteLine(comletedTask.Result + "传输关闭，重新读取字节");
         }
 
 
-        /// <summary>
-        /// 流间传输
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <param name="fromStream"></param>
-        /// <param name="toStream"></param>
-        /// <param name="beforeTransfer"></param>
-        /// <returns></returns>
+       
         private async Task<string> StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
             await fromStream.CopyToAsync(toStream, ct);
             return signal;
         }
 
-        /// <summary>
-        /// 流间传输
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <param name="fromStream"></param>
-        /// <param name="toStream"></param>
-        /// <param name="beforeTransfer"></param>
-        /// <returns></returns>
+     
         private async Task<string> ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
