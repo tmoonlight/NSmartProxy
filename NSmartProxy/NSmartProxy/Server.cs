@@ -33,9 +33,9 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-
+        //固定端口，不会改变
         public const int CLIENT_SERVER_PORT = 9973;
-        public const int CONSUMER_PORT = 2344;
+        // public const int CONSUMER_PORT = 2344;
         public const int CONFIG_SERVICE_PORT = 12307;
 
         public ClientConnectionManager ConnectionManager = null;
@@ -44,7 +44,7 @@ namespace NSmartProxy
             ConnectionManager = ClientConnectionManager.GetInstance();
             CancellationTokenSource accepting = new CancellationTokenSource();
 
-            TcpListener listenerConsumer = new TcpListener(IPAddress.Any, CONSUMER_PORT);
+            // TcpListener listenerConsumer = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
             TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
 
@@ -57,9 +57,14 @@ namespace NSmartProxy
                 Console.WriteLine("NSmart server started");
                 var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
-                //get consumer client first.
-                var taskResultConsumer = AcceptConsumeAsync(listenerConsumer, accepting.Token);
+                //
 
+                //get consumer client first.
+                foreach (var kv in ConnectionManager.ServiceClientsDict)
+                {
+                    //TcpTunnel tunnel = kv.Value;
+                    var taskResultConsumer = AcceptConsumeAsync(tunnel, accepting.Token);
+                }
 
 
                 await Task.Delay(6000000); //block here to hold open the server
@@ -72,12 +77,13 @@ namespace NSmartProxy
             {
                 Console.WriteLine("all closed");
                 accepting.Cancel();
-                listenerConsumer.Stop();
+                //listenerConsumer.Stop();
                 listenerServiceClient.Stop();
             }
         }
 
-
+        #region 配置
+        //配置服务，客户端可以通过这个服务接收现有的空闲端口
         //accept a config request.
         //request:
         //   2          1       1
@@ -100,12 +106,12 @@ namespace NSmartProxy
                 {
                     Console.WriteLine("invalid request");
                 }
-               
+
                 byte[] arrangedIds = ConnectionManager.ArrageConfigIds(fourBytes);
                 await nstream.WriteAsync(arrangedIds);
             }
         }
-
+        #endregion
 
 
         /// <summary>
@@ -114,7 +120,7 @@ namespace NSmartProxy
         /// <param name="consumerlistener"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        async Task AcceptConsumeAsync(TcpListener consumerlistener, CancellationToken ct)
+        async Task AcceptConsumeAsync(TcpTunnel tcpTunnel ,TcpListener consumerlistener, CancellationToken ct)
         {
             consumerlistener.Start(1000);
             //给两个listen，同时监听3端
@@ -127,12 +133,14 @@ namespace NSmartProxy
                 Console.WriteLine("consumer已连接");
                 //连接成功 连接provider端
                 clientCounter++;
-                TcpClient s2pClient = ConnectionManager.GetClient();
+                //需要端口
+                TcpClient s2pClient = ConnectionManager.GetClient(tcpTunnel);
 
                 Task transferResult = TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
             }
         }
 
+        #region datatransfer
         //3端互相传输数据
         async Task TcpTransferAsync(TcpListener consumerlistener, TcpClient consumerClient, TcpClient providerClient,
             int clientIndex,
@@ -200,5 +208,6 @@ namespace NSmartProxy
             tc.Connect("127.0.0.1", port);
             tc.Client.Send(new byte[] { 0 });
         }
+        #endregion
     }
 }

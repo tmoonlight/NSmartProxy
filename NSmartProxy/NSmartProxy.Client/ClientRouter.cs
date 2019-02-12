@@ -22,6 +22,10 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
       
+        /// <summary>
+        /// 重要：连接服务端
+        /// </summary>
+        /// <returns></returns>
         public async Task ConnectToProvider()
         {
             ServerConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
@@ -45,6 +49,7 @@ namespace NSmartProxy.Client
             byte[] buffer = new byte[4096];
             var providerClientStream = providerClient.GetStream();
             int readByteCount = await providerClientStream.ReadAsync(buffer);
+            //从空闲连接列表中移除
             ConnnectionManager.RemoveClient(providerClient);
             Console.WriteLine("接受到首条信息");
             TcpClient toTargetServer = new TcpClient();

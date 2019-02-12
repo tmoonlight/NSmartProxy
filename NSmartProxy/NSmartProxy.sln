@@ -15,7 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Net45.WinformCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.ConsoleClient", "NSmartProxy.ConsoleClient\NSmartProxy.ConsoleClient.csproj", "{B01BAA93-41A1-479C-BAAE-35CDE6D09983}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.ServerHost", "NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj", "{094B0334-FEDB-4867-9960-03382408BFBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ServerHost", "NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj", "{094B0334-FEDB-4867-9960-03382408BFBA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Data", "NSmartProxy.Data\NSmartProxy.Data.csproj", "{24542AF8-7666-42E4-B5D4-6E814162108D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{094B0334-FEDB-4867-9960-03382408BFBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{094B0334-FEDB-4867-9960-03382408BFBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{094B0334-FEDB-4867-9960-03382408BFBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -21,7 +21,12 @@ namespace NSmartProxy
             Task.Run(ListenServiceClient);
         }
 
-        public Dictionary<int, List<TcpTunnel>> serviceClientsDict = new Dictionary<int, List<TcpTunnel>>();
+        /// <summary>
+        /// 客户端，appid，端口映射
+        /// </summary>
+        public Dictionary<int, List<TcpTunnel>> ServiceClientsDict = new Dictionary<int, List<TcpTunnel>>();
+        //port->tcptunnels->tcpclients
+        private Dictionary<TcpTunnel, Queue<TcpClient>> ServiceClientQueueCollection = new Dictionary<TcpTunnel, Queue<TcpClient>>();
 
         private object _lockObject = new Object();
         private object _lockObject2 = new Object();
@@ -35,17 +40,22 @@ namespace NSmartProxy
             {
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
                 Console.WriteLine("已建立一个空连接");
-                AddClient(incomeClient);
+                //立即侦听一次并且分配连接
+                byte[] bytes = new byte[4];
+                await incomeClient.GetStream().ReadAsync(bytes);
+                //根据不同的服务端appid安排不同的连接池
+                AddClient(GetTcpTunnelFromBytes(bytes), incomeClient);
             }
 
         }
 
         //可能要改成字典
-        private Queue<TcpClient> ServiceClientQueue = new Queue<TcpClient>();
+        //private Queue<TcpClient> ServiceClientQueue = new Queue<TcpClient>();
+       
         private static ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
-        public void AddClient(TcpClient client)
+        public void AddClient(TcpTunnel tcpTunnel, TcpClient client)
         {
-            ServiceClientQueue.Enqueue(client);
+            ServiceClientQueueCollection[tcpTunnel].Enqueue(client);
         }
 
         public static ClientConnectionManager GetInstance()
@@ -53,15 +63,16 @@ namespace NSmartProxy
             return Instance;
         }
 
-        public TcpClient GetClient()
+        public TcpClient GetClient(int port)
         {
-            return ServiceClientQueue.Dequeue();
+            ServiceClientsDict[port][0]
+            return ServiceClientQueueCollection[tcpTunnel].Dequeue();
         }
 
         //arrange ConfigId from top 4 bytes which received from client.
         //response:
-        //   2          1       1  ...N
-        //  clientid    appid   port
+        //   2          1       1       1           1        ...N
+        //  clientid    appid   port    appid2      port2
         public byte[] ArrageConfigIds(byte[] fourBytes)
         {
             byte[] arrangedBytes = new byte[256];
@@ -76,12 +87,12 @@ namespace NSmartProxy
                     {
                         _rand.NextBytes(tempClientIdBytes);
                         int tempClientId = tempClientIdBytes[0] << 8 + tempClientIdBytes[1];
-                        if (!serviceClientsDict.ContainsKey(tempClientId))
+                        if (!ServiceClientsDict.ContainsKey(tempClientId))
                         {
                             arrangedBytes[0] = tempClientIdBytes[0];
                             arrangedBytes[1] = tempClientIdBytes[1];
                             clientId = tempClientId;
-                            serviceClientsDict.Add(clientId, new List<TcpTunnel>());
+                            ServiceClientsDict.Add(clientId, new List<TcpTunnel>());
                             break;
                         }
                     }
@@ -94,7 +105,7 @@ namespace NSmartProxy
             }
             lock (_lockObject2)
             {
-                int maxAppCount = serviceClientsDict[clientId].Count;
+                int maxAppCount = ServiceClientsDict[clientId].Count;
                 //增加请求的客户端
                 int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
                 for (int i = 0; i < appCount; i++)
@@ -102,7 +113,7 @@ namespace NSmartProxy
                     int arrangedAppid = maxAppCount + i;
                     if (arrangedAppid > 255) throw new Exception("Stack overflow.");
                     //获取可用端口，增加到tcpclient
-                    serviceClientsDict[clientId].Add(new TcpTunnel()
+                    ServiceClientsDict[clientId].Add(new TcpTunnel()
                     {
                         ClientID = clientId,
                         AppID = arrangedAppid,
@@ -113,6 +124,21 @@ namespace NSmartProxy
             }
 
             return arrangedBytes;
+        }
+
+        /// <summary>
+        /// 解析客户端请求的tcp连接分类
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        private TcpTunnel GetTcpTunnelFromBytes(byte[] bytes)
+        {
+            return new TcpTunnel()
+            {
+                ClientID = bytes[0] << 8 + bytes[1],
+                AppID = bytes[2],
+                Port = 0
+            };
         }
     }
 }
