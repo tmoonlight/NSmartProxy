@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NSmartProxy.Client
 {
@@ -17,7 +18,7 @@ namespace NSmartProxy.Client
             Thread.Sleep(3000);
             Console.ForegroundColor = ConsoleColor.Yellow;
             ClientRouter clientRouter = new ClientRouter();
-            clientRouter.ConnectToProvider();
+            Task tsk = clientRouter.ConnectToProvider();
             Console.Read();
         }
     }

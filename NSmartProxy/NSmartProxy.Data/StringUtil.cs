@@ -23,10 +23,13 @@ namespace NSmartProxy
         /// <returns></returns>
         public static byte[] ClientIDAppIdToBytes(int clientID, int appid)
         {
-            byte[] bytes = IntTo2Bytes(clientID);
+            byte[] bytes = new byte[3];
+            byte[] clientbytes = IntTo2Bytes(clientID);
+            bytes[0] = clientbytes[0];
+            bytes[1] = clientbytes[1];
             bytes[2] = (byte)appid;
 
-            return bytes.Take(3).ToArray();
+            return bytes;
         }
 
         /// <summary>

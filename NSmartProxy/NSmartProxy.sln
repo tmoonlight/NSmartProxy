@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.ConsoleClient",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ServerHost", "NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj", "{094B0334-FEDB-4867-9960-03382408BFBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Data", "NSmartProxy.Data\NSmartProxy.Data.csproj", "{24542AF8-7666-42E4-B5D4-6E814162108D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Data", "NSmartProxy.Data\NSmartProxy.Data.csproj", "{24542AF8-7666-42E4-B5D4-6E814162108D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace NSmartProxy.Data
 {
+    /// <summary>
+    /// 客户端，包含一个客户端的信息
+    /// </summary>
     public class ClientModel
     {
         public int ClientId;        //2
@@ -50,6 +53,9 @@ namespace NSmartProxy.Data
         }
     }
 
+    /// <summary>
+    /// 一个App
+    /// </summary>
     public class App
     {
         //id需要大于1，否则会有很多问题
@@ -57,6 +63,9 @@ namespace NSmartProxy.Data
         public int Port;            //2
     }
 
+    /// <summary>
+    /// 客户端和appid的组合
+    /// </summary>
     public class ClientIdAppId
     {
         public int ClientId;        //2
@@ -81,13 +90,17 @@ namespace NSmartProxy.Data
         }
     }
 
-    public class ClientApp
-    {
-        public int ClientId;
-        public int AppId;
-        public int TargetServicePort;
-    }
 
+    //public class ClientApp
+    //{
+    //    public int ClientId;
+    //    public int AppId;
+    //    public int TargetServicePort;
+    //}
+
+    /// <summary>
+    /// 客户端向服务端申请新app的请求包
+    /// </summary>
     public class ClientNewAppRequest
     {
         public int ClientId;    //2
@@ -108,5 +121,12 @@ namespace NSmartProxy.Data
                 ClientCount = bytes[2]
             };
         }
+    }
+
+    public class ClientApp
+    {
+        public int AppId;
+        public string IP;
+        public int TargetServicePort;
     }
 }

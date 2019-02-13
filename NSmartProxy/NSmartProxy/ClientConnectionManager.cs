@@ -1,5 +1,6 @@
 ﻿using NSmartProxy.Data;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -13,12 +14,23 @@ namespace NSmartProxy
         public int ClientID;
         public int AppID;
     }
+    public class AppChangedEventArgs : EventArgs
+    {
+        public ClientIDAppID App;
+    }
+
     public class ClientConnectionManager
     {
+        /// <summary>
+        /// 当app增加时触发
+        /// </summary>
+        public event EventHandler<AppChangedEventArgs> AppAdded = delegate { };
+        public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
+
         //端口和ClientIDAppID的映射关系
-        public Dictionary<int, ClientIDAppID> PortAppMap;
+        public Dictionary<int, ClientIDAppID> PortAppMap = new Dictionary<int, ClientIDAppID>();
         //app和代理客户端socket之间的映射关系
-        public Dictionary<ClientIDAppID, List<TcpClient>> AppTcpClientMap = new Dictionary<ClientIDAppID, List<TcpClient>>();
+        public ConcurrentDictionary<ClientIDAppID, List<TcpClient>> AppTcpClientMap = new ConcurrentDictionary<ClientIDAppID, List<TcpClient>>();
 
         //已注册的clientID,和appid之间的关系,appid序号=元素下标序号+1
         public Dictionary<int, List<ClientIDAppID>> RegisteredClient = new Dictionary<int, List<ClientIDAppID>>();
@@ -48,15 +60,35 @@ namespace NSmartProxy
             {
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
                 Console.WriteLine("已建立一个空连接");
-                //立即侦听一次并且分配连接
-                byte[] bytes = new byte[4];
-                await incomeClient.GetStream().ReadAsync(bytes);
-                var clientIdAppId = GetAppFromBytes(bytes);
-                //根据不同的服务端appid安排不同的连接池
-                AppTcpClientMap[clientIdAppId].Add(incomeClient);
+                ProcessInComeRequest(incomeClient);
                 //AddClient(GetTcpTunnelFromBytes(bytes), incomeClient);
             }
 
+        }
+
+        /// <summary>
+        /// 处理消息
+        /// </summary>
+        /// <param name="incomeClient"></param>
+        /// <returns></returns>
+        private async Task ProcessInComeRequest(TcpClient incomeClient)
+        {
+            //立即侦听一次并且分配连接
+            byte[] bytes = new byte[4];
+            await incomeClient.GetStream().ReadAsync(bytes);
+
+            var clientIdAppId = GetAppFromBytes(bytes);
+            Console.WriteLine("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
+                + "AppID:" + clientIdAppId.AppID.ToString()
+                );
+            //根据不同的服务端appid安排不同的连接池
+            lock (_lockObject)
+            {
+                AppTcpClientMap.GetOrAdd(clientIdAppId, new List<TcpClient>()).Add(incomeClient);
+            }
+            var arg = new AppChangedEventArgs();
+            arg.App = clientIdAppId;
+            AppAdded(this, arg);
         }
 
         //可能要改成字典
@@ -79,6 +111,7 @@ namespace NSmartProxy
             ClientIDAppID clientappid = PortAppMap[consumerPort];
             TcpClient client = AppTcpClientMap[clientappid][0];
             AppTcpClientMap[clientappid].Remove(client);
+            AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
             //ServiceClientsDict[port][0]
             //return ServiceClientQueueCollection[tcpTunnel].Dequeue();
@@ -150,7 +183,7 @@ namespace NSmartProxy
                     };
 
 
-            }
+                }
             }
             return clientModel.ToBytes();
         }

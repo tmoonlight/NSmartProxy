@@ -58,14 +58,7 @@ namespace NSmartProxy
                 var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
                 //
-
-                //get consumer client first.
-                foreach (var kv in ConnectionManager.PortAppMap)
-                {
-                    //TcpTunnel tunnel = kv.Value;
-                    var taskResultConsumer = AcceptConsumeAsync(kv.Key, accepting.Token);
-                }
-
+                ConnectionManager.AppAdded += ConnectionManager_AppAdded;
 
                 await Task.Delay(6000000); //block here to hold open the server
             }
@@ -80,6 +73,27 @@ namespace NSmartProxy
                 //listenerConsumer.Stop();
                 listenerServiceClient.Stop();
             }
+        }
+
+        /// <summary>
+        /// 有连接连上则开始侦听新的端口
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConnectionManager_AppAdded(object sender, AppChangedEventArgs e)
+        {
+            Console.WriteLine("added事件已触发");
+            int port = 0;
+            foreach (var kv in ConnectionManager.PortAppMap)
+            {
+                if (kv.Value.AppID == e.App.AppID &&
+                    kv.Value.ClientID == e.App.ClientID) port = kv.Key;
+            }
+            //int port =  e.App
+            if (port == 0) throw new Exception("app未注册");
+            var ct = new CancellationToken();
+            Task tsk = AcceptConsumeAsync(port, ct);
+            //if (tsk.Exception != null) Console.WriteLine(tsk.Exception.Message);
         }
 
         #region 配置
@@ -99,6 +113,7 @@ namespace NSmartProxy
                 byte[] appRequestBytes = new byte[4];
                 listenerConfigService.Start(100);
                 var listener = await listenerConfigService.AcceptTcpClientAsync();
+                Console.WriteLine("config request received.");
                 var nstream = listener.GetStream();
                 int resultByte = await nstream.ReadAsync(appRequestBytes);
 
@@ -122,14 +137,14 @@ namespace NSmartProxy
         /// <returns></returns>
         async Task AcceptConsumeAsync(int consumerPort, CancellationToken ct)
         {
-            var consumerlistener = new TcpListener(IPAddress.Any,consumerPort);
+            var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
             consumerlistener.Start(1000);
             //给两个listen，同时监听3端
             var clientCounter = 0;
             while (!ct.IsCancellationRequested)
             {
                 //目标的代理服务联通了，才去处理consumer端的请求。
-                Console.WriteLine("listening serviceClient....");
+                Console.WriteLine("listening serviceClient....Port:" + consumerPort);
                 TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
                 Console.WriteLine("consumer已连接");
                 //连接成功 连接provider端
