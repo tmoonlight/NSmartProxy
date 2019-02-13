@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NSmartProxy.Data
 {
-    public class Client
+    public class ClientModel
     {
         public int ClientId;        //2
         public List<App> AppList;   //3 * N
@@ -22,22 +23,26 @@ namespace NSmartProxy.Data
             return listBytes.ToArray();
         }
 
-        public static Client GetFromBytes(byte[] bytes)
+        public static ClientModel GetFromBytes(byte[] bytes, int totalLength = 0)
         {
-            Client client = new Client();
-            client.ClientId = bytes[0] << 8 + bytes[1];
+            if (totalLength == 0)
+            {
+                totalLength = bytes.Length;
+            }
+            ClientModel client = new ClientModel();
+            client.ClientId = (bytes[0] << 8) + bytes[1];
             client.AppList = new List<App>();
-            int appCount = (bytes.Length - 2) / 3;
-            if (((bytes.Length - 2) % 3) > 0)
+            int appCount = (totalLength - 2) / 3;
+            if (((totalLength - 2) % 3) > 0)
             {
                 throw new Exception("error format");
             }
-            for (int i = 2; i < appCount; i++)
+            for (int i = 0; i < appCount; i++)
             {
                 App app = new App()
                 {
                     AppId = bytes[2 + 3 * i],
-                    Port = bytes[3 + 3 * i] << 8 + bytes[4 + 3 * i]
+                    Port = (bytes[3 + 3 * i] << 8) + bytes[4 + 3 * i]
                 };
                 client.AppList.Add(app);
             }
@@ -56,6 +61,52 @@ namespace NSmartProxy.Data
     {
         public int ClientId;        //2
         public int AppId;           //1
+        public byte[] ToBytes()
+        {
+            byte[] bytes = new byte[3];
+            byte[] clientIdBytres = StringUtil.IntTo2Bytes(ClientId);
+            bytes[0] = clientIdBytres[0];
+            bytes[1] = clientIdBytres[1];
+            bytes[2] = (byte)AppId;
+            return bytes;
+        }
 
+        public static ClientIdAppId GetFromBytes(byte[] bytes)
+        {
+            return new ClientIdAppId
+            {
+                ClientId = StringUtil.DoubleBytesToInt(bytes[0], bytes[1]),
+                AppId = bytes[2]
+            };
+        }
+    }
+
+    public class ClientApp
+    {
+        public int ClientId;
+        public int AppId;
+        public int TargetServicePort;
+    }
+
+    public class ClientNewAppRequest
+    {
+        public int ClientId;    //2
+        public int ClientCount; //1
+        public byte[] ToBytes()
+        {
+            byte[] bytes = new byte[3];
+            byte[] clientIdBytres = StringUtil.IntTo2Bytes(ClientId);
+            bytes[0] = clientIdBytres[0];
+            bytes[2] = (byte)ClientCount;
+            return bytes;
+        }
+        public static ClientNewAppRequest GetFromBytes(byte[] bytes)
+        {
+            return new ClientNewAppRequest
+            {
+                ClientId = StringUtil.DoubleBytesToInt(bytes[0], bytes[1]),
+                ClientCount = bytes[2]
+            };
+        }
     }
 }

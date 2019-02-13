@@ -60,10 +60,10 @@ namespace NSmartProxy
                 //
 
                 //get consumer client first.
-                foreach (var kv in ConnectionManager.ServiceClientsDict)
+                foreach (var kv in ConnectionManager.PortAppMap)
                 {
                     //TcpTunnel tunnel = kv.Value;
-                    var taskResultConsumer = AcceptConsumeAsync(tunnel, accepting.Token);
+                    var taskResultConsumer = AcceptConsumeAsync(kv.Key, accepting.Token);
                 }
 
 
@@ -96,18 +96,18 @@ namespace NSmartProxy
         {
             while (1 == 1)
             {
-                byte[] fourBytes = new byte[4];
+                byte[] appRequestBytes = new byte[4];
                 listenerConfigService.Start(100);
                 var listener = await listenerConfigService.AcceptTcpClientAsync();
                 var nstream = listener.GetStream();
-                int resultByte = await nstream.ReadAsync(fourBytes);
+                int resultByte = await nstream.ReadAsync(appRequestBytes);
 
                 if (resultByte == 0)
                 {
                     Console.WriteLine("invalid request");
                 }
 
-                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(fourBytes);
+                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
                 await nstream.WriteAsync(arrangedIds);
             }
         }
@@ -120,8 +120,9 @@ namespace NSmartProxy
         /// <param name="consumerlistener"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        async Task AcceptConsumeAsync(TcpTunnel tcpTunnel ,TcpListener consumerlistener, CancellationToken ct)
+        async Task AcceptConsumeAsync(int consumerPort, CancellationToken ct)
         {
+            var consumerlistener = new TcpListener(IPAddress.Any,consumerPort);
             consumerlistener.Start(1000);
             //给两个listen，同时监听3端
             var clientCounter = 0;
@@ -134,7 +135,7 @@ namespace NSmartProxy
                 //连接成功 连接provider端
                 clientCounter++;
                 //需要端口
-                TcpClient s2pClient = ConnectionManager.GetClient(tcpTunnel);
+                TcpClient s2pClient = ConnectionManager.GetClient(consumerPort);
 
                 Task transferResult = TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
             }

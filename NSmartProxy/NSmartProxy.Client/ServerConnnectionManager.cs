@@ -1,4 +1,5 @@
 ﻿using NSmartProxy.Client;
+using NSmartProxy.Data;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -11,6 +12,7 @@ namespace NSmartProxy
     public class ClientGroupEventArgs : EventArgs
     {
         public IEnumerable<TcpClient> NewClients;
+        public ClientIdAppId App;
     }
 
     public class ServerConnnectionManager
@@ -23,18 +25,22 @@ namespace NSmartProxy
             //获取服务端配置信息
             //测试 ，暂时设置为3
             //int length = Apps.Length
-            byte[] configBytes = ReadConfigFromProvider();
-            //※要求服务端分配资源并获取服务端配置※，待完善
+            ClientModel clientModel = ReadConfigFromProvider();
+            //要求服务端分配资源并获取服务端配置，待完善
             //Console.WriteLine(config[0] + "!!!!!!!!!");
             //唯一的clientid
-            ClientID = configBytes[0] << 8 + configBytes[1];
+            this.ClientID = clientModel.ClientId;
             //分配appid
-            ServiceClientListCollection = new Dictionary<int, List<TcpClient>>();
-            for (int i = 2; i < configBytes.Length; i++)
+            ServiceClientListCollection = new Dictionary<int, ClientAppWorker>();
+            for (int i = 0; i < clientModel.AppList.Count; i++)
             {
-                if (configBytes[i] == 0)
-                    break;
-                ServiceClientListCollection.Add((int)configBytes[i], new List<TcpClient>());
+                var app = clientModel.AppList[i];
+                ServiceClientListCollection.Add(clientModel.AppList[i].AppId, new ClientAppWorker()
+                {
+                    AppId = app.AppId,
+                    Port = app.Port,
+                    TcpClientGroup = new List<TcpClient>(MAX_CONNECT_SIZE)
+                });
             }
             //arrangedAppid = configBytes[]
 
@@ -45,16 +51,17 @@ namespace NSmartProxy
         /// 从服务端读取配置
         /// </summary>
         /// <returns></returns>
-        private static byte[] ReadConfigFromProvider()
+        private static ClientModel ReadConfigFromProvider()
         {
             TcpClient configClient = new TcpClient();
             configClient.Connect(ClientRouter.PROVIDER_ADDRESS, ClientRouter.PROVIDER_CONFIG_SERVICE_PORT);
             var configStream = configClient.GetStream();
-            byte[] fourBytes = new byte[4] { 0, 0, 3, 0 };
-            configStream.Write(fourBytes);
+
+            //byte[] fourBytes = new byte[4] { 0, 0, 3, 0 };
+            configStream.Write(new ClientNewAppRequest { ClientId = 0, ClientCount = 3 }.ToBytes());
             byte[] config = new byte[256];
-            configStream.Read(config);
-            return config;
+            int readBytesCount = configStream.Read(config);
+            return ClientModel.GetFromBytes(config, readBytesCount);
         }
 
         public static event EventHandler ClientGroupConnected;
@@ -62,7 +69,7 @@ namespace NSmartProxy
         {
             if (ClientID == 0) { Console.WriteLine("error:未连接客户端"); return; };
             int hungryNumber = MAX_CONNECT_SIZE / 2;
-            byte[] clientBytes = StringUtil.IntToBytes(ClientID);
+            byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
             //侦听，并且构造连接池
             //throw new NotImplementedException();
             //int currentClientCount = ServiceClientQueue.Count;
@@ -70,14 +77,15 @@ namespace NSmartProxy
             foreach (var kv in ServiceClientListCollection)
             {
                 int appid = kv.Key;
-                byte[] requestBytes = StringUtil.Generate1stRequestBytes(ClientID,appid);
+                ClientAppWorker app = kv.Value;
+                byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
                 taskList.Add(Task.Run(async () =>
                 {
                     while (1 == 1)
                     {
 
                         int activeClientCount = 0;
-                        foreach (TcpClient c in ServiceClientListCollection[appid])
+                        foreach (TcpClient c in app.TcpClientGroup)
                         {
                             if (c.Connected) activeClientCount++;
                         }
@@ -93,10 +101,13 @@ namespace NSmartProxy
                                 client.Connect(ClientRouter.PROVIDER_ADDRESS, ClientRouter.PROVIDER_ADDRESS_PORT);
                                 //连完了马上发送端口信息过去，方便服务端分配
                                 client.GetStream().Write(requestBytes);
-                                ServiceClientListCollection[appid].Add(client);
+                                app.TcpClientGroup.Add(client);
                                 clientList.Add(client);
                             }
-                            ClientGroupConnected(this, new ClientGroupEventArgs() { NewClients = clientList });
+                            ClientGroupConnected(this, new ClientGroupEventArgs() {
+                                NewClients = clientList,
+                                App = new ClientIdAppId { ClientId = ClientID, AppId = appid
+                             } });
                         }
                         await Task.Delay(2000);
                         //currentClientCount = ServiceClientQueue.Count;
@@ -108,14 +119,14 @@ namespace NSmartProxy
             Console.WriteLine(resultTask.Exception?.ToString());
         }
 
-        //可能要改成字典
-        private Dictionary<int, List<TcpClient>> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
+        //key:appid value;ClientApp
+        private Dictionary<int, ClientAppWorker> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
         private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
         //Queue<TcpClient> IdleClientsQueue = new Queue<TcpClient>();
-        public void AddClient(int appId, TcpClient client)
-        {
-            ServiceClientListCollection[appId].Add(client);
-        }
+        //public void AddClient(int appId, TcpClient client)
+        //{
+        //    ServiceClientListCollection[appId].Add(client);
+        //}
 
         public static ServerConnnectionManager GetInstance()
         {
@@ -124,7 +135,7 @@ namespace NSmartProxy
 
         public TcpClient RemoveClient(int appId, TcpClient client)
         {
-            if (ServiceClientListCollection[appId].Remove(client))
+            if (ServiceClientListCollection[appId].TcpClientGroup.Remove(client))
 
                 return client;
             else

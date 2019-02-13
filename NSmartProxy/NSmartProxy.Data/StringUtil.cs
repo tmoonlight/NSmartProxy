@@ -9,7 +9,10 @@ namespace NSmartProxy
     {
         public static byte[] IntTo2Bytes(int number)
         {
-            return System.BitConverter.GetBytes(number).Take(2).ToArray();
+            byte[] bytes = new byte[2];
+            bytes[0] = (byte)(number / 256);
+            bytes[1] = (byte)(number % 256);
+            return bytes;
         }
 
         /// <summary>
@@ -18,12 +21,23 @@ namespace NSmartProxy
         /// <param name="clientID"></param>
         /// <param name="appid"></param>
         /// <returns></returns>
-        public static byte[] Generate1stRequestBytes(int clientID, int appid)
+        public static byte[] ClientIDAppIdToBytes(int clientID, int appid)
         {
             byte[] bytes = IntTo2Bytes(clientID);
             bytes[2] = (byte)appid;
 
             return bytes.Take(3).ToArray();
+        }
+
+        /// <summary>
+        /// 双字节转整型
+        /// </summary>
+        /// <param name="hByte"></param>
+        /// <param name="lByte"></param>
+        /// <returns></returns>
+        public static int DoubleBytesToInt(byte hByte, byte lByte)
+        {
+            return (hByte << 8) + lByte;
         }
     }
 }

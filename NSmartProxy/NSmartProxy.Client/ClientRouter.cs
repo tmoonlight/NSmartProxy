@@ -21,7 +21,8 @@ namespace NSmartProxy.Client
         CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
-      
+        public Dictionary<int, int> AppPortMap;  //key:appid,value:servicetargetport 目标端口
+
         /// <summary>
         /// 重要：连接服务端
         /// </summary>
@@ -39,20 +40,21 @@ namespace NSmartProxy.Client
             {
 
                 Console.WriteLine("开启连接");
-                OpenTrasferation(providerClient);
+                OpenTrasferation(args.App.AppId, providerClient);
             }
 
         }
 
-        private async Task OpenTrasferation(TcpClient providerClient)
+        private async Task OpenTrasferation(int appId, TcpClient providerClient)
         {
             byte[] buffer = new byte[4096];
             var providerClientStream = providerClient.GetStream();
             int readByteCount = await providerClientStream.ReadAsync(buffer);
             //从空闲连接列表中移除
-            ConnnectionManager.RemoveClient(providerClient);
-            Console.WriteLine("接受到首条信息");
+            ConnnectionManager.RemoveClient(appId, providerClient);
+            Console.WriteLine(appId + "接受到首条信息");
             TcpClient toTargetServer = new TcpClient();
+            //※根据clientid_appid发送到固定的端口※
             toTargetServer.Connect(TARGET_SERVICE_ADDRESS, TARGET_SERVICE_ADDRESS_PORT);
             NetworkStream targetServerStream = toTargetServer.GetStream();
             targetServerStream.Write(buffer, 0, readByteCount);
@@ -77,14 +79,14 @@ namespace NSmartProxy.Client
         }
 
 
-       
+
         private async Task<string> StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
             await fromStream.CopyToAsync(toStream, ct);
             return signal;
         }
 
-     
+
         private async Task<string> ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
 
