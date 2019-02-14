@@ -32,9 +32,9 @@ namespace NSmartProxy.Client
         public async Task ConnectToProvider()
         {
             appIdIpPortConfig = new List<ClientApp>() {
-                new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 80 },
-                new ClientApp(){AppId = 0, IP = "192.168.1.2", TargetServicePort = 80 },
-                new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 80 }
+                new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 10001 },
+                new ClientApp(){AppId = 0, IP = "192.168.1.2", TargetServicePort = 10002 },
+                new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 10003 }
             };
 
 
@@ -56,7 +56,15 @@ namespace NSmartProxy.Client
                     counter++;
                 }
             }
-
+            Console.WriteLine("**********port list*******");
+            
+            foreach (var ap in clientModel.AppList)
+            {
+                //Console.WriteLine("*                        *");
+                //Console.SetCursorPosition(1)
+                Console.WriteLine(ap.AppId.ToString() + ":" + ap.Port.ToString());
+            }
+            Console.WriteLine("**************************");
             await ConnnectionManager.PollingToProvider();
         }
 
@@ -75,15 +83,15 @@ namespace NSmartProxy.Client
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
         {
             byte[] buffer = new byte[4096];
-            var providerClientStream = providerClient.GetStream();
+            NetworkStream providerClientStream = providerClient.GetStream();
             //接收首条消息，首条消息中返回的是appid和客户端
             int readByteCount = await providerClientStream.ReadAsync(buffer);
             //从空闲连接列表中移除
             ConnnectionManager.RemoveClient(appId, providerClient);
             Console.WriteLine(appId + "接受到首条信息");
             TcpClient toTargetServer = new TcpClient();
-            //※根据clientid_appid发送到固定的端口※
-            var item = appIdIpPortConfig.First((obj) => obj.AppId == appId);
+            //根据clientid_appid发送到固定的端口
+            ClientApp item = appIdIpPortConfig.First((obj) => obj.AppId == appId);
             // item1:app编号，item2:ip地址，item3:目标服务端口
             toTargetServer.Connect(item.IP, item.TargetServicePort);
             NetworkStream targetServerStream = toTargetServer.GetStream();

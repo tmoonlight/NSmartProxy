@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace NSmartProxy.ServerHost
 {
@@ -6,7 +7,14 @@ namespace NSmartProxy.ServerHost
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("*** NSmart Server v0.1 ***");
+            Server srv = new Server();
+            Task.Run(async () =>
+            {
+                await srv.Start(); 
+            }).GetAwaiter().GetResult();
+            Console.WriteLine("NSmart server stopped. Press any key to continue.");
+            Console.Read();
         }
     }
 }

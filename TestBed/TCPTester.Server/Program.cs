@@ -12,7 +12,9 @@ namespace TCPTester.Server
     {
         static void Main(string[] args)
         {
-            TcpListener tcpListener = TcpListener.Create(12306);
+            int port = int.Parse(args[0]);
+            Console.WriteLine("start listen " + port.ToString());
+            TcpListener tcpListener = TcpListener.Create(port);
             tcpListener.Start();
             TcpClient client = null;
             CancellationTokenSource cts = null;

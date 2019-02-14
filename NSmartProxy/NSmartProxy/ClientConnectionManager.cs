@@ -54,7 +54,7 @@ namespace NSmartProxy
         private async Task ListenServiceClient()
         {
             //侦听，并且构造连接池
-            TcpListener listenter = new TcpListener(IPAddress.Any, Server.CLIENT_SERVER_PORT);
+            TcpListener listenter = new TcpListener(IPAddress.Any, Server.ClientServicePort);
             listenter.Start(1000);
             while (1 == 1)
             {
@@ -187,21 +187,6 @@ namespace NSmartProxy
             }
             return clientModel.ToBytes();
         }
-
-        ///// <summary>
-        ///// 解析客户端请求的tcp连接分类
-        ///// </summary>
-        ///// <param name="bytes"></param>
-        ///// <returns></returns>
-        //private TcpTunnel GetTcpTunnelFromBytes(byte[] bytes)
-        //{
-        //    return new TcpTunnel()
-        //    {
-        //        ClientID = (bytes[0] << 8) + bytes[1],
-        //        AppID = bytes[2],
-        //        Port = 0
-        //    };
-        //}
 
         private ClientIDAppID GetAppFromBytes(byte[] bytes)
         {

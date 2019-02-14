@@ -11,9 +11,10 @@ namespace TCPTester.Client
     {
         static void Main(string[] args)
         {
+            int port = int.Parse(args[0]);
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect("192.168.1.2", 2344);
-         //tcpClient.Connect("192.168.1.2", 12306);
+            tcpClient.Connect("192.168.1.2", port);
+            //tcpClient.Connect("192.168.1.2", 12306);
             var stream = tcpClient.GetStream();
 
             Task.Run(() =>

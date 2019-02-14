@@ -33,10 +33,10 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-        //固定端口，不会改变
-        public const int CLIENT_SERVER_PORT = 9973;
-        // public const int CONSUMER_PORT = 2344;
-        public const int CONFIG_SERVICE_PORT = 12307;
+        //服务端代理转发端口
+        public static int ClientServicePort = 9973;
+        //服务端配置通讯端口
+        public static int ConfigServicePort = 12307;
 
         public ClientConnectionManager ConnectionManager = null;
         public async Task Start()
@@ -46,9 +46,9 @@ namespace NSmartProxy
 
             // TcpListener listenerConsumer = new TcpListener(IPAddress.Any, CONSUMER_PORT);
 
-            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, CLIENT_SERVER_PORT);
+            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, ClientServicePort);
 
-            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, CONFIG_SERVICE_PORT);
+            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
 
             try
             {
