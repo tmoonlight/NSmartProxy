@@ -27,10 +27,10 @@ namespace NSmartProxy
             Configuration = builder.Build();
 
             //start clientrouter.
-            StartServer();
+            StartClient();
         }
 
-        private static void StartServer()
+        private static void StartClient()
         {
             Router clientRouter = new Router();
             //read config from config file.

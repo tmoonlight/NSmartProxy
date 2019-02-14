@@ -41,19 +41,13 @@ namespace NSmartProxy
             Task.Run(ListenServiceClient);
         }
 
-        /// <summary>
-        /// 客户端，appid，端口映射
-        /// </summary>
-        // public Dictionary<int, List<TcpTunnel>> ServiceClientsDict = new Dictionary<int, List<TcpTunnel>>();
-        //port->tcptunnels->tcpclients
-        // private Dictionary<TcpTunnel, Queue<TcpClient>> ServiceClientQueueCollection = new Dictionary<TcpTunnel, Queue<TcpClient>>();
-
         private object _lockObject = new Object();
         private object _lockObject2 = new Object();
         private Random _rand = new Random();
         private async Task ListenServiceClient()
         {
             //侦听，并且构造连接池
+            Console.WriteLine("Listening client on port " + Server.ClientServicePort + "...");
             TcpListener listenter = new TcpListener(IPAddress.Any, Server.ClientServicePort);
             listenter.Start(1000);
             while (1 == 1)
@@ -61,7 +55,6 @@ namespace NSmartProxy
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
                 Console.WriteLine("已建立一个空连接");
                 ProcessInComeRequest(incomeClient);
-                //AddClient(GetTcpTunnelFromBytes(bytes), incomeClient);
             }
 
         }
@@ -91,14 +84,8 @@ namespace NSmartProxy
             AppAdded(this, arg);
         }
 
-        //可能要改成字典
-        //private Queue<TcpClient> ServiceClientQueue = new Queue<TcpClient>();
 
         private static ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
-        //public void AddClient(TcpTunnel tcpTunnel, TcpClient client)
-        //{
-        //    ServiceClientQueueCollection[tcpTunnel].Enqueue(client);
-        //}
 
         public static ClientConnectionManager GetInstance()
         {
@@ -113,8 +100,6 @@ namespace NSmartProxy
             AppTcpClientMap[clientappid].Remove(client);
             AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
-            //ServiceClientsDict[port][0]
-            //return ServiceClientQueueCollection[tcpTunnel].Dequeue();
         }
 
         //通过客户端的id请求，分配好服务端端口和appid交给客户端

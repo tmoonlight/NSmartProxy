@@ -33,21 +33,10 @@ namespace NSmartProxy.Client
         public async Task ConnectToProvider()
         {
             var appIdIpPortConfig = ClientConfig.Clients;
-            //appIdIpPortConfig = new List<ClientApp>() {
-            //    new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 10001 },
-            //    new ClientApp(){AppId = 0, IP = "192.168.1.2", TargetServicePort = 10002 },
-            //    new ClientApp(){AppId = 0, IP = "127.0.0.1", TargetServicePort = 10003 }
-            //};
-
 
             ConnnectionManager = ServerConnnectionManager.GetInstance();
             ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
             var clientModel = ConnnectionManager.InitConfig();
-            //foreach (var kv in ConnnectionManager.ServiceClientListCollection)
-            //{
-            //    ClientAppWorker caw = kv.Value;
-            //    appIdIpPortConfig.First((obj) => obj.TargetServicePort == caw.Port).AppId = caw.AppId;
-            //}
             int counter = 0;
             //appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
@@ -63,8 +52,6 @@ namespace NSmartProxy.Client
             foreach (var ap in clientModel.AppList)
             {
                 var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
-                //Console.WriteLine("*                        *");
-                //Console.SetCursorPosition(1)
                 Console.WriteLine(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
                      cApp.IP + ":" + cApp.TargetServicePort);
             }

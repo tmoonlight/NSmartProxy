@@ -23,17 +23,6 @@ namespace NSmartProxy.Client
         private ServerConnnectionManager()
         {
             Console.WriteLine("ServerConnnectionManager initialized.");
-            //获取服务端配置信息
-            //测试 ，暂时设置为3
-            //int length = Apps.Length
-
-
-            //arrangedAppid = configBytes[]
-
-            ///
-            /// var tsk = Task.Run(PollingToProvider);
-            /// tsk.Wait();
-            ///   if (tsk.Exception != null) { Console.WriteLine(tsk.Exception.Message); };
         }
 
         /// <summary>
@@ -131,7 +120,7 @@ namespace NSmartProxy.Client
                                 //连完了马上发送端口信息过去，方便服务端分配
                                 client.GetStream().Write(requestBytes, 0, requestBytes.Length);
                                 Console.WriteLine("ClientID:" + ClientID.ToString()
-                                    + "AppId:" + appid.ToString() + " 已连接");
+                                    + " AppId:" + appid.ToString() + " 已连接");
                                 app.TcpClientGroup.Add(client);
                                 clientList.Add(client);
                             }
@@ -146,7 +135,6 @@ namespace NSmartProxy.Client
                             });
                         }
                         await Task.Delay(2000);
-                        //currentClientCount = ServiceClientQueue.Count;
                     }
                 })
                );
@@ -158,11 +146,6 @@ namespace NSmartProxy.Client
         //key:appid value;ClientApp
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
         private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
-        //Queue<TcpClient> IdleClientsQueue = new Queue<TcpClient>();
-        //public void AddClient(int appId, TcpClient client)
-        //{
-        //    ServiceClientListCollection[appId].Add(client);
-        //}
 
         public static ServerConnnectionManager GetInstance()
         {

@@ -7,6 +7,11 @@ namespace NSmartProxy
 {
     public class StringUtil
     {
+        /// <summary>
+        /// 整型转双字节
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
         public static byte[] IntTo2Bytes(int number)
         {
             byte[] bytes = new byte[2];

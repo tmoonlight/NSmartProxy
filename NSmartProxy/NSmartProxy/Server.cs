@@ -43,11 +43,6 @@ namespace NSmartProxy
         {
             ConnectionManager = ClientConnectionManager.GetInstance();
             CancellationTokenSource accepting = new CancellationTokenSource();
-
-            // TcpListener listenerConsumer = new TcpListener(IPAddress.Any, CONSUMER_PORT);
-
-            TcpListener listenerServiceClient = new TcpListener(IPAddress.Any, ClientServicePort);
-
             TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
 
             try
@@ -55,6 +50,7 @@ namespace NSmartProxy
 
 
                 Console.WriteLine("NSmart server started");
+                Console.WriteLine("Listening config request on port " + ConfigServicePort.ToString() + "...");
                 var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
                 //
@@ -71,7 +67,6 @@ namespace NSmartProxy
                 Console.WriteLine("all closed");
                 accepting.Cancel();
                 //listenerConsumer.Stop();
-                listenerServiceClient.Stop();
             }
         }
 
