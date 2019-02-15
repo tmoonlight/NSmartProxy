@@ -21,11 +21,13 @@ namespace NSmartProxy
         /// <returns>The first available port</returns> 
         public static int[] FindAvailableTCPPorts(int startPort, int PortCount)
         {
+            int[] arrangedPorts = new int[PortCount];
             int port = startPort;
             bool isAvailable = true;
 
             var mutex = new Mutex(false,
-                string.Concat("Global/", PortReleaseGuid));
+                PortReleaseGuid
+                /*string.Concat("./Global/", PortReleaseGuid)*/);
             mutex.WaitOne();
             try
             {
@@ -59,10 +61,10 @@ namespace NSmartProxy
 
                     if (!isAvailable)
                         throw new ApplicationException("Not able to find a free TCP port.");
-
+                    arrangedPorts[i] = port;
                     _usedPorts.Add(port);
                 }
-                return _usedPorts.ToArray();
+                return arrangedPorts;
             }
             finally
             {

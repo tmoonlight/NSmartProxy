@@ -145,6 +145,8 @@ namespace NSmartProxy
                 int maxAppCount = RegisteredClient[clientId].Count;
                 //增加请求的客户端
                 int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
+                foreach (var oneport in ports) Console.Write(oneport + " ");
+                Console.WriteLine(" <=端口已分配。");
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {

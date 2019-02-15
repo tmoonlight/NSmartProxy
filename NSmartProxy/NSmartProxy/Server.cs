@@ -105,21 +105,36 @@ namespace NSmartProxy
         {
             while (1 == 1)
             {
-                byte[] appRequestBytes = new byte[4];
+
                 listenerConfigService.Start(100);
-                var listener = await listenerConfigService.AcceptTcpClientAsync();
-                Console.WriteLine("config request received.");
-                var nstream = listener.GetStream();
-                int resultByte = await nstream.ReadAsync(appRequestBytes);
+                var client = await listenerConfigService.AcceptTcpClientAsync();
+                ProcessConfigRequestAsync(client);
+            }
+        }
 
-                if (resultByte == 0)
-                {
-                    Console.WriteLine("invalid request");
-                }
+        private async Task ProcessConfigRequestAsync(TcpClient client)
+        {
+            byte[] appRequestBytes = new byte[4];
+            Console.WriteLine("config request received.");
+            var nstream = client.GetStream();
+            int resultByte = await nstream.ReadAsync(appRequestBytes);
+            Console.WriteLine("appRequestBytes received.");
+            if (resultByte == 0)
+            {
+                Console.WriteLine("invalid request");
+            }
 
+            try
+            {
                 byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
+                Console.WriteLine("apprequest arranged");
                 await nstream.WriteAsync(arrangedIds);
             }
+            catch (Exception ex)
+            { Console.WriteLine(ex.ToString()); }
+
+           
+            Console.WriteLine("arrangedIds writed.");
         }
         #endregion
 

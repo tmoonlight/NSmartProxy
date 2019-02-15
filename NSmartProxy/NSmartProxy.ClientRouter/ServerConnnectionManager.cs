@@ -74,6 +74,7 @@ namespace NSmartProxy.Client
             }.ToBytes(), 0, requestBytes.Length);
             byte[] serverConfig = new byte[256];
             int readBytesCount = configStream.Read(serverConfig, 0, serverConfig.Length);
+            if (readBytesCount == 0) Console.WriteLine("服务器状态异常，已断开连接");
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
 
