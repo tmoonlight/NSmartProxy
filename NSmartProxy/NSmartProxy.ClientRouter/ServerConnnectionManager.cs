@@ -29,9 +29,9 @@ namespace NSmartProxy.Client
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
         /// <returns></returns>
-        public ClientModel InitConfig()
+        public async Task<ClientModel> InitConfig()
         {
-            ClientModel clientModel = ReadConfigFromProvider();
+            ClientModel clientModel = await ReadConfigFromProvider();
             //要求服务端分配资源并获取服务端配置，待完善
 
             this.ClientID = clientModel.ClientId;
@@ -54,12 +54,21 @@ namespace NSmartProxy.Client
         /// 从服务端读取配置
         /// </summary>
         /// <returns></returns>
-        private ClientModel ReadConfigFromProvider()
+        private async Task<ClientModel> ReadConfigFromProvider()
         {
+            //c#并发编程经典实例 9.3 超时后取消
             var config = NSmartProxy.Client.Router.ClientConfig;
             Console.WriteLine("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
-            configClient.Connect(config.ProviderAddress, config.ProviderConfigPort);
+            var delayDispose = Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(_ => configClient.Dispose());
+            var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
+            //超时则dispose掉
+            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+            if (!connectAsync.IsCompleted)
+            {
+                throw new Exception("连接超时");
+            }
+
             var configStream = configClient.GetStream();
 
             var requestBytes = new ClientNewAppRequest
@@ -148,9 +157,11 @@ namespace NSmartProxy.Client
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
         private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
 
-        public static ServerConnnectionManager GetInstance()
+
+
+        public static ServerConnnectionManager Create()
         {
-            return Instance;
+            return new ServerConnnectionManager();
         }
 
         public TcpClient RemoveClient(int appId, TcpClient client)

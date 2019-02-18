@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Exception = System.Exception;
 
 namespace NSmartProxy
 {
@@ -27,16 +28,36 @@ namespace NSmartProxy
             Configuration = builder.Build();
 
             //start clientrouter.
-            StartClient();
+            try
+            {
+                StartClient().Wait();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                
+            }
+          
+            Console.WriteLine("client established,press any key to continure.");
+            Console.Read();
         }
 
-        private static void StartClient()
+        private static async Task StartClient()
         {
             Router clientRouter = new Router();
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             Task tsk = clientRouter.ConnectToProvider();
-            Console.Read();
+            try
+            {
+                await tsk;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+           
         }
 
         private static void SetConfig(Router clientRouter)

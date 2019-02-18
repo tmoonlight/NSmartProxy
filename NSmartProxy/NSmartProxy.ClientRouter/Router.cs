@@ -34,9 +34,9 @@ namespace NSmartProxy.Client
         {
             var appIdIpPortConfig = ClientConfig.Clients;
 
-            ConnnectionManager = ServerConnnectionManager.GetInstance();
+            ConnnectionManager = ServerConnnectionManager.Create();
             ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
-            var clientModel = ConnnectionManager.InitConfig();
+            var clientModel =await ConnnectionManager.InitConfig();
             int counter = 0;
             //appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
