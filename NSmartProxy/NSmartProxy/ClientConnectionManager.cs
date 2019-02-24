@@ -37,7 +37,7 @@ namespace NSmartProxy
 
         private ClientConnectionManager()
         {
-            Console.WriteLine("ClientManager initialized");
+            Server.Logger.Debug("ClientManager initialized");
             Task.Run(ListenServiceClient);
         }
 
@@ -47,13 +47,13 @@ namespace NSmartProxy
         private async Task ListenServiceClient()
         {
             //侦听，并且构造连接池
-            Console.WriteLine("Listening client on port " + Server.ClientServicePort + "...");
+            Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
             TcpListener listenter = new TcpListener(IPAddress.Any, Server.ClientServicePort);
             listenter.Start(1000);
             while (1 == 1)
             {
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
-                Console.WriteLine("已建立一个空连接");
+                Server.Logger.Debug("已建立一个空连接");
                 ProcessInComeRequest(incomeClient);
             }
 
@@ -71,7 +71,7 @@ namespace NSmartProxy
             await incomeClient.GetStream().ReadAsync(bytes);
 
             var clientIdAppId = GetAppFromBytes(bytes);
-            Console.WriteLine("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
+            Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
                 + "AppID:" + clientIdAppId.AppID.ToString()
                 );
             //根据不同的服务端appid安排不同的连接池

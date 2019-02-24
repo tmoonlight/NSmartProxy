@@ -18,11 +18,11 @@ namespace NSmartProxy.Client
 
     public class ServerConnnectionManager
     {
-        private int MAX_CONNECT_SIZE = 6;
+        private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int ClientID = 0;
         private ServerConnnectionManager()
         {
-            Console.WriteLine("ServerConnnectionManager initialized.");
+            Router.Logger.Debug("ServerConnnectionManager initialized.");
         }
 
         /// <summary>
@@ -56,9 +56,9 @@ namespace NSmartProxy.Client
         /// <returns></returns>
         private async Task<ClientModel> ReadConfigFromProvider()
         {
-            //c#并发编程经典实例 9.3 超时后取消
+            //《c#并发编程经典实例》 9.3 超时后取消
             var config = NSmartProxy.Client.Router.ClientConfig;
-            Console.WriteLine("Reading Config From Provider..");
+            Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
             var delayDispose = Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(_ => configClient.Dispose());
             var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
@@ -83,7 +83,7 @@ namespace NSmartProxy.Client
             }.ToBytes(), 0, requestBytes.Length);
             byte[] serverConfig = new byte[256];
             int readBytesCount = configStream.Read(serverConfig, 0, serverConfig.Length);
-            if (readBytesCount == 0) Console.WriteLine("服务器状态异常，已断开连接");
+            if (readBytesCount == 0) Router.Logger.Debug("服务器状态异常，已断开连接");
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
 
@@ -95,7 +95,7 @@ namespace NSmartProxy.Client
         public async Task PollingToProvider()
         {
             var config = NSmartProxy.Client.Router.ClientConfig;
-            if (ClientID == 0) { Console.WriteLine("error:未连接客户端"); return; };
+            if (ClientID == 0) { Router.Logger.Debug("error:未连接客户端"); return; };
             int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
             //侦听，并且构造连接池
@@ -119,7 +119,7 @@ namespace NSmartProxy.Client
                         }
                         if (activeClientCount < hungryNumber)
                         {
-                            Console.WriteLine("连接已接近饥饿值，扩充连接池");
+                            Router.Logger.Debug("连接已接近饥饿值，扩充连接池");
 
                             var clientList = new List<TcpClient>();
                             //补齐
@@ -129,7 +129,7 @@ namespace NSmartProxy.Client
                                 client.Connect(config.ProviderAddress, config.ProviderPort);
                                 //连完了马上发送端口信息过去，方便服务端分配
                                 client.GetStream().Write(requestBytes, 0, requestBytes.Length);
-                                Console.WriteLine("ClientID:" + ClientID.ToString()
+                                Router.Logger.Debug("ClientID:" + ClientID.ToString()
                                     + " AppId:" + appid.ToString() + " 已连接");
                                 app.TcpClientGroup.Add(client);
                                 clientList.Add(client);
@@ -144,13 +144,13 @@ namespace NSmartProxy.Client
                                 }
                             });
                         }
-                        await Task.Delay(2000);
+                        await Task.Delay(100);
                     }
                 })
                );
             }
             Task resultTask = await Task.WhenAny(taskList);
-            Console.WriteLine(resultTask.Exception?.ToString());
+            Router.Logger.Debug(resultTask.Exception?.ToString());
         }
 
         //key:appid value;ClientApp

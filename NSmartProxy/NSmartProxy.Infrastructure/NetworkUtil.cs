@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace NSmartProxy
 {
-    class NetworkUtil
+    public class NetworkUtil
     {
         private const string PortReleaseGuid = "C086DE94-2C45-4247-81E2-2E5248F5A769";
 

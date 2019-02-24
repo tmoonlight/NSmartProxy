@@ -1,4 +1,5 @@
 ﻿using NSmartProxy.Data;
+using NSmartProxy.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +13,22 @@ namespace NSmartProxy.Client
 {
     public class Router
     {
-        public int provider_port = 9973;// static
+        public int provider_port = 9973;//default value
 
-        public const int PROVIDER_CONFIG_SERVICE_PORT = 12307; //static
+        public const int PROVIDER_CONFIG_SERVICE_PORT = 12307; //default value
         CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
 
         internal static Config ClientConfig;
+
+        //inject
+        internal static INSmartLogger Logger;
+
+        public Router(INSmartLogger logger)
+        {
+            Logger = logger;
+        }
 
         public void SetConifiguration(Config config)
         {
@@ -36,7 +45,7 @@ namespace NSmartProxy.Client
 
             ConnnectionManager = ServerConnnectionManager.Create();
             ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
-            var clientModel =await ConnnectionManager.InitConfig();
+            var clientModel = await ConnnectionManager.InitConfig();
             int counter = 0;
             //appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
@@ -47,7 +56,7 @@ namespace NSmartProxy.Client
                     counter++;
                 }
             }
-            Console.WriteLine("**********port list*******");
+            Console.WriteLine("****************port list*************");
 
             foreach (var ap in clientModel.AppList)
             {
@@ -55,7 +64,7 @@ namespace NSmartProxy.Client
                 Console.WriteLine(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
                      cApp.IP + ":" + cApp.TargetServicePort);
             }
-            Console.WriteLine("**************************");
+            Console.WriteLine("**************************************");
             await ConnnectionManager.PollingToProvider();
         }
 
@@ -65,7 +74,7 @@ namespace NSmartProxy.Client
             foreach (TcpClient providerClient in args.NewClients)
             {
 
-                Console.WriteLine("开启连接");
+                Router.Logger.Debug("开启连接");
                 OpenTrasferation(args.App.AppId, providerClient);
             }
 
@@ -79,7 +88,7 @@ namespace NSmartProxy.Client
             int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
             //从空闲连接列表中移除
             ConnnectionManager.RemoveClient(appId, providerClient);
-            Console.WriteLine(appId + "接受到首条信息");
+            Router.Logger.Debug(appId + "接受到首条信息");
             TcpClient toTargetServer = new TcpClient();
             //根据clientid_appid发送到固定的端口
             ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
@@ -90,13 +99,13 @@ namespace NSmartProxy.Client
             await TcpTransferAsync(providerClientStream, targetServerStream);
             //close connection
             providerClient.Close();
-            Console.WriteLine("关闭一条连接");
+            Router.Logger.Debug("关闭一条连接");
         }
 
 
         private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream)
         {
-            Console.WriteLine("Looping start.");
+            Router.Logger.Debug("Looping start.");
             //创建相互转发流
             var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
             var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
@@ -104,7 +113,7 @@ namespace NSmartProxy.Client
 
             //close connnection,whether client or server stopped transferring.
             var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
-            Console.WriteLine(comletedTask.Result + "传输关闭，重新读取字节");
+            Router.Logger.Debug(comletedTask.Result + "传输关闭，重新读取字节");
         }
 
 

@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NSmartProxy.Interfaces;
 
 namespace NSmartProxy
 {
@@ -39,6 +40,15 @@ namespace NSmartProxy
         public static int ConfigServicePort = 12307;
 
         public ClientConnectionManager ConnectionManager = null;
+
+        //inject
+        internal static INSmartLogger Logger;
+
+        public Server(INSmartLogger logger)
+        {
+            Logger = logger;
+        }
+
         public async Task Start()
         {
             ConnectionManager = ClientConnectionManager.GetInstance();
@@ -77,18 +87,16 @@ namespace NSmartProxy
         /// <param name="e"></param>
         private void ConnectionManager_AppAdded(object sender, AppChangedEventArgs e)
         {
-            Console.WriteLine("added事件已触发");
+            Server.Logger.Debug("added事件已触发");
             int port = 0;
             foreach (var kv in ConnectionManager.PortAppMap)
             {
                 if (kv.Value.AppID == e.App.AppID &&
                     kv.Value.ClientID == e.App.ClientID) port = kv.Key;
             }
-            //int port =  e.App
             if (port == 0) throw new Exception("app未注册");
             var ct = new CancellationToken();
             Task tsk = AcceptConsumeAsync(port, ct);
-            //if (tsk.Exception != null) Console.WriteLine(tsk.Exception.Message);
         }
 
         #region 配置
@@ -115,10 +123,10 @@ namespace NSmartProxy
         private async Task ProcessConfigRequestAsync(TcpClient client)
         {
             byte[] appRequestBytes = new byte[4];
-            Console.WriteLine("config request received.");
+            Server.Logger.Debug("config request received.");
             var nstream = client.GetStream();
             int resultByte = await nstream.ReadAsync(appRequestBytes);
-            Console.WriteLine("appRequestBytes received.");
+            Server.Logger.Debug("appRequestBytes received.");
             if (resultByte == 0)
             {
                 Console.WriteLine("invalid request");
@@ -127,13 +135,13 @@ namespace NSmartProxy
             try
             {
                 byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
-                Console.WriteLine("apprequest arranged");
+                Server.Logger.Debug("apprequest arranged");
                 await nstream.WriteAsync(arrangedIds);
             }
             catch (Exception ex)
             { Console.WriteLine(ex.ToString()); }
 
-           
+
             Console.WriteLine("arrangedIds writed.");
         }
         #endregion
@@ -172,7 +180,7 @@ namespace NSmartProxy
             int clientIndex,
             CancellationToken ct)
         {
-            Console.WriteLine("New client ({0}) connected", clientIndex);
+            Server.Logger.Debug(string.Format("New client ({0}) connected", clientIndex));
 
             CancellationTokenSource transfering = new CancellationTokenSource();
 

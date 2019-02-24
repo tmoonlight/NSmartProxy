@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using log4net;
+using Microsoft.Extensions.Configuration;
 using NSmartProxy.Client;
 using NSmartProxy.Data;
+using NSmartProxy.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,11 +16,28 @@ using Exception = System.Exception;
 
 namespace NSmartProxy
 {
-    class Program
+    class Net46Client
     {
+        public class Log4netLogger : INSmartLogger
+        {
+            public void Debug(string message)
+            {
+                Logger.Debug(message);
+            }
+
+            public void Error(string message, Exception ex)
+            {
+                Logger.Error(message);
+            }
+        }
+
+        public static ILog Logger;
         public static IConfigurationRoot Configuration { get; set; }
         static void Main(string[] args)
         {
+            //log
+            Net46Client.Logger = LogManager.GetLogger(Assembly.GetEntryAssembly(), "NSmartServer");
+
             Thread.Sleep(3000);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("*** NSmart ClientRouter v0.1 ***");
@@ -35,16 +56,17 @@ namespace NSmartProxy
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                
+
             }
-          
+
             Console.WriteLine("client established,press any key to continure.");
             Console.Read();
         }
 
         private static async Task StartClient()
         {
-            Router clientRouter = new Router();
+
+            Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             Task tsk = clientRouter.ConnectToProvider();
@@ -57,7 +79,7 @@ namespace NSmartProxy
                 Console.WriteLine(e);
                 throw;
             }
-           
+
         }
 
         private static void SetConfig(Router clientRouter)

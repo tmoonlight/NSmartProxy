@@ -51,6 +51,9 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.Configuration, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Configuration.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
     </Reference>
@@ -101,7 +104,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Net46Client.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +123,10 @@
     <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj">
       <Project>{24542af8-7666-42e4-b5d4-6e814162108d}</Project>
       <Name>NSmartProxy.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj">
+      <Project>{8604F141-1392-434C-AF51-A1B73B214D98}</Project>
+      <Name>NSmartProxy.Infrastructure</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

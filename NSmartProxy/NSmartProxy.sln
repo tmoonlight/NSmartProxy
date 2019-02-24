@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ClientRouter", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Net46.Client", "NSmartProxy.Net46.Client\NSmartProxy.Net46.Client.csproj", "{12486812-911B-45D9-9E20-D1E0B811A27F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.Infrastructure", "NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj", "{8604F141-1392-434C-AF51-A1B73B214D98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{12486812-911B-45D9-9E20-D1E0B811A27F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12486812-911B-45D9-9E20-D1E0B811A27F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12486812-911B-45D9-9E20-D1E0B811A27F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
