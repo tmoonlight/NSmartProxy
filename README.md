@@ -4,7 +4,7 @@
 # NSmartProxy
 
 什么是NSmartProxy？<br />
-NSmartProxy是一款免费的内网穿透软件。
+NSmartProxy是一款免费的内网穿透工具。
 
 ## 特点
 1. 跨平台，客户端和服务端均可运行在MacOS，Linux，Windows系统上；<br />
