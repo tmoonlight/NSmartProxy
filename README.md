@@ -66,7 +66,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 
 	解压NSmartProxy_Client_V0_1_net4_6_1.zip，运行NSmartProxyClient.exe即可
 
-* P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](Server.MD)。
+* P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md)。
 
 ## 使用案例
 以上已经讲述了将内网的服务映射到外网的方法，还有更多有趣的用法等着你发掘：<br />
