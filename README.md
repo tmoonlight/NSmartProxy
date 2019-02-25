@@ -7,9 +7,9 @@
 NSmartProxy是一款免费的内网穿透软件。
 
 ## 特点
-1.跨平台，客户端和服务端均可运行在MacOS，Linux，Windows系统上；<br />
-2.使用方便，配置简单；<br />
-3.多端映射，一个NSmart Proxy客户端可以同时映射多种服务。（暂不支持UDP协议，开发中。）
+1. 跨平台，客户端和服务端均可运行在MacOS，Linux，Windows系统上；<br />
+2. 使用方便，配置简单；<br />
+3. 多端映射，一个NSmart Proxy客户端可以同时映射多种服务。（暂不支持UDP协议，开发中。）
 
 ## 运行原理
 NSmartProxy包含两个服务程序：<br />
@@ -19,12 +19,12 @@ NSmartProxy包含两个服务程序：<br />
 
 ## 启动准备
 #### Linux
-1.[安装.NET Core环境](https：//dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current)<br />
-2.下载NSmartProxy For Linux 版本
+1. [安装.NET Core环境](https：//dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current)<br />
+2. 下载NSmartProxy For Linux 版本
 
 #### windows
-1.[下载.NET Framework](https：//dotnet.microsoft.com/download/dotnet-framework/net461)<br />
-2.下载NSmartProxy For Windows版本
+1. [下载.NET Framework](https：//dotnet.microsoft.com/download/dotnet-framework/net461)<br />
+2. 下载NSmartProxy For Windows版本
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
@@ -66,7 +66,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 
 	解压NSmartProxy_Client_V0_1_net4_6_1.zip，运行NSmartProxyClient.exe即可
 
-* P.S：以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](Server.MD)。
+* P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](Server.MD)。
 
 ## 使用案例
 以上已经讲述了将内网的服务映射到外网的方法，还有更多有趣的用法等着你发掘：<br />
