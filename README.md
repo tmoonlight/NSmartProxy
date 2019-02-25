@@ -23,7 +23,7 @@ NSmartProxy包含两个服务程序：<br />
 2. 下载[NSmartProxy For Linux](https://https://github.com/tmoonlight)
 
 #### windows
-1. 下载[.NET Framework](https://dotnet.microsoft.com/download/dotnet-framework/net461)<br />
+1. 安装[.NET Framework Runtime](https://dotnet.microsoft.com/download/dotnet-framework/net461)<br />
 2. 下载[NSmartProxy For Windows](https://github.com/tmoonlight/NSmartProxy/releases/download/0.1/NSmartProxy_Client_V0_1_net4_6_1.zip)
 
 ## 使用方法
