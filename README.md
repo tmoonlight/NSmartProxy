@@ -28,7 +28,7 @@ NSmartProxy包含两个服务程序：<br />
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
-1.打开安装目录下的appsetting.json文件，配置服务地址，映射地址和端口：<br />
+1. 打开安装目录下的appsetting.json文件，配置服务地址，映射地址和端口：<br />
 ```
 {
   "ProviderPort": "9974",                     //反向连接的端口
@@ -54,7 +54,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 }
 ```
 <br />
-2.运行NSmartProxy <br />
+2. 运行NSmartProxy <br />
 
 * Linux：
 ```
