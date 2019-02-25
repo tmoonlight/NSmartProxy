@@ -31,7 +31,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 {
   "ProviderPort": "9974",                     //反向连接的端口
   "ProviderConfigPort": "12308",              //配置服务的端口
-  "ProviderAddress": "2017studio.imwork.net", //配置服务的地址，可以是域名（eg.:www.tmoonlight.com）也可以是ip（eg.:211.54.5.4）
+  "ProviderAddress": "2017studio.imwork.net", //配置服务的地址，可以是域名（eg.:domain.com）也可以是ip（eg.:211.54.5.4）
   //"ProviderAddress": "192.168.0.106",
 
   //反向代理客户端，可以配置多个
