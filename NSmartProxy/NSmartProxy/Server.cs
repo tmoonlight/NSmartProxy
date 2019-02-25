@@ -142,7 +142,7 @@ namespace NSmartProxy
             { Console.WriteLine(ex.ToString()); }
 
 
-            Console.WriteLine("arrangedIds writed.");
+            Console.WriteLine("arrangedIds written.");
         }
         #endregion
 

@@ -13,7 +13,7 @@ namespace NSmartProxy
 
             StringBuilder http = new StringBuilder();
 
-            http.AppendLine("HTTP/1.0 200 OK");//http1.0实现的服务器，方便起见，不采取半连接。
+            http.AppendLine("HTTP/1.0 200 OK");//方便起见 http1.0实现服务器。
             http.AppendLine("Content-type:text/html");
             http.AppendLine("Connection:close");
 
