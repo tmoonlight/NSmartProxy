@@ -11,17 +11,17 @@ NSmartProxy是一款免费的内网穿透软件。
 
 ## 运行原理
 NSmartProxy包含两个服务程序：<br />
-* 服务端（NSmartProxy.ServerHost）:部署在外网，用来接收来自最终使用者和客户端的反向连接，并将它们进行相互转发。
+* 服务端（NSmartProxy.ServerHost）：部署在外网，用来接收来自最终使用者和客户端的反向连接，并将它们进行相互转发。
 * 客户端（NSmartProxyClient.exe）：部署在内网，用来转发访问内网各种服务的请求以及响应。
 
 
 ## 启动准备
 #### Linux
-1.[安装.NET Core环境](https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current)<br />
+1.[安装.NET Core环境](https：//dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current)<br />
 2.下载NSmartProxy For Linux 版本
 
 #### windows
-1.[下载.NET Framework](https://dotnet.microsoft.com/download/dotnet-framework/net461)<br />
+1.[下载.NET Framework](https：//dotnet.microsoft.com/download/dotnet-framework/net461)<br />
 2.下载NSmartProxy For Windows版本
 
 ## 使用方法
@@ -54,13 +54,13 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 <br />
 2.运行NSmartProxy <br />
 
-* Linux:
+* Linux：
 ```
-sudo unzip NSmartProxy_Client_V0_1_netcore.zip
-cd NSmartProxy_Client_V0_1_netcore
-sudo dotnet NSmartProxyClient.dll
+    sudo unzip NSmartProxy_Client_V0_1_netcore.zip
+    cd NSmartProxy_Client_V0_1_netcore
+    sudo dotnet NSmartProxyClient.dll
 ```
-* Windows:
+* Windows：
 
 	运行NSmartProxyClient.exe即可
 
