@@ -7,7 +7,7 @@
 
 ## 启动准备
 * 首先你需要一台具备独立IP的服务器，以下安装过程均在此机器上执行：
-#### Linux
+#### Linux/Windows
 1.安装[.NET Core环境](https://dotnet.microsoft.com/download)<br />
 2.下载[NSmartProxyServer](https://github.com/tmoonlight/NSmartProxy/releases/download/0.1/NSmartProxy_ServerHost_V0_1_netcore2_1.zip)
 
