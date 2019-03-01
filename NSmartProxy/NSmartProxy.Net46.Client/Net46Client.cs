@@ -38,7 +38,6 @@ namespace NSmartProxy
             //log
             Net46Client.Logger = LogManager.GetLogger(Assembly.GetEntryAssembly(), "NSmartServer");
 
-            Thread.Sleep(3000);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("*** NSmart ClientRouter v0.1 ***");
 

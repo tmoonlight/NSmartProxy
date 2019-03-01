@@ -55,18 +55,15 @@ namespace NSmartProxy
             CancellationTokenSource accepting = new CancellationTokenSource();
             TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
 
+            Console.WriteLine("NSmart server started");
+            Console.WriteLine("Listening config request on port " + ConfigServicePort.ToString() + "...");
+            var taskResultConfig = AcceptConfigRequest(listenerConfigService);
+
+            //
+            ConnectionManager.AppAdded += ConnectionManager_AppAdded;
             try
             {
-
-
-                Console.WriteLine("NSmart server started");
-                Console.WriteLine("Listening config request on port " + ConfigServicePort.ToString() + "...");
-                var taskResultConfig = AcceptConfigRequest(listenerConfigService);
-
-                //
-                ConnectionManager.AppAdded += ConnectionManager_AppAdded;
-
-                await Task.Delay(6000000); //block here to hold open the server
+                await taskResultConfig; //block here to hold open the server
             }
             catch (Exception ex)
             {
