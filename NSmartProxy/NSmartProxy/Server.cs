@@ -108,10 +108,11 @@ namespace NSmartProxy
         //  clientid    appid   port
         private async Task AcceptConfigRequest(TcpListener listenerConfigService)
         {
-            while (1 == 1)
+            while (true)
             {
 
                 listenerConfigService.Start(100);
+
                 var client = await listenerConfigService.AcceptTcpClientAsync();
                 ProcessConfigRequestAsync(client);
             }
@@ -119,27 +120,36 @@ namespace NSmartProxy
 
         private async Task ProcessConfigRequestAsync(TcpClient client)
         {
-            byte[] appRequestBytes = new byte[4];
-            Server.Logger.Debug("config request received.");
-            var nstream = client.GetStream();
-            int resultByte = await nstream.ReadAsync(appRequestBytes);
-            Server.Logger.Debug("appRequestBytes received.");
-            if (resultByte == 0)
-            {
-                Console.WriteLine("invalid request");
-            }
-
             try
             {
-                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
-                Server.Logger.Debug("apprequest arranged");
-                await nstream.WriteAsync(arrangedIds);
+                byte[] appRequestBytes = new byte[4];
+                Server.Logger.Debug("config request received.");
+                var nstream = client.GetStream();
+                int resultByte = await nstream.ReadAsync(appRequestBytes);
+                Server.Logger.Debug("appRequestBytes received.");
+                if (resultByte == 0)
+                {
+                    Console.WriteLine("invalid request");
+                }
+
+                try
+                {
+                    byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
+                    Server.Logger.Debug("apprequest arranged");
+                    await nstream.WriteAsync(arrangedIds);
+                }
+                catch (Exception ex)
+                { Console.WriteLine(ex.ToString()); }
+
+
+                Console.WriteLine("arrangedIds written.");
             }
-            catch (Exception ex)
-            { Console.WriteLine(ex.ToString()); }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
 
-
-            Console.WriteLine("arrangedIds written.");
         }
         #endregion
 

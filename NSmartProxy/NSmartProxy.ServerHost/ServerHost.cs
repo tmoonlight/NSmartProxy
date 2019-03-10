@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using NSmartProxy.Interfaces;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -53,12 +54,48 @@ namespace NSmartProxy.ServerHost
             }
             Server srv = new Server(new Log4netLogger());
 
-            Task.Run(async () =>
+            int retryCount = 0;
+            while (true)
             {
-                await srv.Start();
-            }).GetAwaiter().GetResult();
-            Console.WriteLine("NSmart server stopped. Press any key to continue.");
-            Console.Read();
+                var sw = new Stopwatch();
+
+                try
+                {
+                    sw.Start();
+                    srv.Start().Wait();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    sw.Stop();
+                }
+
+                //短时间多次出错则终止服务器
+                if (sw.Elapsed > TimeSpan.FromSeconds(10))
+                {
+                    retryCount = 0;
+                }
+                else
+                {
+                    retryCount++;
+                }
+                if (retryCount > 100) break;
+
+            }
+
+
+            Console.WriteLine("NSmart server terminated. Press any key to continue.");
+            try
+            {
+                Console.Read();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }

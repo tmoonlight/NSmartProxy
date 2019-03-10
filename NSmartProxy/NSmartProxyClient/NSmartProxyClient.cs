@@ -56,10 +56,9 @@ namespace NSmartProxy
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-
             }
 
-            Console.WriteLine("client terminated,press any key to continure.");
+            Console.WriteLine("Client terminated,press any key to continue.");
             Console.Read();
         }
 

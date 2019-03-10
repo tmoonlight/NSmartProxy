@@ -65,7 +65,16 @@ namespace NSmartProxy.Client
                      cApp.IP + ":" + cApp.TargetServicePort);
             }
             Console.WriteLine("**************************************");
-            await ConnnectionManager.PollingToProvider();
+            Task pollingTask = ConnnectionManager.PollingToProvider();
+            try
+            {
+                await pollingTask;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
+                throw;
+            }
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)
@@ -74,7 +83,7 @@ namespace NSmartProxy.Client
             foreach (TcpClient providerClient in args.NewClients)
             {
 
-                Router.Logger.Debug("开启连接");
+                Router.Logger.Debug("Open server connection.");
                 OpenTrasferation(args.App.AppId, providerClient);
             }
 
@@ -82,24 +91,33 @@ namespace NSmartProxy.Client
 
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
         {
-            byte[] buffer = new byte[4096];
-            NetworkStream providerClientStream = providerClient.GetStream();
-            //接收首条消息，首条消息中返回的是appid和客户端
-            int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
-            //从空闲连接列表中移除
-            ConnnectionManager.RemoveClient(appId, providerClient);
-            Router.Logger.Debug(appId + "接受到首条信息");
-            TcpClient toTargetServer = new TcpClient();
-            //根据clientid_appid发送到固定的端口
-            ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
-            // item1:app编号，item2:ip地址，item3:目标服务端口
-            toTargetServer.Connect(item.IP, item.TargetServicePort);
-            NetworkStream targetServerStream = toTargetServer.GetStream();
-            targetServerStream.Write(buffer, 0, readByteCount);
-            await TcpTransferAsync(providerClientStream, targetServerStream);
-            //close connection
-            providerClient.Close();
-            Router.Logger.Debug("关闭一条连接");
+            try
+            {
+                byte[] buffer = new byte[4096];
+                NetworkStream providerClientStream = providerClient.GetStream();
+                //接收首条消息，首条消息中返回的是appid和客户端
+                int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
+                //从空闲连接列表中移除
+                ConnnectionManager.RemoveClient(appId, providerClient);
+                Router.Logger.Debug(appId + "接受到首条信息");
+                TcpClient toTargetServer = new TcpClient();
+                //根据clientid_appid发送到固定的端口
+                ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
+                // item1:app编号，item2:ip地址，item3:目标服务端口
+                toTargetServer.Connect(item.IP, item.TargetServicePort);
+                NetworkStream targetServerStream = toTargetServer.GetStream();
+                targetServerStream.Write(buffer, 0, readByteCount);
+                await TcpTransferAsync(providerClientStream, targetServerStream);
+                //close connection
+                providerClient.Close();
+                Router.Logger.Debug("关闭一条连接");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
         }
 
 

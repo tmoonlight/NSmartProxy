@@ -50,7 +50,7 @@ namespace NSmartProxy
             Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
             TcpListener listenter = new TcpListener(IPAddress.Any, Server.ClientServicePort);
             listenter.Start(1000);
-            while (1 == 1)
+            while (true)
             {
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
                 Server.Logger.Debug("已建立一个空连接");
@@ -66,22 +66,30 @@ namespace NSmartProxy
         /// <returns></returns>
         private async Task ProcessInComeRequest(TcpClient incomeClient)
         {
-            //立即侦听一次并且分配连接
-            byte[] bytes = new byte[4];
-            await incomeClient.GetStream().ReadAsync(bytes);
-
-            var clientIdAppId = GetAppFromBytes(bytes);
-            Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
-                + "AppID:" + clientIdAppId.AppID.ToString()
-                );
-            //根据不同的服务端appid安排不同的连接池
-            lock (_lockObject)
+            try
             {
-                AppTcpClientMap.GetOrAdd(clientIdAppId, new List<TcpClient>()).Add(incomeClient);
+                //立即侦听一次并且分配连接
+                byte[] bytes = new byte[4];
+                await incomeClient.GetStream().ReadAsync(bytes);
+
+                var clientIdAppId = GetAppFromBytes(bytes);
+                Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
+                                                      + "AppID:" + clientIdAppId.AppID.ToString()
+                );
+                //根据不同的服务端appid安排不同的连接池
+                lock (_lockObject)
+                {
+                    AppTcpClientMap.GetOrAdd(clientIdAppId, new List<TcpClient>()).Add(incomeClient);
+                }
+                var arg = new AppChangedEventArgs();
+                arg.App = clientIdAppId;
+                AppAdded(this, arg);
             }
-            var arg = new AppChangedEventArgs();
-            arg.App = clientIdAppId;
-            AppAdded(this, arg);
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+           
         }
 
 
