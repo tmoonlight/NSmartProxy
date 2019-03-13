@@ -87,7 +87,11 @@ namespace NSmartProxy.Client
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
 
+        /// <summary>
+        /// client firstConnected event.
+        /// </summary>
         public event EventHandler ClientGroupConnected;
+
         /// <summary>
         /// 将所有的app循环连接服务端
         /// </summary>
@@ -96,66 +100,51 @@ namespace NSmartProxy.Client
         {
             var config = NSmartProxy.Client.Router.ClientConfig;
             if (ClientID == 0) { Router.Logger.Debug("error:未连接客户端"); return; };
-            int hungryNumber = MAX_CONNECT_SIZE / 2;
+            //int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
-            //侦听，并且构造连接池
-            //throw new NotImplementedException();
-            //int currentClientCount = ServiceClientQueue.Count;
+
             List<Task> taskList = new List<Task>();
             foreach (var kv in ServiceClientListCollection)
             {
+                //优化，只连接一个，维持一个备用连接。
                 int appid = kv.Key;
-                ClientAppWorker app = kv.Value;
-                byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
-                taskList.Add(Task.Run(async () =>
+                TcpClient client =await ConnectAppToServer(appid);
+
+                var clientList = new List<TcpClient>() { client };
+                ClientGroupConnected(this, new ClientGroupEventArgs()
                 {
-                    while (1 == 1)
+                    NewClients = clientList,
+                    App = new ClientIdAppId
                     {
-
-                        int activeClientCount = 0;
-                        foreach (TcpClient c in app.TcpClientGroup)
-                        {
-                            if (c.Connected) activeClientCount++;
-                        }
-                        if (activeClientCount < hungryNumber)
-                        {
-                            Router.Logger.Debug("连接已接近饥饿值，扩充连接池");
-
-                            var clientList = new List<TcpClient>();
-                            //补齐
-                            for (int i = activeClientCount; i < MAX_CONNECT_SIZE; i++)
-                            {
-                                TcpClient client = new TcpClient();
-                                client.Connect(config.ProviderAddress, config.ProviderPort);
-                                //连完了马上发送端口信息过去，方便服务端分配
-                                client.GetStream().Write(requestBytes, 0, requestBytes.Length);
-                                Router.Logger.Debug("ClientID:" + ClientID.ToString()
-                                    + " AppId:" + appid.ToString() + " 已连接");
-                                app.TcpClientGroup.Add(client);
-                                clientList.Add(client);
-                            }
-                            ClientGroupConnected(this, new ClientGroupEventArgs()
-                            {
-                                NewClients = clientList,
-                                App = new ClientIdAppId
-                                {
-                                    ClientId = ClientID,
-                                    AppId = appid
-                                }
-                            });
-                        }
-                        await Task.Delay(100);
+                        ClientId = ClientID,
+                        AppId = appid
                     }
-                })
-               );
+                });
             }
-            Task resultTask = await Task.WhenAny(taskList);
-            Router.Logger.Debug(resultTask.Exception?.ToString());
+        }
+
+        public async Task<TcpClient> ConnectAppToServer(int appid)
+        {
+            var app = this.ServiceClientListCollection[appid];
+            var config = NSmartProxy.Client.Router.ClientConfig;
+            // ClientAppWorker app = kv.Value;
+            byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
+            var clientList = new List<TcpClient>();
+            //补齐
+            TcpClient client = new TcpClient();
+            await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
+            //连完了马上发送端口信息过去，方便服务端分配
+            await  client.GetStream().WriteAsync(requestBytes, 0, requestBytes.Length);
+            Router.Logger.Debug("ClientID:" + ClientID.ToString()
+                                            + " AppId:" + appid.ToString() + " 已连接");
+            app.TcpClientGroup.Add(client);
+            //clientList.Add(client);
+            return client;
         }
 
         //key:appid value;ClientApp
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
-        private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
+        //private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
 
 
 

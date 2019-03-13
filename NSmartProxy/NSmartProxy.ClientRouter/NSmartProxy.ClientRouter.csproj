@@ -10,4 +10,8 @@
     <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ILLink.Tasks" Version="0.1.5-preview-1841731" />
+  </ItemGroup>
+
 </Project>

@@ -16,7 +16,7 @@ namespace NSmartProxy.Client
         public int provider_port = 9973;//default value
 
         public const int PROVIDER_CONFIG_SERVICE_PORT = 12307; //default value
-        CancellationTokenSource CANCELTOKEN = new CancellationTokenSource();
+        CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
 
@@ -75,6 +75,8 @@ namespace NSmartProxy.Client
                 Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
                 throw;
             }
+
+            await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token);
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)
@@ -99,12 +101,19 @@ namespace NSmartProxy.Client
                 int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                 //从空闲连接列表中移除
                 ConnnectionManager.RemoveClient(appId, providerClient);
+                //每移除一个链接则发起一个新的链接
+                //※待实现※
                 Router.Logger.Debug(appId + "接受到首条信息");
                 TcpClient toTargetServer = new TcpClient();
                 //根据clientid_appid发送到固定的端口
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
+
+                await ConnnectionManager.ConnectAppToServer(appId);
+                Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口
                 toTargetServer.Connect(item.IP, item.TargetServicePort);
+                Router.Logger.Debug("已连接目标服务:" + item.IP.ToString() + ":" + item.TargetServicePort.ToString());
+
                 NetworkStream targetServerStream = toTargetServer.GetStream();
                 targetServerStream.Write(buffer, 0, readByteCount);
                 await TcpTransferAsync(providerClientStream, targetServerStream);

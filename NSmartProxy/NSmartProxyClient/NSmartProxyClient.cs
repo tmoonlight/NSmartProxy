@@ -22,6 +22,7 @@ namespace NSmartProxy
         {
             public void Debug(string message)
             {
+                Console.WriteLine(message);
                 Logger.Debug(message);
             }
 
