@@ -108,6 +108,7 @@ namespace NSmartProxy.Client
                 //根据clientid_appid发送到固定的端口
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
 
+                //只发送一次，需要在链接成功移除时加入
                 await ConnnectionManager.ConnectAppToServer(appId);
                 Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口

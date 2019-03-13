@@ -106,24 +106,15 @@ namespace NSmartProxy.Client
             List<Task> taskList = new List<Task>();
             foreach (var kv in ServiceClientListCollection)
             {
-                //优化，只连接一个，维持一个备用连接。
+               
                 int appid = kv.Key;
-                TcpClient client =await ConnectAppToServer(appid);
+                await ConnectAppToServer(appid);
 
-                var clientList = new List<TcpClient>() { client };
-                ClientGroupConnected(this, new ClientGroupEventArgs()
-                {
-                    NewClients = clientList,
-                    App = new ClientIdAppId
-                    {
-                        ClientId = ClientID,
-                        AppId = appid
-                    }
-                });
+        
             }
         }
 
-        public async Task<TcpClient> ConnectAppToServer(int appid)
+        public async Task ConnectAppToServer(int appid)
         {
             var app = this.ServiceClientListCollection[appid];
             var config = NSmartProxy.Client.Router.ClientConfig;
@@ -138,8 +129,17 @@ namespace NSmartProxy.Client
             Router.Logger.Debug("ClientID:" + ClientID.ToString()
                                             + " AppId:" + appid.ToString() + " 已连接");
             app.TcpClientGroup.Add(client);
-            //clientList.Add(client);
-            return client;
+            clientList.Add(client);
+            //var clientList = new List<TcpClient>() { client };
+            ClientGroupConnected(this, new ClientGroupEventArgs()
+            {
+                NewClients = clientList,
+                App = new ClientIdAppId
+                {
+                    ClientId = ClientID,
+                    AppId = appid
+                }
+            });
         }
 
         //key:appid value;ClientApp
