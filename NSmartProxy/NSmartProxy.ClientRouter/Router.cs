@@ -117,10 +117,9 @@ namespace NSmartProxy.Client
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
                 targetServerStream.Write(buffer, 0, readByteCount);
-                await TcpTransferAsync(providerClientStream, targetServerStream);
-                //close connection
-                providerClient.Close();
-                Router.Logger.Debug("关闭一条连接");
+                TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer);
+                //already close connection
+
             }
             catch (Exception e)
             {
@@ -131,17 +130,28 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream)
+        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream, TcpClient providerClient, TcpClient toTargetServer)
         {
-            Router.Logger.Debug("Looping start.");
-            //创建相互转发流
-            var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
-            var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
+            try
+            {
+                Router.Logger.Debug("Looping start.");
+                //创建相互转发流
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
+                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
 
-
-            //close connnection,whether client or server stopped transferring.
-            var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
-            Router.Logger.Debug(comletedTask.Result + "传输关闭，重新读取字节");
+                //close connnection,whether client or server stopped transferring.
+                var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
+                //Router.Logger.Debug(comletedTask.Result + "传输关闭，重新读取字节");
+                providerClient.Close();
+                Router.Logger.Debug("已关闭toProvider连接。");
+                toTargetServer.Close();
+                Router.Logger.Debug("已关闭toTargetServer连接。");
+            }
+            catch (Exception ex)
+            {
+                Router.Logger.Debug(ex.ToString());
+                throw;
+            }
         }
 
 
