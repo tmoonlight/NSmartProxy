@@ -18,13 +18,9 @@ NSmartProxy包含两个服务程序：<br />
 <img src="https://github.com/tmoonlight/NSmartProxy/blob/img/theo.png">
 
 ## 启动准备
-#### Linux
-1. 安装[.NET Core环境](https://dotnet.microsoft.com/download/linux-package-manager/rhel/runtime-current)<br />
-2. 下载[NSmartProxy For Linux](https://https://github.com/tmoonlight)
-
-#### windows
-
-1. 下载[NSmartProxy For Windows](https://github.com/tmoonlight/NSmartProxy/releases/download/0.2/NSmartProxyClient.zip)
+#### Linux/Windows/MacOS
+1. 安装[.NET Core Runtime](https://dotnet.microsoft.com/download)<br />
+2. 下载[NSmartProxy客户端](https://https://github.com/tmoonlight)
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
