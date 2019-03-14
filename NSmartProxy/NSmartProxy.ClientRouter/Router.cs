@@ -95,7 +95,7 @@ namespace NSmartProxy.Client
         {
             try
             {
-                byte[] buffer = new byte[4096];
+                byte[] buffer = new byte[1];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
                 int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
@@ -103,7 +103,7 @@ namespace NSmartProxy.Client
                 ConnnectionManager.RemoveClient(appId, providerClient);
                 //每移除一个链接则发起一个新的链接
                 //※待实现※
-                Router.Logger.Debug(appId + "接受到首条信息");
+                Router.Logger.Debug(appId + "接收到连接请求");
                 TcpClient toTargetServer = new TcpClient();
                 //根据clientid_appid发送到固定的端口
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
@@ -116,7 +116,7 @@ namespace NSmartProxy.Client
                 Router.Logger.Debug("已连接目标服务:" + item.IP.ToString() + ":" + item.TargetServicePort.ToString());
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
-                targetServerStream.Write(buffer, 0, readByteCount);
+                //targetServerStream.Write(buffer, 0, readByteCount);
                 TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer);
                 //already close connection
 

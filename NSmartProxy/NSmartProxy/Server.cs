@@ -173,9 +173,14 @@ namespace NSmartProxy
                 TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
                 Console.WriteLine("consumer已连接");
                 //连接成功 连接provider端
-                clientCounter++;
+               
+                
                 //需要端口
                 TcpClient s2pClient = ConnectionManager.GetClient(consumerPort);
+                //✳关键过程✳
+                //连接完之后发送一个字节过去促使客户端建立转发隧道
+                await s2pClient.GetStream().WriteAsync(new byte[] { 1 }, 0, 1);
+                clientCounter++;
 
                 Task transferResult = TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
             }
