@@ -13,7 +13,7 @@
 
 ## 使用方法
 1. 解压缩NSmartProxy服务端的压缩包。
-2. 打开安装目录下的appsetting.json文件，设置反向连接端口和配置服务端口：<br />
+2. 打开安装目录下的appsettings.json文件，设置反向连接端口和配置服务端口：<br />
 ```
 {
   "ClientServicePort": 9974,      //反向连接端口
@@ -32,7 +32,7 @@ sudo dotnet NSmartProxy.ServerHost.dll
 * Windows：
 
 ```
-运行安装目录下的run.bat
+运行安装目录下的run.cmd
 ```
 
 
