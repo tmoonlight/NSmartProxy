@@ -130,7 +130,7 @@ namespace NSmartProxy
             response.ContentType = "text/html;charset=utf-8";
 
             //getJson
-            StringBuilder json = new StringBuilder("{[");
+            StringBuilder json = new StringBuilder("[");
             foreach (var ca in this.ConnectionManager.PortAppMap)
             {
                 json.Append("{");
@@ -156,7 +156,7 @@ namespace NSmartProxy
                 json.Append("}").C();
             }
             json.D();
-            json.Append("]}");
+            json.Append("]");
             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
             //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
             response.OutputStream.Close();
