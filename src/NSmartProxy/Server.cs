@@ -38,6 +38,8 @@ namespace NSmartProxy
         public static int ClientServicePort = 9973;
         //服务端配置通讯端口
         public static int ConfigServicePort = 12307;
+        //远端管理端口
+        public static int WebManagementPort = 0;
 
         public ClientConnectionManager ConnectionManager = null;
 
@@ -49,21 +51,33 @@ namespace NSmartProxy
             Logger = logger;
         }
 
+        //必须设置远程端口才可以通信
+        public Server SetWebPort(int port)
+        {
+            WebManagementPort = port;
+            return this;
+        }
+
         public async Task Start()
         {
+            CancellationTokenSource ctsConfig = new CancellationTokenSource();
+            CancellationTokenSource ctsHttp = new CancellationTokenSource();
+
+            //1.开启客户端连接服务
             ConnectionManager = ClientConnectionManager.GetInstance();
-            CancellationTokenSource accepting = new CancellationTokenSource();
-            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
-
-            Console.WriteLine("NSmart server started");
-            Console.WriteLine("Listening config request on port " + ConfigServicePort.ToString() + "...");
-            var taskResultConfig = AcceptConfigRequest(listenerConfigService);
-
-            //
+            //注册客户端发生连接时的事件
             ConnectionManager.AppAdded += ConnectionManager_AppAdded;
+            Console.WriteLine("NSmart server started");
+
+            //2.开启http服务
+            if (WebManagementPort > 0)
+                StartHttpService(ctsHttp);
+
+            //3.开启配置服务
+
             try
             {
-                await taskResultConfig; //block here to hold open the server
+                await StartConfigService(ctsConfig);
             }
             catch (Exception ex)
             {
@@ -72,9 +86,104 @@ namespace NSmartProxy
             finally
             {
                 Console.WriteLine("all closed");
-                accepting.Cancel();
+                ctsConfig.Cancel();
                 //listenerConsumer.Stop();
             }
+
+
+        }
+
+        #region HTTPServer
+        private async Task StartHttpService(CancellationTokenSource ctsHttp)
+        {
+            try
+            {
+                HttpListener listener = new HttpListener();
+                listener.Prefixes.Add($"http://127.0.0.1:{WebManagementPort}/");
+                //TcpListener listenerConfigService = new TcpListener(IPAddress.Any, WebManagementPort);
+                Console.WriteLine("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
+                await AcceptHttpRequest(listener, ctsHttp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                Server.Logger.Error(ex.ToString(), ex);
+            }
+        }
+
+        private async Task AcceptHttpRequest(HttpListener httpService, CancellationTokenSource ctsHttp)
+        {
+            httpService.Start();
+            while (true)
+            {
+                var client = await httpService.GetContextAsync();
+                ProcessHttpRequestAsync(client);
+            }
+        }
+
+        private async Task ProcessHttpRequestAsync(HttpListenerContext context)
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            response.ContentEncoding = Encoding.UTF8;
+            response.ContentType = "text/html;charset=utf-8";
+
+            //getJson
+            StringBuilder json = new StringBuilder("{[");
+            foreach (var ca in this.ConnectionManager.PortAppMap)
+            {
+                json.Append("{");
+                json.Append(KV2Json("port", ca.Key)).C();
+                json.Append(KV2Json("clientId", ca.Value.ClientID)).C();
+                json.Append(KV2Json("appId", ca.Value.AppID)).C();
+
+                
+                json.Append(KV2Json("connections"));
+                json.Append("[");
+                foreach (TcpClient client in ConnectionManager.AppTcpClientMap[ca.Value])
+                {
+                    json.Append("{");
+                    json.Append(KV2Json("lEndPoint", client.Client.LocalEndPoint.ToString())).C();
+                    json.Append(KV2Json("rEndPoint", client.Client.RemoteEndPoint.ToString()));
+                    //json.Append(KV2Json("p", c)).C();
+                    //json.Append(KV2Json("port", ca.Key));
+                    json.Append("}");
+                    json.C();
+                }
+                json.D();
+                json.Append("]");
+                json.Append("}").C();
+            }
+            json.D();
+            json.Append("]}");
+            await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
+            //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
+            response.OutputStream.Close();
+        }
+
+        private string KV2Json(string key)
+        {
+            return "\"" + key + "\":";
+        }
+        private string KV2Json(string key, object value)
+        {
+            return "\"" + key + "\":\"" + value.ToString() + "\"";
+        }
+
+        #endregion
+
+
+        private async Task StartConfigService(CancellationTokenSource accepting)
+        {
+            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
+
+
+            Console.WriteLine("Listening config request on port " + ConfigServicePort.ToString() + "...");
+            var taskResultConfig = AcceptConfigRequest(listenerConfigService);
+
+            await taskResultConfig; //block here to hold open the server
+
         }
 
         /// <summary>
@@ -108,11 +217,9 @@ namespace NSmartProxy
         //  clientid    appid   port
         private async Task AcceptConfigRequest(TcpListener listenerConfigService)
         {
+            listenerConfigService.Start(100);
             while (true)
             {
-
-                listenerConfigService.Start(100);
-
                 var client = await listenerConfigService.AcceptTcpClientAsync();
                 ProcessConfigRequestAsync(client);
             }
@@ -173,8 +280,8 @@ namespace NSmartProxy
                 TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
                 Console.WriteLine("consumer已连接");
                 //连接成功 连接provider端
-               
-                
+
+
                 //需要端口
                 TcpClient s2pClient = ConnectionManager.GetClient(consumerPort);
                 //✳关键过程✳
@@ -198,7 +305,7 @@ namespace NSmartProxy
 
             var providerStream = providerClient.GetStream();
             var consumerStream = consumerClient.GetStream();
-            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, async (transbuf) =>
+            Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream /*, async (transbuf) =>
             {
                 if (CompareBytes(transbuf, PartternWord))
                 {
@@ -209,7 +316,7 @@ namespace NSmartProxy
                     return false;
                 }
                 else return true;
-            });
+            }*/);
             Task taskP2CLooping = StreamTransfer(transfering.Token, providerStream, consumerStream);
 
             //任何一端传输中断或者故障，则关闭所有连接，回到上层重新accept
@@ -232,28 +339,30 @@ namespace NSmartProxy
         }
 
 
-        private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome/");
-        private byte[] PartternPostWord = System.Text.Encoding.ASCII.GetBytes("POST /welcome/");
+        //private byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome/");
+        //private byte[] PartternPostWord = System.Text.Encoding.ASCII.GetBytes("POST /welcome/");
 
-        //GET /welcome 
-        private bool CompareBytes(byte[] wholeBytes, byte[] partternWord)
-        {
-            for (int i = 0; i < partternWord.Length; i++)
-            {
-                if (wholeBytes[i] != partternWord[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        ////GET /welcome 
+        //private bool CompareBytes(byte[] wholeBytes, byte[] partternWord)
+        //{
+        //    for (int i = 0; i < partternWord.Length; i++)
+        //    {
+        //        if (wholeBytes[i] != partternWord[i])
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    return true;
+        //}
 
-        private void SendZero(int port)
-        {
-            TcpClient tc = new TcpClient();
-            tc.Connect("127.0.0.1", port);
-            tc.Client.Send(new byte[] { 0 });
-        }
+        //private void SendZero(int port)
+        //{
+        //    TcpClient tc = new TcpClient();
+        //    tc.Connect("127.0.0.1", port);
+        //    tc.Client.Send(new byte[] { 0 });
+        //}
         #endregion
+
+
     }
 }

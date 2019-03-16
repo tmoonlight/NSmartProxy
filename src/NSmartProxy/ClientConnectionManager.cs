@@ -115,6 +115,10 @@ namespace NSmartProxy
         //response:
         //   2          1       1       1           1        ...N
         //  clientid    appid   port    appid2      port2
+        //request:
+        //   2          2
+        //  clientid    count
+        //  methodType  value = 0
         public byte[] ArrageConfigIds(byte[] appRequestBytes)
         {
             // byte[] arrangedBytes = new byte[256];

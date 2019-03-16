@@ -10,6 +10,7 @@ namespace NSmartProxy.Data
     {
         public int ClientId;        //2
         public List<App> AppList;   //3 * N
+        public string IP;           //no serialize
         public byte[] ToBytes()
         {
             byte[] bytes = new byte[2 + AppList.Count * 3];

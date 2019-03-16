@@ -28,7 +28,8 @@ namespace NSmartProxy
 
             public void Error(string message, Exception ex)
             {
-                Logger.Error(message);
+                Console.WriteLine(message);
+                Logger.Error(message,ex);
             }
         }
 

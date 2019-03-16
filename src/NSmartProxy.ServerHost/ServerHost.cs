@@ -20,7 +20,7 @@ namespace NSmartProxy.ServerHost
 
             public void Error(string message, Exception ex)
             {
-                Logger.Error(message);
+                Logger.Error(message,ex);
             }
         }
 
@@ -57,12 +57,14 @@ namespace NSmartProxy.ServerHost
             int retryCount = 0;
             while (true)
             {
-                var sw = new Stopwatch();
+                var watch = new Stopwatch();
 
                 try
                 {
-                    sw.Start();
-                    srv.Start().Wait();
+                    watch.Start();
+                    srv.SetWebPort(int.Parse(Configuration.GetSection("WebAPIPort").Value))
+                       .Start()
+                       .Wait();
                 }
                 catch (Exception ex)
                 {
@@ -70,11 +72,11 @@ namespace NSmartProxy.ServerHost
                 }
                 finally
                 {
-                    sw.Stop();
+                    watch.Stop();
                 }
 
                 //短时间多次出错则终止服务器
-                if (sw.Elapsed > TimeSpan.FromSeconds(10))
+                if (watch.Elapsed > TimeSpan.FromSeconds(10))
                 {
                     retryCount = 0;
                 }

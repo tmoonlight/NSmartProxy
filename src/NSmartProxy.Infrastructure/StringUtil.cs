@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NSmartProxy
 {
-    public class StringUtil
+    public static class StringUtil
     {
         /// <summary>
         /// 整型转双字节
@@ -46,6 +46,26 @@ namespace NSmartProxy
         public static int DoubleBytesToInt(byte hByte, byte lByte)
         {
             return (hByte << 8) + lByte;
+        }
+
+        /// <summary>
+        /// comma
+        /// </summary>
+        /// <param name="sb"></param>
+        /// <returns></returns>
+        public static StringBuilder C(this StringBuilder sb)
+        {
+            return sb.Append(",");
+        }
+
+        /// <summary>
+        /// delcomma
+        /// </summary>
+        /// <param name="sb"></param>
+        /// <returns></returns>
+        public static StringBuilder D(this StringBuilder sb)
+        {
+            return sb.Remove(sb.Length - 1, 1);
         }
     }
 }
