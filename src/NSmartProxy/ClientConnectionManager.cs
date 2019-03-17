@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NSmartProxy
@@ -19,13 +20,17 @@ namespace NSmartProxy
         public ClientIDAppID App;
     }
 
+    /// <summary>
+    /// 反向连接处理类
+    /// </summary>
     public class ClientConnectionManager
     {
         /// <summary>
         /// 当app增加时触发
         /// </summary>
-        public event EventHandler<AppChangedEventArgs> AppAdded = delegate { };
-        public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
+        public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
+        public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
+        //public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
 
         //端口和ClientIDAppID的映射关系
         public Dictionary<int, ClientIDAppID> PortAppMap = new Dictionary<int, ClientIDAppID>();
@@ -54,21 +59,21 @@ namespace NSmartProxy
             {
                 TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
                 Server.Logger.Debug("已建立一个空连接");
-                ProcessInComeRequest(incomeClient);
+                ProcessReverseRequest(incomeClient);
             }
 
         }
 
         /// <summary>
-        /// 处理消息
+        /// 处理反向连接请求
         /// </summary>
         /// <param name="incomeClient"></param>
         /// <returns></returns>
-        private async Task ProcessInComeRequest(TcpClient incomeClient)
+        private async Task ProcessReverseRequest(TcpClient incomeClient)
         {
             try
             {
-                //立即侦听一次并且分配连接
+                //读取头四个字节
                 byte[] bytes = new byte[4];
                 await incomeClient.GetStream().ReadAsync(bytes);
 
@@ -76,20 +81,20 @@ namespace NSmartProxy
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
                                                       + "AppID:" + clientIdAppId.AppID.ToString()
                 );
-                //根据不同的服务端appid安排不同的连接池
+                //分配
                 lock (_lockObject)
                 {
                     AppTcpClientMap.GetOrAdd(clientIdAppId, new List<TcpClient>()).Add(incomeClient);
                 }
-                var arg = new AppChangedEventArgs();
-                arg.App = clientIdAppId;
-                AppAdded(this, arg);
+                //var arg = new AppChangedEventArgs();
+                //arg.App = clientIdAppId;
+                //AppTcpClientMapReverseConnected(this, arg);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
             }
-           
+
         }
 
 
@@ -104,9 +109,14 @@ namespace NSmartProxy
         {
             //从字典的list中取出tcpclient，并将其移除
             ClientIDAppID clientappid = PortAppMap[consumerPort];
+            //有时候会取不到
+            while (AppTcpClientMap[clientappid].Count == 0)
+            {
+                Task.Delay(1);
+            }
             TcpClient client = AppTcpClientMap[clientappid][0];
             AppTcpClientMap[clientappid].Remove(client);
-            AppRemoved(this, new AppChangedEventArgs { App = clientappid });
+            //AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
         }
 
@@ -175,14 +185,15 @@ namespace NSmartProxy
                         AppId = arrangedAppid,
                         Port = ports[i]
                     });
-                    PortAppMap[ports[i]] = new ClientIDAppID
+                    var clientIdAppId = PortAppMap[ports[i]] = new ClientIDAppID
                     {
                         ClientID = clientId,
                         AppID = arrangedAppid
                     };
-
-
+                    //配置时触发
+                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = clientIdAppId });
                 }
+
             }
             return clientModel.ToBytes();
         }

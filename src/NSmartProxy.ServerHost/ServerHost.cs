@@ -15,11 +15,13 @@ namespace NSmartProxy.ServerHost
         {
             public void Debug(string message)
             {
+                //Console.WriteLine(message);
                 Logger.Debug(message);
             }
 
             public void Error(string message, Exception ex)
             {
+                //Console.WriteLine(message);
                 Logger.Error(message,ex);
             }
         }
