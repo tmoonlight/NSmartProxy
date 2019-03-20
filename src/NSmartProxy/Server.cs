@@ -146,16 +146,17 @@ namespace NSmartProxy
                 
                 json.Append(KV2Json("connections"));
                 json.Append("[");
-                foreach (TcpClient client in ConnectionManager.AppTcpClientMap[ca.Value])
-                {
-                    json.Append("{");
-                    json.Append(KV2Json("lEndPoint", client.Client.LocalEndPoint.ToString())).C();
-                    json.Append(KV2Json("rEndPoint", client.Client.RemoteEndPoint.ToString()));
-                    //json.Append(KV2Json("p", c)).C();
-                    //json.Append(KV2Json("port", ca.Key));
-                    json.Append("}");
-                    json.C();
-                }
+                //暂时注销这里
+                //foreach (TcpClient client in ConnectionManager.AppTcpClientMap[ca.Value])
+                //{
+                //    json.Append("{");
+                //    json.Append(KV2Json("lEndPoint", client.Client.LocalEndPoint.ToString())).C();
+                //    json.Append(KV2Json("rEndPoint", client.Client.RemoteEndPoint.ToString()));
+                //    //json.Append(KV2Json("p", c)).C();
+                //    //json.Append(KV2Json("port", ca.Key));
+                //    json.Append("}");
+                //    json.C();
+                //}
                 json.D();
                 json.Append("]");
                 json.Append("}").C();
@@ -275,10 +276,7 @@ namespace NSmartProxy
         /// <param name="ct"></param>
         /// <returns></returns>
         async Task ListenConsumeAsync(int consumerPort, CancellationToken ct)
-        {//✳这里需要传appclientid 以便获取tcpclient 这里如果端口已监听，则不监听✳
-            //传输时只管接收到tcpclient即可，需要将tcplistener打包
-            //getclient失败则说明需要重新取连接了
-            //第二个连接进来了不能正常连
+        {
             try
             {
 
@@ -292,11 +290,11 @@ namespace NSmartProxy
                     Console.WriteLine("listening serviceClient....Port:" + consumerPort);
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
                     Console.WriteLine("consumer已连接");
-                    //连接成功 连接provider端
+                    //消费端连接成功,连接
 
 
                     //需要端口
-                    TcpClient s2pClient = ConnectionManager.GetClient(consumerPort);
+                    TcpClient s2pClient =await ConnectionManager.GetClient(consumerPort);
                     //✳关键过程✳
                     //连接完之后发送一个字节过去促使客户端建立转发隧道
                     await s2pClient.GetStream().WriteAsync(new byte[] { 1 }, 0, 1);

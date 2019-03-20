@@ -102,7 +102,6 @@ namespace NSmartProxy.Client
                 //从空闲连接列表中移除
                 ConnnectionManager.RemoveClient(appId, providerClient);
                 //每移除一个链接则发起一个新的链接
-                //※待实现※
                 Router.Logger.Debug(appId + "接收到连接请求");
                 TcpClient toTargetServer = new TcpClient();
                 //根据clientid_appid发送到固定的端口

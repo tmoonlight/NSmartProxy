@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace NSmartProxy
 {
@@ -35,7 +36,7 @@ namespace NSmartProxy
         //端口和ClientIDAppID的映射关系
         public Dictionary<int, ClientIDAppID> PortAppMap = new Dictionary<int, ClientIDAppID>();
         //app和代理客户端socket之间的映射关系
-        public ConcurrentDictionary<ClientIDAppID, List<TcpClient>> AppTcpClientMap = new ConcurrentDictionary<ClientIDAppID, List<TcpClient>>();
+        public ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>> AppTcpClientMap = new ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>>();
 
         //已注册的clientID,和appid之间的关系,appid序号=元素下标序号+1
         public Dictionary<int, List<ClientIDAppID>> RegisteredClient = new Dictionary<int, List<ClientIDAppID>>();
@@ -84,7 +85,7 @@ namespace NSmartProxy
                 //分配
                 lock (_lockObject)
                 {
-                    AppTcpClientMap.GetOrAdd(clientIdAppId, new List<TcpClient>()).Add(incomeClient);
+                    AppTcpClientMap.GetOrAdd(clientIdAppId, new BufferBlock<TcpClient>()).Post(incomeClient);
                 }
                 //var arg = new AppChangedEventArgs();
                 //arg.App = clientIdAppId;
@@ -105,17 +106,17 @@ namespace NSmartProxy
             return Instance;
         }
 
-        public TcpClient GetClient(int consumerPort)
+        public async Task<TcpClient> GetClient(int consumerPort)
         {
             //从字典的list中取出tcpclient，并将其移除
             ClientIDAppID clientappid = PortAppMap[consumerPort];
             //有时候会取不到
-            while (AppTcpClientMap[clientappid].Count == 0)
-            {
-                Task.Delay(1);
-            }
-            TcpClient client = AppTcpClientMap[clientappid][0];
-            AppTcpClientMap[clientappid].Remove(client);
+            //while (AppTcpClientMap[clientappid].Count == 0)
+            //{
+            //    Task.Delay(1);
+            //}
+            TcpClient client =await AppTcpClientMap[clientappid].ReceiveAsync();
+           // AppTcpClientMap[clientappid].Remove(client);
             //AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
         }
