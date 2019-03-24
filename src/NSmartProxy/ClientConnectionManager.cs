@@ -8,19 +8,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using static NSmartProxy.Server;
 
 namespace NSmartProxy
 {
-    public struct ClientIDAppID
-    {
-        public int ClientID;
-        public int AppID;
-    }
-    public class AppChangedEventArgs : EventArgs
-    {
-        public ClientIDAppID App;
-    }
-
+   
     /// <summary>
     /// 反向连接处理类
     /// </summary>
@@ -33,8 +25,9 @@ namespace NSmartProxy
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
         //public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
 
-        //端口和ClientIDAppID的映射关系
-        public Dictionary<int, ClientIDAppID> PortAppMap = new Dictionary<int, ClientIDAppID>();
+        //端口和app的映射关系，需定时清理
+        public Dictionary<int, AppModel> PortAppMap = new Dictionary<int, AppModel>();
+
         //app和代理客户端socket之间的映射关系
         public ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>> AppTcpClientMap = new ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>>();
 
@@ -93,7 +86,7 @@ namespace NSmartProxy
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Debug(e);
             }
 
         }
@@ -109,14 +102,11 @@ namespace NSmartProxy
         public async Task<TcpClient> GetClient(int consumerPort)
         {
             //从字典的list中取出tcpclient，并将其移除
-            ClientIDAppID clientappid = PortAppMap[consumerPort];
-            //有时候会取不到
-            //while (AppTcpClientMap[clientappid].Count == 0)
-            //{
-            //    Task.Delay(1);
-            //}
-            TcpClient client =await AppTcpClientMap[clientappid].ReceiveAsync();
-           // AppTcpClientMap[clientappid].Remove(client);
+            ClientIDAppID clientappid = PortAppMap[consumerPort].ClientIdAppId;
+            
+            TcpClient client = await AppTcpClientMap[clientappid].ReceiveAsync();
+            PortAppMap[consumerPort].ReverseClients.Add(client);
+            // AppTcpClientMap[clientappid].Remove(client);
             //AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
         }
@@ -168,8 +158,8 @@ namespace NSmartProxy
                 int maxAppCount = RegisteredClient[clientId].Count;
                 //增加请求的客户端
                 int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
-                foreach (var oneport in ports) Console.Write(oneport + " ");
-                Console.WriteLine(" <=端口已分配。");
+                foreach (var oneport in ports) Logger.Info(oneport + " ");
+                Logger.Debug(" <=端口已分配。");
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
@@ -186,13 +176,18 @@ namespace NSmartProxy
                         AppId = arrangedAppid,
                         Port = ports[i]
                     });
-                    var clientIdAppId = PortAppMap[ports[i]] = new ClientIDAppID
+                    var appClient = PortAppMap[ports[i]] = new AppModel()
                     {
-                        ClientID = clientId,
-                        AppID = arrangedAppid
+                        ClientIdAppId = new ClientIDAppID()
+                        {
+                            ClientID = clientId,
+                            AppID = arrangedAppid
+                        },
+                        Tunnels = new List<TcpTunnel>(),
+                        ReverseClients =  new List<TcpClient>()
                     };
                     //配置时触发
-                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = clientIdAppId });
+                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = appClient.ClientIdAppId });
                 }
 
             }

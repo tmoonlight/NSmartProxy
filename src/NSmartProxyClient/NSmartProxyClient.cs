@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net.Config;
 using Exception = System.Exception;
 
 namespace NSmartProxy
@@ -20,16 +21,21 @@ namespace NSmartProxy
     {
         public class Log4netLogger : INSmartLogger
         {
-            public void Debug(string message)
+            public void Debug(object message)
             {
-                //Console.WriteLine(message);
+                //Logger.Debug(message);
                 Logger.Debug(message);
             }
 
-            public void Error(string message, Exception ex)
+            public void Error(object message, Exception ex)
             {
-                //Console.WriteLine(message);
+                //Logger.Debug(message);
                 Logger.Error(message,ex);
+            }
+
+            public void Info(object message)
+            {
+                Logger.Info(message);
             }
         }
 
@@ -38,11 +44,14 @@ namespace NSmartProxy
         static void Main(string[] args)
         {
             //log
-            NSmartProxyClient.Logger = LogManager.GetLogger(Assembly.GetEntryAssembly(), "NSmartServer");
-
+            var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
+            XmlConfigurator.Configure(loggerRepository, new FileInfo("log4net.config"));
+            //BasicConfigurator.Configure(loggerRepository);
+            NSmartProxyClient.Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServerClient");
+            if (!loggerRepository.Configured) throw new Exception("log config failed.");
             //Thread.Sleep(3000);
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("*** NSmart ClientRouter v0.1 ***");
+            Logger.Info("*** NSmart ClientRouter v0.2 ***");
 
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
@@ -57,10 +66,10 @@ namespace NSmartProxy
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.Error(e.Message);
             }
 
-            Console.WriteLine("Client terminated,press any key to continue.");
+            Logger.Info("Client terminated,press any key to continue.");
             Console.Read();
         }
 
@@ -77,7 +86,7 @@ namespace NSmartProxy
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Error(e);
                 throw;
             }
 

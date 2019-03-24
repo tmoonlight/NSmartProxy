@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using log4net;
+using log4net.Config;
 
 namespace NSmartProxy.ServerHost
 {
@@ -13,16 +14,21 @@ namespace NSmartProxy.ServerHost
     {
         public class Log4netLogger : INSmartLogger
         {
-            public void Debug(string message)
+            public void Debug(object message)
             {
-                //Console.WriteLine(message);
+                //Logger.Debug(message);
                 Logger.Debug(message);
             }
 
-            public void Error(string message, Exception ex)
+            public void Error(object message, Exception ex)
             {
-                //Console.WriteLine(message);
+                //Logger.Debug(message);
                 Logger.Error(message,ex);
+            }
+
+            public void Info(object message)
+            {
+                Logger.Info(message);
             }
         }
 
@@ -31,9 +37,12 @@ namespace NSmartProxy.ServerHost
         static void Main(string[] args)
         {
             //log
-            ServerHost.Logger = LogManager.GetLogger(Assembly.GetEntryAssembly(), "NSmartServer");
+            var loggerRepository = LogManager.CreateRepository("NSmartServerRepository");
+            XmlConfigurator.ConfigureAndWatch(loggerRepository, new FileInfo("log4net.config"));
+            Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServer");
+            if (!loggerRepository.Configured) throw new Exception("log config failed.");
 
-            Console.WriteLine("*** NSmart Server v0.1 ***");
+            Logger.Debug("*** NSmart Server v0.2 ***");
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
               .AddJsonFile("appsettings.json");
@@ -51,7 +60,7 @@ namespace NSmartProxy.ServerHost
             }
             catch (Exception ex)
             {
-                Console.WriteLine("配置文件读取失败：" + ex.ToString());
+                Logger.Debug("配置文件读取失败：" + ex.ToString());
                 return;
             }
             Server srv = new Server(new Log4netLogger());
@@ -70,7 +79,7 @@ namespace NSmartProxy.ServerHost
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    Logger.Debug(ex.ToString());
                 }
                 finally
                 {
@@ -91,7 +100,7 @@ namespace NSmartProxy.ServerHost
             }
 
 
-            Console.WriteLine("NSmart server terminated. Press any key to continue.");
+            Logger.Debug("NSmart server terminated. Press any key to continue.");
             try
             {
                 Console.Read();
@@ -101,5 +110,9 @@ namespace NSmartProxy.ServerHost
                 // ignored
             }
         }
+    }
+
+    internal class NSmartProxyClient
+    {
     }
 }

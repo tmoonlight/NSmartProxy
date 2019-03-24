@@ -88,7 +88,7 @@ namespace NSmartProxy.Client
         }
 
         /// <summary>
-        /// client firstConnected event.
+        /// clients Connected event.
         /// </summary>
         public event EventHandler ClientGroupConnected;
 

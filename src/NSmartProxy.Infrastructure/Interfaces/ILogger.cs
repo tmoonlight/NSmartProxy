@@ -5,8 +5,10 @@ namespace NSmartProxy.Interfaces
 {
     public interface INSmartLogger
     {
-        void Debug(string message);
+        void Debug(object message);
        
-        void Error(string message,Exception ex);
+        void Error(object message,Exception ex);
+
+        void Info(object message);
     }
 }

@@ -56,15 +56,15 @@ namespace NSmartProxy.Client
                     counter++;
                 }
             }
-            Console.WriteLine("****************port list*************");
+            Logger.Debug("****************port list*************");
 
             foreach (var ap in clientModel.AppList)
             {
                 var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
-                Console.WriteLine(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
+                Logger.Debug(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
                      cApp.IP + ":" + cApp.TargetServicePort);
             }
-            Console.WriteLine("**************************************");
+            Logger.Debug("**************************************");
             Task pollingTask = ConnnectionManager.PollingToProvider();
             try
             {
@@ -122,7 +122,7 @@ namespace NSmartProxy.Client
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Debug(e);
                 throw;
             }
 
