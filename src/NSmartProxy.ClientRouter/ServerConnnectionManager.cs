@@ -60,7 +60,7 @@ namespace NSmartProxy.Client
             var config = NSmartProxy.Client.Router.ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(_ => configClient.Dispose());
+            var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
             var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
             //超时则dispose掉
             var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
@@ -71,18 +71,31 @@ namespace NSmartProxy.Client
 
             var configStream = configClient.GetStream();
 
+
+            //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
                 ClientId = 0,
                 ClientCount = config.Clients.Count(obj => obj.AppId == 0) //appid为0的则是未分配的
             }.ToBytes();
-            configStream.Write(new ClientNewAppRequest
+            await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
+
+            //请求2 分配端口
+            //var requestBytes
+            byte[] requestBytes2 = new byte[config.Clients.Count * 2];
+            int i = 0;
+            foreach (var client in config.Clients)
             {
-                ClientId = 0,
-                ClientCount = config.Clients.Count(obj => obj.AppId == 0) //appid为0的则是未分配的
-            }.ToBytes(), 0, requestBytes.Length);
+                byte[] portBytes = StringUtil.IntTo2Bytes(client.ConsumerPort);
+                requestBytes2[2 * i] = portBytes[0];
+                requestBytes2[2 * i + 1] = portBytes[1];
+                i++;
+            }
+            await configStream.WriteAsync(requestBytes2, 0, requestBytes2.Length);
+
+            //读端口配置
             byte[] serverConfig = new byte[256];
-            int readBytesCount = configStream.Read(serverConfig, 0, serverConfig.Length);
+            int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0) Router.Logger.Debug("服务器状态异常，已断开连接");
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
@@ -106,11 +119,11 @@ namespace NSmartProxy.Client
             List<Task> taskList = new List<Task>();
             foreach (var kv in ServiceClientListCollection)
             {
-               
+
                 int appid = kv.Key;
                 await ConnectAppToServer(appid);
 
-        
+
             }
         }
 
@@ -125,7 +138,7 @@ namespace NSmartProxy.Client
             TcpClient client = new TcpClient();
             await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
             //连完了马上发送端口信息过去，方便服务端分配
-            await  client.GetStream().WriteAsync(requestBytes, 0, requestBytes.Length);
+            await client.GetStream().WriteAsync(requestBytes, 0, requestBytes.Length);
             Router.Logger.Debug("ClientID:" + ClientID.ToString()
                                             + " AppId:" + appid.ToString() + " 已连接");
             app.TcpClientGroup.Add(client);

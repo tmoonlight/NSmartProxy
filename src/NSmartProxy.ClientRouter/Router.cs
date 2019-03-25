@@ -13,9 +13,6 @@ namespace NSmartProxy.Client
 {
     public class Router
     {
-        public int provider_port = 9973;//default value
-
-        public const int PROVIDER_CONFIG_SERVICE_PORT = 12307; //default value
         CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;

@@ -13,6 +13,17 @@ namespace NSmartProxy
         private const string PortReleaseGuid = "C086DE94-2C45-4247-81E2-2E5248F5A769";
 
         private static HashSet<int> _usedPorts = new HashSet<int>();
+
+        /// <summary>
+        /// 查找一个端口
+        /// </summary>
+        /// <param name="startPort"></param>
+        /// <returns></returns>
+        public static int FindOneAvailableTCPPort(int startPort)
+        {
+            return NetworkUtil.FindAvailableTCPPorts(startPort, 1)[0];
+        }
+
         /// <summary> 
         /// Check if startPort is available, incrementing and 
         /// checking again if it's in use until a free port is found 

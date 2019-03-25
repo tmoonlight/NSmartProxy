@@ -9,8 +9,9 @@
 
     public class ClientApp
     {
-        public int AppId;
-        public string IP;
-        public int TargetServicePort;
+        public int AppId { get; set; }
+        public string IP { get; set; }
+        public int TargetServicePort { get; set; }
+        public int ConsumerPort { get; set; }
     }
 }

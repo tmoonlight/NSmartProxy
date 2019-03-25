@@ -101,10 +101,13 @@ namespace NSmartProxy
             var configClients = Configuration.GetSection("Clients").GetChildren();
             foreach (var cli in configClients)
             {
+                int confConsumerPort = 0;
+                if (cli["ConsumerPort"] != null) confConsumerPort = int.Parse(cli["ConsumerPort"]);
                 config.Clients.Add(new ClientApp
                 {
                     IP = cli["IP"],
-                    TargetServicePort = int.Parse(cli["TargetServicePort"])
+                    TargetServicePort = int.Parse(cli["TargetServicePort"]),
+                    ConsumerPort = confConsumerPort
                 });
             }
             // Configuration.GetSection("1").

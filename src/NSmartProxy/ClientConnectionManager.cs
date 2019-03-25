@@ -12,7 +12,7 @@ using static NSmartProxy.Server;
 
 namespace NSmartProxy
 {
-   
+
     /// <summary>
     /// 反向连接处理类
     /// </summary>
@@ -103,7 +103,7 @@ namespace NSmartProxy
         {
             //从字典的list中取出tcpclient，并将其移除
             ClientIDAppID clientappid = PortAppMap[consumerPort].ClientIdAppId;
-            
+
             TcpClient client = await AppTcpClientMap[clientappid].ReceiveAsync();
             PortAppMap[consumerPort].ReverseClients.Add(client);
             // AppTcpClientMap[clientappid].Remove(client);
@@ -120,12 +120,13 @@ namespace NSmartProxy
         //   2          2
         //  clientid    count
         //  methodType  value = 0
-        public byte[] ArrageConfigIds(byte[] appRequestBytes)
+        public byte[] ArrageConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes)
         {
             // byte[] arrangedBytes = new byte[256];
             ClientModel clientModel = new ClientModel();
             int clientId = (appRequestBytes[0] << 8) + appRequestBytes[1];
             int appCount = (int)appRequestBytes[2];
+
             if (clientId == 0)
             {
                 lock (_lockObject)
@@ -157,15 +158,17 @@ namespace NSmartProxy
                 //循环获取appid，appid是元素下标+1
                 int maxAppCount = RegisteredClient[clientId].Count;
                 //增加请求的客户端
-                int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
-                foreach (var oneport in ports) Logger.Info(oneport + " ");
-                Logger.Debug(" <=端口已分配。");
+                //int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
+                //foreach (var oneport in ports) Logger.Info(oneport + " ");
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
+                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
                     int arrangedAppid = maxAppCount + i + 1;
                     if (arrangedAppid > 255) throw new Exception("Stack overflow.");
-                    //获取可用端口，增加到tcpclient
+                    //查找port的起始端口如果未指定，则设置为20000
+                    if (startPort == 0) startPort = 20000;
+                    int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
                     RegisteredClient[clientId].Add(new ClientIDAppID
                     {
                         ClientID = clientId,
@@ -174,9 +177,9 @@ namespace NSmartProxy
                     clientModel.AppList.Add(new App
                     {
                         AppId = arrangedAppid,
-                        Port = ports[i]
+                        Port = port
                     });
-                    var appClient = PortAppMap[ports[i]] = new AppModel()
+                    var appClient = PortAppMap[port] = new AppModel()
                     {
                         ClientIdAppId = new ClientIDAppID()
                         {
@@ -184,12 +187,13 @@ namespace NSmartProxy
                             AppID = arrangedAppid
                         },
                         Tunnels = new List<TcpTunnel>(),
-                        ReverseClients =  new List<TcpClient>()
+                        ReverseClients = new List<TcpClient>()
                     };
+                    Logger.Info(port);
                     //配置时触发
                     AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = appClient.ClientIdAppId });
                 }
-
+                Logger.Debug(" <=端口已分配。");
             }
             return clientModel.ToBytes();
         }

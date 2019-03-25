@@ -111,14 +111,14 @@ namespace NSmartProxy
             try
             {
                 HttpListener listener = new HttpListener();
-                listener.Prefixes.Add($"http://*:{WebManagementPort}/");
+                listener.Prefixes.Add($"http://127.0.0.1:{WebManagementPort}/");
                 //TcpListener listenerConfigService = new TcpListener(IPAddress.Any, WebManagementPort);
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
                 await AcceptHttpRequest(listener, ctsHttp);
             }
             catch (HttpListenerException ex)
             {
-                Logger.Debug("Please run this program in administrator mode."+ex);
+                Logger.Debug("Please run this program in administrator mode." + ex);
                 Server.Logger.Error(ex.ToString(), ex);
             }
             catch (Exception ex)
@@ -186,11 +186,11 @@ namespace NSmartProxy
                     {
                         json.Append("{ ");
                         if (tunnel.ClientServerClient.Connected)
-                        
+
                             json.Append(KV2Json("clientServerClient", tunnel.ClientServerClient?.Client.LocalEndPoint.ToString())).C();
                         if (tunnel.ConsumerClient.Connected)
                             json.Append(KV2Json("consumerClient", tunnel.ConsumerClient?.Client.LocalEndPoint.ToString())).C();
-                       
+
                         json.D();
                         //json.Append(KV2Json("p", c)).C();
                         //json.Append(KV2Json("port", ca.Key));
@@ -284,10 +284,12 @@ namespace NSmartProxy
             try
             {
                 //长度固定4个字节
-                int configRequestLength = 4;
+                int configRequestLength = 3;
                 byte[] appRequestBytes = new byte[configRequestLength];
                 Server.Logger.Debug("config request received.");
                 var nstream = client.GetStream();
+
+                //1.读取配置请求1
                 int resultByte = await nstream.ReadAsync(appRequestBytes);
                 Server.Logger.Debug("appRequestBytes received.");
                 if (resultByte == 0)
@@ -295,10 +297,21 @@ namespace NSmartProxy
                     CloseClient(client);
                     return;
                 }
+                //2.根据配置请求1获取更多配置信息
+                int appCount = (int)appRequestBytes[2];
+                byte[] consumerPortBytes = new byte[appCount * 2];
+                int resultByte2 = await nstream.ReadAsync(consumerPortBytes);
+                Server.Logger.Debug("consumerPortBytes received.");
+                if (resultByte2 == 0)
+                {
+                    CloseClient(client);
+                    return;
+                }
 
+                //3.分配配置ID，并且写回给客户端
                 try
                 {
-                    byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes);
+                    byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes);
                     Server.Logger.Debug("apprequest arranged");
                     await nstream.WriteAsync(arrangedIds);
                 }
