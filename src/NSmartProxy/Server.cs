@@ -185,10 +185,10 @@ namespace NSmartProxy
                     foreach (var tunnel in app.Value.Tunnels)
                     {
                         json.Append("{ ");
-                        if (tunnel.ClientServerClient.Connected)
+                        if (tunnel.ClientServerClient != null && tunnel.ClientServerClient.Connected)
 
                             json.Append(KV2Json("clientServerClient", tunnel.ClientServerClient?.Client.LocalEndPoint.ToString())).C();
-                        if (tunnel.ConsumerClient.Connected)
+                        if (tunnel.ConsumerClient != null && tunnel.ConsumerClient.Connected)
                             json.Append(KV2Json("consumerClient", tunnel.ConsumerClient?.Client.LocalEndPoint.ToString())).C();
 
                         json.D();
