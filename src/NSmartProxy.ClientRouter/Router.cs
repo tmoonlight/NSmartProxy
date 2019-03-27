@@ -40,11 +40,12 @@ namespace NSmartProxy.Client
         {
             var appIdIpPortConfig = ClientConfig.Clients;
 
+            //1.获取配置
             ConnnectionManager = ServerConnnectionManager.Create();
             ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
             var clientModel = await ConnnectionManager.InitConfig();
             int counter = 0;
-            //appid为0时说明没有分配appid，所以需要分配一个
+            //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
             {
                 if (app.AppId == 0)
@@ -63,6 +64,9 @@ namespace NSmartProxy.Client
             }
             Logger.Debug("**************************************");
             Task pollingTask = ConnnectionManager.PollingToProvider();
+            //3.创建心跳连接
+            ConnnectionManager.StartHeartBeats(5000);
+
             try
             {
                 await pollingTask;

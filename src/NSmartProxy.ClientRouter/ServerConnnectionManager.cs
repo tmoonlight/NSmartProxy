@@ -71,6 +71,9 @@ namespace NSmartProxy.Client
 
             var configStream = configClient.GetStream();
 
+            //请求0 协议名名
+            byte requestByte0 = (byte)Protocol.ClientNewAppRequest;
+            await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
@@ -175,6 +178,11 @@ namespace NSmartProxy.Client
             {
                 throw new Exception("无此client");
             }
+        }
+
+        public void StartHeartBeats(int miniseconds)
+        {
+            //TODO 开启心跳
         }
     }
 }

@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using NSmartProxy.Data;
 using NSmartProxy.Interfaces;
 using static NSmartProxy.Server;
 
@@ -77,7 +79,6 @@ namespace NSmartProxy
                 StartHttpService(ctsHttp);
 
             //3.开启配置服务
-
             try
             {
                 await StartConfigService(ctsConfig);
@@ -90,13 +91,9 @@ namespace NSmartProxy
             {
                 Logger.Debug("all closed");
                 ctsConfig.Cancel();
-                //listenerConsumer.Stop();
+
             }
-            ////4.通过已配置的端口集合开启侦听
-            //foreach (var kv in ConnectionManager.PortAppMap)
-            //{
-            //    ListenConsumeAsync(kv.Key, ctsConsumer.Token);
-            //}
+
 
         }
 
@@ -283,43 +280,32 @@ namespace NSmartProxy
         {
             try
             {
-                //长度固定4个字节
-                int configRequestLength = 3;
-                byte[] appRequestBytes = new byte[configRequestLength];
                 Server.Logger.Debug("config request received.");
                 var nstream = client.GetStream();
 
-                //1.读取配置请求1
-                int resultByte = await nstream.ReadAsync(appRequestBytes);
+                //0.读取协议名
+                int protoRequestLength = 1;
+                byte[] protoRequestBytes = new byte[protoRequestLength];
+                var proto = (Protocol)protoRequestBytes[0];
+                int resultByte0 = await nstream.ReadAsync(protoRequestBytes);
                 Server.Logger.Debug("appRequestBytes received.");
-                if (resultByte == 0)
-                {
-                    CloseClient(client);
-                    return;
-                }
-                //2.根据配置请求1获取更多配置信息
-                int appCount = (int)appRequestBytes[2];
-                byte[] consumerPortBytes = new byte[appCount * 2];
-                int resultByte2 = await nstream.ReadAsync(consumerPortBytes);
-                Server.Logger.Debug("consumerPortBytes received.");
-                if (resultByte2 == 0)
+                if (resultByte0 == 0)
                 {
                     CloseClient(client);
                     return;
                 }
 
-                //3.分配配置ID，并且写回给客户端
-                try
+                switch (proto)
                 {
-                    byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes);
-                    Server.Logger.Debug("apprequest arranged");
-                    await nstream.WriteAsync(arrangedIds);
+                    case Protocol.ClientNewAppRequest:
+                        await ProcessAppRequestProtocol(client);
+                        break;
+                    case Protocol.Heartbeat:
+                        //TODO 重启计时器
+                        break;
                 }
-                catch (Exception ex)
-                { Logger.Debug(ex.ToString()); }
 
-
-                Logger.Debug("arrangedIds written.");
+                if (await ProcessAppRequestProtocol(client)) return;
             }
             catch (Exception e)
             {
@@ -328,6 +314,50 @@ namespace NSmartProxy
             }
 
         }
+
+        private async Task<bool> ProcessAppRequestProtocol(TcpClient client)
+        {
+            Server.Logger.Debug("Now processing request protocol....");
+            NetworkStream nstream = client.GetStream();
+            //1.读取配置请求1
+            int configRequestLength = 3;
+            byte[] appRequestBytes = new byte[configRequestLength];
+            int resultByte = await nstream.ReadAsync(appRequestBytes);
+            Server.Logger.Debug("appRequestBytes received.");
+            if (resultByte == 0)
+            {
+                CloseClient(client);
+                return true;
+            }
+
+            //2.根据配置请求1获取更多配置信息
+            int appCount = (int)appRequestBytes[2];
+            byte[] consumerPortBytes = new byte[appCount * 2];
+            int resultByte2 = await nstream.ReadAsync(consumerPortBytes);
+            Server.Logger.Debug("consumerPortBytes received.");
+            if (resultByte2 == 0)
+            {
+                CloseClient(client);
+                return true;
+            }
+
+            //3.分配配置ID，并且写回给客户端
+            try
+            {
+                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes);
+                Server.Logger.Debug("apprequest arranged");
+                await nstream.WriteAsync(arrangedIds);
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(ex.ToString());
+            }
+
+
+            Logger.Debug("arrangedIds written.");
+            return false;
+        }
+
         #endregion
 
 
