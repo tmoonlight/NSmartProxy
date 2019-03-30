@@ -24,15 +24,10 @@ namespace NSmartProxy
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
         //public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
+        public NSPClientCollection Clients = new NSPClientCollection();
 
-        //端口和app的映射关系，需定时清理
-        public Dictionary<int, AppModel> PortAppMap = new Dictionary<int, AppModel>();
-
-        //app和代理客户端socket之间的映射关系
-        public ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>> AppTcpClientMap = new ConcurrentDictionary<ClientIDAppID, BufferBlock<TcpClient>>();
-
-        //已注册的clientID,和appid之间的关系,appid序号=元素下标序号+1
-        public Dictionary<int, List<ClientIDAppID>> RegisteredClient = new Dictionary<int, List<ClientIDAppID>>();
+        //端口和app的映射关系
+        public Dictionary<int, NSPApp> PortAppMap = new Dictionary<int, NSPApp>();
 
         private ClientConnectionManager()
         {
@@ -40,18 +35,18 @@ namespace NSmartProxy
             Task.Run(ListenServiceClient);
         }
 
-        private object _lockObject = new Object();
-        private object _lockObject2 = new Object();
-        private Random _rand = new Random();
+        private readonly object _lockObject = new Object();
+        private readonly object _lockObject2 = new Object();
+        private readonly Random _rand = new Random();
         private async Task ListenServiceClient()
         {
             //侦听，并且构造连接池
             Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
-            TcpListener listenter = new TcpListener(IPAddress.Any, Server.ClientServicePort);
-            listenter.Start(1000);
+            TcpListener listener = new TcpListener(IPAddress.Any, Server.ClientServicePort);
+            listener.Start(1000);
             while (true)
             {
-                TcpClient incomeClient = await listenter.AcceptTcpClientAsync();
+                TcpClient incomeClient = await listener.AcceptTcpClientAsync();
                 Server.Logger.Debug("已建立一个空连接");
                 ProcessReverseRequest(incomeClient);
             }
@@ -72,13 +67,14 @@ namespace NSmartProxy
                 await incomeClient.GetStream().ReadAsync(bytes);
 
                 var clientIdAppId = GetAppFromBytes(bytes);
-                Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID.ToString()
-                                                      + "AppID:" + clientIdAppId.AppID.ToString()
+                Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID
+                                                      + "AppID:" + clientIdAppId.AppID
                 );
                 //分配
                 lock (_lockObject)
                 {
-                    AppTcpClientMap.GetOrAdd(clientIdAppId, new BufferBlock<TcpClient>()).Post(incomeClient);
+                    Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
+                        .PushInComeClient(incomeClient);
                 }
                 //var arg = new AppChangedEventArgs();
                 //arg.App = clientIdAppId;
@@ -101,13 +97,11 @@ namespace NSmartProxy
 
         public async Task<TcpClient> GetClient(int consumerPort)
         {
-            //从字典的list中取出tcpclient，并将其移除
-            ClientIDAppID clientappid = PortAppMap[consumerPort].ClientIdAppId;
+            var clientID = PortAppMap[consumerPort].ClientId;
+            var appID = PortAppMap[consumerPort].AppId;
 
-            TcpClient client = await AppTcpClientMap[clientappid].ReceiveAsync();
+            TcpClient client = await Clients[clientID].AppMap[appID].PopClientAsync();
             PortAppMap[consumerPort].ReverseClients.Add(client);
-            // AppTcpClientMap[clientappid].Remove(client);
-            //AppRemoved(this, new AppChangedEventArgs { App = clientappid });
             return client;
         }
 
@@ -137,13 +131,13 @@ namespace NSmartProxy
                     {
                         _rand.NextBytes(tempClientIdBytes);
                         int tempClientId = (tempClientIdBytes[0] << 8) + tempClientIdBytes[1];
-                        if (!RegisteredClient.ContainsKey(tempClientId))
+                        if (!Clients.ContainsKey(tempClientId))
                         {
 
                             clientModel.ClientId = tempClientId;
                             clientId = tempClientId;
                             //注册客户端
-                            RegisteredClient.Add(tempClientId, new List<ClientIDAppID>());
+                            Clients.RegisterNewClient(tempClientId);
                             break;
                         }
                     }
@@ -155,43 +149,33 @@ namespace NSmartProxy
             }
             lock (_lockObject2)
             {
-                //循环获取appid，appid是元素下标+1
-                int maxAppCount = RegisteredClient[clientId].Count;
-                //增加请求的客户端
-                //int[] ports = NetworkUtil.FindAvailableTCPPorts(20000, appCount);
-                //foreach (var oneport in ports) Logger.Info(oneport + " ");
+                //注册app
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
                     int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
-                    int arrangedAppid = maxAppCount + i + 1;
-                    if (arrangedAppid > 255) throw new Exception("Stack overflow.");
+
+                    int arrangedAppid = Clients[clientId].RegisterNewApp();
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = 20000;
                     int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
-                    RegisteredClient[clientId].Add(new ClientIDAppID
-                    {
-                        ClientID = clientId,
-                        AppID = arrangedAppid
-                    });
+                    NSPApp app = Clients[clientId].AppMap[arrangedAppid];
+                    app.ClientId = clientId;
+                    app.AppId = arrangedAppid;
+                    app.ConsumePort = port;
+                    app.Tunnels = new List<TcpTunnel>();
+                    app.ReverseClients = new List<TcpClient>();
+                    PortAppMap[port] = app;
+
                     clientModel.AppList.Add(new App
                     {
                         AppId = arrangedAppid,
                         Port = port
                     });
-                    var appClient = PortAppMap[port] = new AppModel()
-                    {
-                        ClientIdAppId = new ClientIDAppID()
-                        {
-                            ClientID = clientId,
-                            AppID = arrangedAppid
-                        },
-                        Tunnels = new List<TcpTunnel>(),
-                        ReverseClients = new List<TcpClient>()
-                    };
+
                     Logger.Info(port);
                     //配置时触发
-                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = appClient.ClientIdAppId });
+                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = app });
                 }
                 Logger.Debug(" <=端口已分配。");
             }

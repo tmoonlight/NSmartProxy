@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy
 {
@@ -11,21 +12,41 @@ namespace NSmartProxy
         public int AppID;
     }
 
-    public class TcpTunnel
+    public class NSPClientCollection
     {
-        public TcpClient ConsumerClient;
-        public TcpClient ClientServerClient;
+        private Dictionary<int, NSPClient> ClientMap;
+
+        public NSPClient this[int index]
+        {
+            get => ClientMap[index];
+            set => ClientMap[index] = value;
+        }
+        public NSPClientCollection()
+        {
+            ClientMap = new Dictionary<int, NSPClient>();
+        }
+
+        public bool ContainsKey(int key)
+        {
+            return ClientMap.ContainsKey(key);
+        }
+
+        public void RegisterNewClient(int key)
+        {
+            if (!ClientMap.ContainsKey(key))
+                ClientMap[key] = new NSPClient()
+                {
+                    ClientID = key,
+                    LastUpdateTime = DateTime.Now.Ticks
+                };
+        }
+
     }
 
-    public class AppModel
-    {
-        public ClientIDAppID ClientIdAppId;
-        public List<TcpTunnel> Tunnels;          //正在使用的隧道
-        public List<TcpClient> ReverseClients;  //反向连接的socket
-    }
 
     public class AppChangedEventArgs : EventArgs
     {
-        public ClientIDAppID App;
+        public NSPApp App;
     }
+
 }
