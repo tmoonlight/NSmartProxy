@@ -8,7 +8,7 @@ namespace NSmartProxy
     {
         public int ClientID;
         public long LastUpdateTime;
-        //public TcpClient ConfigClient;      //配置用的socket
+        public TcpClient ConfigClient;      //配置用的socket
         //Appid->app
         public Dictionary<int, NSPApp> AppMap;
 
@@ -40,6 +40,18 @@ namespace NSmartProxy
         public NSPApp GetApp(int appId)
         {
             return AppMap[appId];
+        }
+
+        public int Close()
+        {
+            //统计关闭的连接数
+            int ClosedConnectionCount = 0;
+            foreach (var AppKV in AppMap)
+            {
+                ClosedConnectionCount += AppKV.Value.Close();
+            }
+
+            return ClosedConnectionCount;
         }
     }
 }

@@ -14,6 +14,11 @@ namespace NSmartProxy
 
         private static HashSet<int> _usedPorts = new HashSet<int>();
 
+        public static bool ReleasePort(int port)
+        {
+            return _usedPorts.Remove(port);
+        }
+
         /// <summary>
         /// 查找一个端口
         /// </summary>

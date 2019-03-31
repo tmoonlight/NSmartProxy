@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using NSmartProxy.Data;
 using NSmartProxy.Interfaces;
+using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 
 namespace NSmartProxy
@@ -81,7 +82,10 @@ namespace NSmartProxy
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 
-            //3.开启配置服务
+            //3.开启心跳检测线程
+            ProcessHeartbeats(Global.HeartbeatInterval, ctsConsumer);
+
+            //4.开启配置服务(常开)
             try
             {
                 await StartConfigService(ctsConfig);
@@ -93,11 +97,49 @@ namespace NSmartProxy
             finally
             {
                 Logger.Debug("all closed");
-                ctsConfig.Cancel();
+                ctsConfig.Cancel(); ctsHttp.Cancel(); ctsConsumer.Cancel();
+            }
+        }
+
+        private async Task ProcessHeartbeats(int interval, CancellationTokenSource cts)
+        {
+            try
+            {
+                String msg = "";
+                while (!cts.Token.IsCancellationRequested)
+                {
+                    // List<int> pendingRemovekey = new List<int>();
+                    var outTimeClients = ConnectionManager.Clients.Where(
+                        (cli) => DateTime.Now.Ticks - cli.LastUpdateTime > interval).ToList();
+
+                    foreach (var client in outTimeClients)
+                    {
+                        foreach (var appKV in client.AppMap)
+                        {
+                            int port = appKV.Value.ConsumePort;
+                            //1.移除AppMap中的App
+                            ConnectionManager.PortAppMap.Remove(port);
+                            msg += appKV.Value.ConsumePort + " ";
+                            //2.移除端口占用
+                            NetworkUtil.ReleasePort(port);
+                        }
+                        //3.移除client
+                        int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
+                        Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
+                    }
+                    // ConnectionManager.PortAppMap.Remove(port
+                    await Task.Delay(interval);
+                }
 
             }
-
-
+            catch (Exception ex)
+            {
+                Logger.Error(ex.Message, ex);
+            }
+            finally
+            {
+                Logger.Debug("心跳检测异常终止。");
+            }
         }
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -105,7 +147,7 @@ namespace NSmartProxy
             Logger.Error(e.Exception.ToString(), e.Exception);
         }
 
-       
+
 
 
         private async Task StartConfigService(CancellationTokenSource accepting)
@@ -137,8 +179,7 @@ namespace NSmartProxy
             if (port == 0) throw new Exception("app未注册");
             var ct = new CancellationToken();
 
-
-            ListenConsumeAsync(port, ct);
+            ListenConsumeAsync(port);
         }
 
         #region 配置
@@ -256,14 +297,20 @@ namespace NSmartProxy
         /// <param name="consumerlistener"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        async Task ListenConsumeAsync(int consumerPort, CancellationToken ct)
+        async Task ListenConsumeAsync(int consumerPort)
         {
             try
             {
-
+                var cts = new CancellationTokenSource();
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
+                var nspApp = ConnectionManager.PortAppMap[consumerPort];
+                var ct = cts.Token;
                 consumerlistener.Start(1000);
-                //给两个listen，同时监听3端
+                //Token,Listener加入全局管理
+                nspApp.Listener = consumerlistener;
+                nspApp.CancelListenSource = cts;
+
+                //给两个listener，同时监听3端
                 var clientCounter = 0;
                 while (!ct.IsCancellationRequested)
                 {
@@ -277,7 +324,7 @@ namespace NSmartProxy
                     Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
                     //消费端连接成功,连接
 
-
+                    //TODO 此处是否新开线程异步处理？
                     //需要端口
                     TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
                     //记录tcp隧道，客户端

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -12,8 +13,9 @@ namespace NSmartProxy
         public int AppID;
     }
 
-    public class NSPClientCollection
+    public class NSPClientCollection:IEnumerable<NSPClient>
     {
+        //clientid->NSPClient
         private Dictionary<int, NSPClient> ClientMap;
 
         public NSPClient this[int index]
@@ -41,6 +43,24 @@ namespace NSmartProxy
                 };
         }
 
+        public int UnRegisterClient(int key)
+        {
+            //关闭所有连接
+            int closedClients = ClientMap[key].Close();
+            this.ClientMap.Remove(key);
+            //停止端口侦听
+            return closedClients;
+        }
+
+        public IEnumerator<NSPClient> GetEnumerator()
+        {
+            return ClientMap.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
 
