@@ -33,7 +33,7 @@ namespace NSmartProxy.Client
         {
             ClientModel clientModel = await ReadConfigFromProvider();
 
-            
+
             //要求服务端分配资源并获取服务端配置，待完善
 
             this.ClientID = clientModel.ClientId;
@@ -102,7 +102,7 @@ namespace NSmartProxy.Client
             byte[] serverConfig = new byte[256];
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0) Router.Logger.Debug("服务器状态异常，已断开连接");
-           
+
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
 
@@ -183,9 +183,29 @@ namespace NSmartProxy.Client
             }
         }
 
-        public void StartHeartBeats(int miniseconds)
+        public async Task StartHeartBeats(int interval)
         {
+            var config = NSmartProxy.Client.Router.ClientConfig;
             //TODO 开启心跳
+            TcpClient configClient = new TcpClient();
+            var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
+            var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
+            //超时则dispose掉
+            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+            if (!connectAsync.IsCompleted)
+            {
+                throw new Exception("连接超时");
+            }
+            var configStream = configClient.GetStream();
+            //请求0 协议名名
+            byte requestByte0 = (byte)Protocol.Heartbeat;
+            while (true)
+            {
+                await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
+                Task.Delay(interval);
+                Console.WriteLine("tick.");
+            }
+
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.Client
 {
@@ -65,7 +66,7 @@ namespace NSmartProxy.Client
             Logger.Debug("**************************************");
             Task pollingTask = ConnnectionManager.PollingToProvider();
             //3.创建心跳连接
-            ConnnectionManager.StartHeartBeats(5000);
+            ConnnectionManager.StartHeartBeats(Global.HeartbeatInterval);
 
             try
             {
