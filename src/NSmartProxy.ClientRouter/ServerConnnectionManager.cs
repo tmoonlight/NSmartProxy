@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 
 namespace NSmartProxy.Client
 {
@@ -183,27 +184,33 @@ namespace NSmartProxy.Client
             }
         }
 
-        public async Task StartHeartBeats(int interval)
+        public async Task StartHeartBeats(int interval,CancellationToken ct)
         {
             var config = NSmartProxy.Client.Router.ClientConfig;
-            //TODO 开启心跳
-            TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
-            var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
-            //超时则dispose掉
-            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-            if (!connectAsync.IsCompleted)
+            //TODO 客户端开启心跳
+           
+           
+            
+            while (!ct.IsCancellationRequested)
             {
-                throw new Exception("连接超时");
-            }
-            var configStream = configClient.GetStream();
-            //请求0 协议名名
-            byte requestByte0 = (byte)Protocol.Heartbeat;
-            while (true)
-            {
+                TcpClient configClient = new TcpClient();
+                var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
+                var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
+                //超时则dispose掉
+                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+                if (!connectAsync.IsCompleted)
+                {
+                    throw new Exception("连接超时");
+                }
+                var configStream = configClient.GetStream();
+                //请求0 协议名
+                byte requestByte0 = (byte)Protocol.Heartbeat;
+                byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
                 await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
-                Task.Delay(interval);
+                await configStream.WriteAsync(requestByte1, 0, 2);
                 Console.WriteLine("tick.");
+                configClient.Close();
+                await Task.Delay(interval);
             }
 
         }

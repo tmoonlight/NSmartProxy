@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 
@@ -7,7 +8,7 @@ namespace NSmartProxy
     public class NSPClient
     {
         public int ClientID;
-        public long LastUpdateTime;
+        public DateTime LastUpdateTime;
         public TcpClient ConfigClient;      //配置用的socket
         //Appid->app
         public Dictionary<int, NSPApp> AppMap;

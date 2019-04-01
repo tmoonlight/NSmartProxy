@@ -16,6 +16,7 @@ namespace NSmartProxy.Client
     {
         CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
+        CancellationTokenSource HEARTBEAT_TOKEN = new CancellationTokenSource();
         ServerConnnectionManager ConnnectionManager;
 
         internal static Config ClientConfig;
@@ -66,7 +67,7 @@ namespace NSmartProxy.Client
             Logger.Debug("**************************************");
             Task pollingTask = ConnnectionManager.PollingToProvider();
             //3.创建心跳连接
-            ConnnectionManager.StartHeartBeats(Global.HeartbeatInterval);
+            ConnnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN.Token);
 
             try
             {

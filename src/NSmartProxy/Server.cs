@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using NSmartProxy.Data;
+using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
@@ -82,7 +83,8 @@ namespace NSmartProxy
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 
-            //3.开启心跳检测线程
+            //3.开启心跳检测线程 
+            //TODO 服务端心跳检测
             ProcessHeartbeats(Global.HeartbeatCheckInterval, ctsConsumer);
 
             //4.开启配置服务(常开)
@@ -108,9 +110,10 @@ namespace NSmartProxy
                 String msg = "";
                 while (!cts.Token.IsCancellationRequested)
                 {
+                    Server.Logger.Debug("开始心跳检测");
                     // List<int> pendingRemovekey = new List<int>();
                     var outTimeClients = ConnectionManager.Clients.Where(
-                        (cli) => DateTime.Now.Ticks - cli.LastUpdateTime > interval).ToList();
+                        (cli) => DateTimeHelper.TimeRange(cli.LastUpdateTime, DateTime.Now) > interval).ToList();
 
                     foreach (var client in outTimeClients)
                     {
@@ -128,6 +131,7 @@ namespace NSmartProxy
                         Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
                     }
                     // ConnectionManager.PortAppMap.Remove(port
+                    Server.Logger.Debug("结束心跳检测");
                     await Task.Delay(interval);
                 }
 
@@ -212,8 +216,9 @@ namespace NSmartProxy
                 //0.读取协议名
                 int protoRequestLength = 1;
                 byte[] protoRequestBytes = new byte[protoRequestLength];
-                var proto = (Protocol)protoRequestBytes[0];
+
                 int resultByte0 = await nstream.ReadAsync(protoRequestBytes);
+                Protocol proto = (Protocol)protoRequestBytes[0];
                 Server.Logger.Debug("appRequestBytes received.");
                 if (resultByte0 == 0)
                 {
@@ -227,7 +232,7 @@ namespace NSmartProxy
                         await ProcessAppRequestProtocol(client);
                         break;
                     case Protocol.Heartbeat:
-                        //TODO 重启计时器
+                        //TODO 记录服务端更新时间
                         await ProcessHeartbeatProtocol(client);
                         break;
                     default:
@@ -235,7 +240,7 @@ namespace NSmartProxy
                         break;
                 }
 
-                if (await ProcessAppRequestProtocol(client)) return;
+                //if (await ProcessAppRequestProtocol(client)) return;
             }
             catch (Exception e)
             {
@@ -247,6 +252,7 @@ namespace NSmartProxy
 
         private async Task ProcessHeartbeatProtocol(TcpClient client)
         {
+            //1.读取clientID
             Server.Logger.Debug("Now processing Heartbeat protocol....");
             NetworkStream nstream = client.GetStream();
             int heartBeatLength = 2;
@@ -260,7 +266,10 @@ namespace NSmartProxy
             }
 
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
-            ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now.Ticks;
+            //2.更新最后更新时间
+            ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
+            //3.接收完立即关闭
+            client.Close();
         }
 
         private async Task<bool> ProcessAppRequestProtocol(TcpClient client)

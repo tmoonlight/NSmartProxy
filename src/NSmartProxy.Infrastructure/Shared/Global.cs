@@ -6,7 +6,7 @@
     public sealed class Global
     {
         public const string LogFormat = "";
-        public const int HeartbeatInterval = 5000;  //心跳间隔
-        public const int HeartbeatCheckInterval = 10000;  //心跳间隔
+        public const int HeartbeatInterval = 15000;  //心跳间隔（毫秒）
+        public const int HeartbeatCheckInterval = 30000;  //心跳检测间隔（毫秒）
     }
 }

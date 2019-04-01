@@ -39,7 +39,7 @@ namespace NSmartProxy
                 ClientMap[key] = new NSPClient()
                 {
                     ClientID = key,
-                    LastUpdateTime = DateTime.Now.Ticks
+                    LastUpdateTime = DateTime.Now
                 };
         }
 
