@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Infrastructure"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxyClient", "NSmartProxyClient\NSmartProxyClient.csproj", "{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxyWinform", "NSmartProxyWinform\NSmartProxyWinform.csproj", "{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{094B0334-FEDB-4867-9960-03382408BFBA} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
 		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CBECE17A-7F2B-4821-843B-65DCE2A768C2}

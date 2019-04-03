@@ -94,7 +94,8 @@ namespace NSmartProxy
 
         private static void SetConfig(Router clientRouter)
         {
-            Config config = new Config();
+           
+           Config config = new Config();
             config.ProviderAddress = Configuration.GetSection("ProviderAddress").Value;
             config.ProviderPort = int.Parse(Configuration.GetSection("ProviderPort").Value);
             config.ProviderConfigPort = int.Parse(Configuration.GetSection("ProviderConfigPort").Value);

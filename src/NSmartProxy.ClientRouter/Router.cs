@@ -12,6 +12,24 @@ using NSmartProxy.Shared;
 
 namespace NSmartProxy.Client
 {
+    public class NullLogger : INSmartLogger
+    {
+        public void Debug(object message)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void Error(object message, Exception ex)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void Info(object message)
+        {
+            //throw new NotImplementedException();
+        }
+    }
+
     public class Router
     {
         CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
@@ -22,7 +40,9 @@ namespace NSmartProxy.Client
         internal static Config ClientConfig;
 
         //inject
-        internal static INSmartLogger Logger;
+        internal static INSmartLogger Logger = new NullLogger();
+
+        public Router() { }
 
         public Router(INSmartLogger logger)
         {
@@ -35,7 +55,7 @@ namespace NSmartProxy.Client
         }
 
         /// <summary>
-        /// 重要：连接服务端
+        /// 重要：连接服务端，一般做为入口方法
         /// </summary>
         /// <returns></returns>
         public async Task ConnectToProvider()
@@ -45,7 +65,7 @@ namespace NSmartProxy.Client
             //1.获取配置
             ConnnectionManager = ServerConnnectionManager.Create();
             ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
-            var clientModel = await ConnnectionManager.InitConfig();
+            var clientModel = await ConnnectionManager.InitConfig().ConfigureAwait(false);
             int counter = 0;
             //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
@@ -71,7 +91,7 @@ namespace NSmartProxy.Client
 
             try
             {
-                await pollingTask;
+                await pollingTask.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -79,7 +99,7 @@ namespace NSmartProxy.Client
                 throw;
             }
 
-            await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token);
+            await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)
