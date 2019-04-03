@@ -35,7 +35,8 @@ namespace NSmartProxy.Client
         CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
         CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
         CancellationTokenSource HEARTBEAT_TOKEN = new CancellationTokenSource();
-        ServerConnnectionManager ConnnectionManager;
+
+        public ServerConnnectionManager ConnnectionManager;
 
         internal static Config ClientConfig;
 
@@ -114,8 +115,15 @@ namespace NSmartProxy.Client
 
         }
 
+        public void Close()
+        {
+
+            //throw new NotImplementedException();
+        }
+
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
         {
+            //事件循环2
             try
             {
                 byte[] buffer = new byte[1];
@@ -135,7 +143,8 @@ namespace NSmartProxy.Client
                 //根据clientid_appid发送到固定的端口
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
 
-                //只发送一次，需要在链接成功移除时加入
+                //向服务端发起一次长连接，没有接收任何外来连接请求时，
+                //该方法会在write处会阻塞。
                 await ConnnectionManager.ConnectAppToServer(appId);
                 Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口

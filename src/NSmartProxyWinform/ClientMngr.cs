@@ -38,16 +38,19 @@ namespace NSmartProxyWinform
                 Program.Logger.Info(message);
             }
         }
+        Router clientRouter;
         public ClientMngr()
         {
             InitializeComponent();
+            Log4netLogger logger = new Log4netLogger();
+            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
+            clientRouter = new Router(logger);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Log4netLogger logger = new Log4netLogger();
-            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
-            Router clientRouter = new Router(logger);
+            ((Button)sender).Enabled = false;
+            
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             var tsk = clientRouter.ConnectToProvider().ConfigureAwait(false);
@@ -95,6 +98,22 @@ namespace NSmartProxyWinform
                     textBox1.ScrollToCaret();
                 }
             )); 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            clientRouter.Close();
+            
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string x = "";
+            foreach (var tcpclient in clientRouter.ConnnectionManager.ConnectedConnections)
+            {
+               x+= tcpclient.GetHashCode() + " " + tcpclient.Connected + " " + Environment.NewLine;
+            }
+            MessageBox.Show(x);
         }
     }
 }

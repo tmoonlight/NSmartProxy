@@ -26,6 +26,8 @@ namespace NSmartProxy.Client
             Router.Logger.Debug("ServerConnnectionManager initialized.");
         }
 
+        public List<TcpClient> ConnectedConnections = new List<TcpClient>();
+
         /// <summary>
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
@@ -74,7 +76,7 @@ namespace NSmartProxy.Client
 
             var configStream = configClient.GetStream();
 
-            //请求0 协议名名
+            //请求0 协议名
             byte requestByte0 = (byte)Protocol.ClientNewAppRequest;
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
@@ -123,7 +125,7 @@ namespace NSmartProxy.Client
             //int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
 
-            List<Task> taskList = new List<Task>();
+            // List<Task> taskList = new List<Task>();
             foreach (var kv in ServiceClientListCollection)
             {
 
@@ -143,14 +145,19 @@ namespace NSmartProxy.Client
             var clientList = new List<TcpClient>();
             //补齐
             TcpClient client = new TcpClient();
+            //1.连接服务端
             await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
-            //连完了马上发送端口信息过去，方便服务端分配
+            //2.发送clientid和appid信息，向服务端申请连接
+            //连接到位后增加相关的元素并且触发客户端连接事件
             await client.GetStream().WriteAsync(requestBytes, 0, requestBytes.Length);
             Router.Logger.Debug("ClientID:" + ClientID.ToString()
                                             + " AppId:" + appid.ToString() + " 已连接");
             app.TcpClientGroup.Add(client);
             clientList.Add(client);
-            //var clientList = new List<TcpClient>() { client };
+            //统一管理连接
+            ConnectedConnections.AddRange(clientList);
+           
+            //事件循环1,这个方法必须放在最后
             ClientGroupConnected(this, new ClientGroupEventArgs()
             {
                 NewClients = clientList,
@@ -160,6 +167,7 @@ namespace NSmartProxy.Client
                     AppId = appid
                 }
             });
+            
         }
 
         //key:appid value;ClientApp
