@@ -69,9 +69,9 @@
             // 
             this.button3.Location = new System.Drawing.Point(13, 372);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.Size = new System.Drawing.Size(113, 23);
             this.button3.TabIndex = 3;
-            this.button3.Text = "查看连接";
+            this.button3.Text = "资源管理器中打开";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -88,7 +88,7 @@
             this.MaximizeBox = false;
             this.Name = "ClientMngr";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "测试";
+            this.Text = "日志查看器";
             this.ResumeLayout(false);
             this.PerformLayout();
 

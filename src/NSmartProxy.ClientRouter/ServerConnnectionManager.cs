@@ -21,13 +21,15 @@ namespace NSmartProxy.Client
     {
         private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int ClientID = 0;
+
+        public List<TcpClient> ConnectedConnections;
+        public Dictionary<int, ClientAppWorker> ServiceClientListCollection;  //key:appid value;ClientApp
+
         private ServerConnnectionManager()
         {
+            ConnectedConnections = new List<TcpClient>();
             Router.Logger.Debug("ServerConnnectionManager initialized.");
         }
-
-        public List<TcpClient> ConnectedConnections = new List<TcpClient>();
-
         /// <summary>
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
@@ -37,8 +39,7 @@ namespace NSmartProxy.Client
             ClientModel clientModel = await ReadConfigFromProvider();
 
 
-            //要求服务端分配资源并获取服务端配置，待完善
-
+            //要求服务端分配资源并获取服务端配置
             this.ClientID = clientModel.ClientId;
             //分配appid给不同的Client
             ServiceClientListCollection = new Dictionary<int, ClientAppWorker>();
@@ -125,7 +126,6 @@ namespace NSmartProxy.Client
             //int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
 
-            // List<Task> taskList = new List<Task>();
             foreach (var kv in ServiceClientListCollection)
             {
 
@@ -170,12 +170,6 @@ namespace NSmartProxy.Client
             
         }
 
-        //key:appid value;ClientApp
-        public Dictionary<int, ClientAppWorker> ServiceClientListCollection;// = new Dictionary<int, List<TcpClient>>();
-        //private static ServerConnnectionManager Instance = new Lazy<ServerConnnectionManager>(() => new ServerConnnectionManager()).Value;
-
-
-
         public static ServerConnnectionManager Create()
         {
             return new ServerConnnectionManager();
@@ -195,10 +189,8 @@ namespace NSmartProxy.Client
         public async Task StartHeartBeats(int interval,CancellationToken ct)
         {
             var config = NSmartProxy.Client.Router.ClientConfig;
+
             //TODO 客户端开启心跳
-           
-           
-            
             while (!ct.IsCancellationRequested)
             {
                 TcpClient configClient = new TcpClient();

@@ -89,6 +89,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ClientConfig.Designer.cs">
+      <DependentUpon>ClientConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="ClientMngr.cs">
       <SubType>Form</SubType>
     </Compile>

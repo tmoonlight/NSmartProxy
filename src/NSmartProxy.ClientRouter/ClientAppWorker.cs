@@ -7,10 +7,11 @@ namespace NSmartProxy.Client
 {
     public class ClientAppWorker
     {
+        private bool isWorking = false;
+
         public List<TcpClient> TcpClientGroup = new List<TcpClient>();
         public int AppId;  //1~255
         public int Port;   //0~65535
-        private bool isWorking = false;
 
         public bool IsWorking { get => isWorking;}
 

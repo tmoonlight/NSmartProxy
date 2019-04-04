@@ -108,12 +108,17 @@ namespace NSmartProxyWinform
 
         private void button3_Click(object sender, EventArgs e)
         {
-            string x = "";
-            foreach (var tcpclient in clientRouter.ConnnectionManager.ConnectedConnections)
-            {
-               x+= tcpclient.GetHashCode() + " " + tcpclient.Connected + " " + Environment.NewLine;
-            }
-            MessageBox.Show(x);
+            //string x = "";
+            //foreach (var tcpclient in clientRouter.ConnnectionManager.ConnectedConnections)
+            //{
+            //   x+= tcpclient.GetHashCode() + " " + tcpclient.Connected + " " + Environment.NewLine;
+            //}
+            //MessageBox.Show(x);
+
+            //记录日志
+            //string argument = "/select, \"" + loggerpath + "\"";
+            //Logging.Debug(argument);
+            //System.Diagnostics.Process.Start("explorer.exe", argument);
         }
     }
 }

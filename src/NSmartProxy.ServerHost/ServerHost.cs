@@ -12,6 +12,7 @@ namespace NSmartProxy.ServerHost
 {
     class ServerHost
     {
+        #region logger
         public class Log4netLogger : INSmartLogger
         {
             public void Debug(object message)
@@ -23,7 +24,7 @@ namespace NSmartProxy.ServerHost
             public void Error(object message, Exception ex)
             {
                 //Logger.Debug(message);
-                Logger.Error(message,ex);
+                Logger.Error(message, ex);
             }
 
             public void Info(object message)
@@ -31,9 +32,11 @@ namespace NSmartProxy.ServerHost
                 Logger.Info(message);
             }
         }
+        #endregion
 
         public static IConfigurationRoot Configuration { get; set; }
         public static ILog Logger;
+
         static void Main(string[] args)
         {
             //log

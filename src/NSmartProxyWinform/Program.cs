@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,6 +14,8 @@ namespace NSmartProxyWinform
   
     static class Program
     {
+        private static Mutex mutex = new Mutex(true, "{41ACBA9E-9699-4766-891B-57F325420A78}");
+
         public static IConfigurationRoot Configuration { get; set; }
 
         public static ILog Logger;
@@ -22,6 +25,14 @@ namespace NSmartProxyWinform
         [STAThread]
         static void Main()
         {
+            if (!mutex.WaitOne(3, false))
+            {
+                string msg = "Another instance of the program is running.";
+                //Logger.Error(msg, new Exception(msg));
+                MessageBox.Show(msg);
+                return;
+            }
+
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
             XmlConfigurator.Configure(loggerRepository, new FileInfo("log4net.config"));
             //BasicConfigurator.Configure(loggerRepository);

@@ -16,17 +16,17 @@ namespace NSmartProxy.Client
     {
         public void Debug(object message)
         {
-            //throw new NotImplementedException();
+            //Not Implemented
         }
 
         public void Error(object message, Exception ex)
         {
-            //throw new NotImplementedException();
+            //Not Implemented
         }
 
         public void Info(object message)
         {
-            //throw new NotImplementedException();
+            //Not Implemented
         }
     }
 
@@ -40,8 +40,7 @@ namespace NSmartProxy.Client
 
         internal static Config ClientConfig;
 
-        //inject
-        internal static INSmartLogger Logger = new NullLogger();
+        internal static INSmartLogger Logger = new NullLogger();   //inject
 
         public Router() { }
 

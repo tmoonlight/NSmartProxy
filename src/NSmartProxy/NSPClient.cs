@@ -10,8 +10,7 @@ namespace NSmartProxy
         public int ClientID;
         public DateTime LastUpdateTime;
         public TcpClient ConfigClient;      //配置用的socket
-        //Appid->app
-        public Dictionary<int, NSPApp> AppMap;
+        public Dictionary<int, NSPApp> AppMap; //Appid->app
 
         public NSPClient()
         {

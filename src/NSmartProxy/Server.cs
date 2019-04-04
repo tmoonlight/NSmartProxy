@@ -39,17 +39,14 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-        //服务端代理转发端口
-        public static int ClientServicePort = 9973;
-        //服务端配置通讯端口
-        public static int ConfigServicePort = 12307;
-        //远端管理端口
-        public static int WebManagementPort = 0;
+      
+        public static int ClientServicePort = 9973;   //服务端代理转发端口
+        public static int ConfigServicePort = 12307;  //服务端配置通讯端口
+        public static int WebManagementPort = 0;    //远端管理端口
 
         public ClientConnectionManager ConnectionManager = null;
-
-        //inject
-        internal static INSmartLogger Logger;
+       
+        internal static INSmartLogger Logger; //inject
 
         public Server(INSmartLogger logger)
         {
@@ -184,6 +181,58 @@ namespace NSmartProxy
             var ct = new CancellationToken();
 
             ListenConsumeAsync(port);
+        }
+
+        /// <summary>
+        /// 同时侦听来自consumer的链接和到provider的链接
+        /// </summary>
+        /// <param name="consumerlistener"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        async Task ListenConsumeAsync(int consumerPort)
+        {
+            try
+            {
+                var cts = new CancellationTokenSource();
+                var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
+                var nspApp = ConnectionManager.PortAppMap[consumerPort];
+                var ct = cts.Token;
+                consumerlistener.Start(1000);
+                //Token,Listener加入全局管理
+                nspApp.Listener = consumerlistener;
+                nspApp.CancelListenSource = cts;
+
+                //给两个listener，同时监听3端
+                var clientCounter = 0;
+                while (!ct.IsCancellationRequested)
+                {
+                    //目标的代理服务联通了，才去处理consumer端的请求。
+                    Logger.Debug("listening serviceClient....Port:" + consumerPort);
+                    TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
+                    //记录tcp隧道，消费端
+                    TcpTunnel tunnel = new TcpTunnel();
+                    tunnel.ConsumerClient = consumerClient;
+                    ClientConnectionManager.GetInstance().PortAppMap[consumerPort].Tunnels.Add(tunnel);
+                    Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
+                    //消费端连接成功,连接
+
+                    //TODO 此处是否新开线程异步处理？
+                    //需要端口
+                    TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
+                    //记录tcp隧道，客户端
+                    tunnel.ClientServerClient = s2pClient;
+                    //✳关键过程✳
+                    //连接完之后发送一个字节过去促使客户端建立转发隧道
+                    await s2pClient.GetStream().WriteAsync(new byte[] { 1 }, 0, 1);
+                    clientCounter++;
+
+                    TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Debug(e);
+            }
         }
 
         #region 配置
@@ -321,59 +370,6 @@ namespace NSmartProxy
 
         #endregion
 
-
-        /// <summary>
-        /// 同时侦听来自consumer的链接和到provider的链接
-        /// </summary>
-        /// <param name="consumerlistener"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        async Task ListenConsumeAsync(int consumerPort)
-        {
-            try
-            {
-                var cts = new CancellationTokenSource();
-                var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
-                var nspApp = ConnectionManager.PortAppMap[consumerPort];
-                var ct = cts.Token;
-                consumerlistener.Start(1000);
-                //Token,Listener加入全局管理
-                nspApp.Listener = consumerlistener;
-                nspApp.CancelListenSource = cts;
-
-                //给两个listener，同时监听3端
-                var clientCounter = 0;
-                while (!ct.IsCancellationRequested)
-                {
-                    //目标的代理服务联通了，才去处理consumer端的请求。
-                    Logger.Debug("listening serviceClient....Port:" + consumerPort);
-                    TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    //记录tcp隧道，消费端
-                    TcpTunnel tunnel = new TcpTunnel();
-                    tunnel.ConsumerClient = consumerClient;
-                    ClientConnectionManager.GetInstance().PortAppMap[consumerPort].Tunnels.Add(tunnel);
-                    Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
-                    //消费端连接成功,连接
-
-                    //TODO 此处是否新开线程异步处理？
-                    //需要端口
-                    TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
-                    //记录tcp隧道，客户端
-                    tunnel.ClientServerClient = s2pClient;
-                    //✳关键过程✳
-                    //连接完之后发送一个字节过去促使客户端建立转发隧道
-                    await s2pClient.GetStream().WriteAsync(new byte[] { 1 }, 0, 1);
-                    clientCounter++;
-
-                    TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Debug(e);
-            }
-
-        }
 
         #region datatransfer
         //3端互相传输数据

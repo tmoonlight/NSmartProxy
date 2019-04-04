@@ -14,10 +14,7 @@ namespace NSmartProxy
         public int ConsumePort;
         public TcpListener Listener;
         public CancellationTokenSource CancelListenSource;
-
         public BufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
-
-        // public ClientIDAppID ClientIdAppId;
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
         public List<TcpClient> ReverseClients;  //反向连接的socket
 
