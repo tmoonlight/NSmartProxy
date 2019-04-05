@@ -14,7 +14,7 @@ namespace TCPTester.Client
         static void Main(string[] args)
         {
             Thread.Sleep(2000);
-            for (int i = 0; i < 3000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 Thread.Sleep(100);
                 Task.Run(() =>
@@ -23,10 +23,12 @@ namespace TCPTester.Client
                     // int port = int.Parse(args[0]);
                     TcpClient tcpClient = new TcpClient();
                     //tcpClient.Connect("192.168.1.168", port);
-                    tcpClient.Connect("127.0.0.1", 20003);
+                    tcpClient.Connect("127.0.0.1", 5900);
                     var stream = tcpClient.GetStream();
-                    Console.WriteLine("连接数"+i.ToString());
-                    
+                    stream.Write(new byte[] { 1 }, 0, 1);
+                    stream.Write(new byte[] { 1 }, 0, 1);
+                    Console.WriteLine("连接数" + i.ToString());
+
                     //Task.Run(() =>
                     //{
 
@@ -55,7 +57,7 @@ namespace TCPTester.Client
                     //    Thread.Sleep(3000);
                     //}
                 });
-                
+
             }
 
             Console.Read();

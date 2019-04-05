@@ -56,15 +56,8 @@ namespace NSmartProxyWinform
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             var tsk = clientRouter.ConnectToProvider().ConfigureAwait(false);
-            //try
-            // {
-            //tsk.GetAwaiter();
-            // }
-            // catch (Exception ex)
-            // {
-            // Logger.Error(ex);
-            //   throw;
-            // }
+            button1.Enabled = false;
+            button2.Enabled = true;
         }
 
         private void SetConfig(Router clientRouter)
@@ -104,8 +97,10 @@ namespace NSmartProxyWinform
 
         private void button2_Click(object sender, EventArgs e)
         {
+            button1.Enabled = true;
+            button2.Enabled = false;
             var tsk =clientRouter.Close().ConfigureAwait(false);
-            MessageBox.Show("已关闭");
+           // MessageBox.Show("已关闭");
         }
 
         private void button3_Click(object sender, EventArgs e)
