@@ -39,13 +39,13 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-      
+
         public static int ClientServicePort = 9973;   //服务端代理转发端口
         public static int ConfigServicePort = 12307;  //服务端配置通讯端口
         public static int WebManagementPort = 0;    //远端管理端口
 
         public ClientConnectionManager ConnectionManager = null;
-       
+
         internal static INSmartLogger Logger; //inject
 
         public Server(INSmartLogger logger)
@@ -104,7 +104,6 @@ namespace NSmartProxy
         {
             try
             {
-                String msg = "";
                 while (!cts.Token.IsCancellationRequested)
                 {
                     Server.Logger.Debug("开始心跳检测");
@@ -114,18 +113,7 @@ namespace NSmartProxy
 
                     foreach (var client in outTimeClients)
                     {
-                        foreach (var appKV in client.AppMap)
-                        {
-                            int port = appKV.Value.ConsumePort;
-                            //1.移除AppMap中的App
-                            ConnectionManager.PortAppMap.Remove(port);
-                            msg += appKV.Value.ConsumePort + " ";
-                            //2.移除端口占用
-                            NetworkUtil.ReleasePort(port);
-                        }
-                        //3.移除client
-                        int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
-                        Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
+                        CloseAllSourceByClient(client.ClientID);
                     }
                     // ConnectionManager.PortAppMap.Remove(port
                     Server.Logger.Debug("结束心跳检测");
@@ -141,6 +129,25 @@ namespace NSmartProxy
             {
                 Logger.Debug("心跳检测异常终止。");
             }
+        }
+
+        private void CloseAllSourceByClient(int clientId)
+        {
+            NSPClient client = ConnectionManager.Clients[clientId];
+            string msg = "";
+            foreach (var appKV in client.AppMap)
+            {
+                int port = appKV.Value.ConsumePort;
+                //1.移除AppMap中的App
+                ConnectionManager.PortAppMap.Remove(port);
+                msg += appKV.Value.ConsumePort + " ";
+                //2.移除端口占用
+                NetworkUtil.ReleasePort(port);
+            }
+
+            //3.移除client
+            int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
+            Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
         }
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -191,12 +198,13 @@ namespace NSmartProxy
         /// <returns></returns>
         async Task ListenConsumeAsync(int consumerPort)
         {
+            var cts = new CancellationTokenSource();
+            var ct = cts.Token;
             try
             {
-                var cts = new CancellationTokenSource();
+
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                 var nspApp = ConnectionManager.PortAppMap[consumerPort];
-                var ct = cts.Token;
                 consumerlistener.Start(1000);
                 //Token,Listener加入全局管理
                 nspApp.Listener = consumerlistener;
@@ -232,6 +240,7 @@ namespace NSmartProxy
             catch (Exception e)
             {
                 Logger.Debug(e);
+                cts.Cancel();
             }
         }
 
@@ -284,6 +293,9 @@ namespace NSmartProxy
                         //TODO 记录服务端更新时间
                         await ProcessHeartbeatProtocol(client);
                         break;
+                    case Protocol.CloseClient:
+                        await ProcessCloseClientProtocol(client);
+                        break;
                     default:
                         throw new Exception("接收到异常请求。");
                         break;
@@ -297,6 +309,27 @@ namespace NSmartProxy
                 throw;
             }
 
+        }
+
+        private async Task ProcessCloseClientProtocol(TcpClient client)
+        {
+            Server.Logger.Debug("Now processing CloseClient protocol....");
+            NetworkStream nstream = client.GetStream();
+            int closeClientLength = 2;
+            byte[] appRequestBytes = new byte[closeClientLength];
+            int resultByte = await nstream.ReadAsync(appRequestBytes);
+            //Server.Logger.Debug("appRequestBytes received.");
+            if (resultByte == 0)
+            {
+                CloseClient(client);
+                return;
+            }
+
+            int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
+            //2.更新最后更新时间
+            CloseAllSourceByClient(clientID);
+            //3.接收完立即关闭
+            client.Close();
         }
 
         private async Task ProcessHeartbeatProtocol(TcpClient client)
@@ -359,12 +392,15 @@ namespace NSmartProxy
             {
                 Logger.Debug(ex.ToString());
             }
+            finally
+            {
+                client.Close();
+            }
 
             ////4.给NSPClient关联configclient
             //nspClient.LastUpdateTime
-
-
             Logger.Debug("arrangedIds written.");
+
             return false;
         }
 

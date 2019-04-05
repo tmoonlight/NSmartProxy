@@ -1,4 +1,5 @@
-﻿using NSmartProxy.Client;
+﻿using log4net;
+using NSmartProxy.Client;
 using NSmartProxy.Data;
 using NSmartProxy.Interfaces;
 using System;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using log4net.Appender;
 
 namespace NSmartProxyWinform
 {
@@ -42,21 +44,21 @@ namespace NSmartProxyWinform
         public ClientMngr()
         {
             InitializeComponent();
-            Log4netLogger logger = new Log4netLogger();
-            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
-            clientRouter = new Router(logger);
+           
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            ((Button)sender).Enabled = false;
-            
+
+            Log4netLogger logger = new Log4netLogger();
+            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
+            clientRouter = new Router(logger);
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             var tsk = clientRouter.ConnectToProvider().ConfigureAwait(false);
             //try
             // {
-            tsk.GetAwaiter();
+            //tsk.GetAwaiter();
             // }
             // catch (Exception ex)
             // {
@@ -91,34 +93,31 @@ namespace NSmartProxyWinform
         public void ShowInfo(string info)
         {
             textBox1.Invoke(
-                new Action(()=>
+                new Action(() =>
                 {
                     textBox1.AppendText(info);
                     textBox1.AppendText(Environment.NewLine);
                     textBox1.ScrollToCaret();
                 }
-            )); 
+            ));
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            clientRouter.Close();
-            
+            var tsk =clientRouter.Close().ConfigureAwait(false);
+            MessageBox.Show("已关闭");
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            //string x = "";
-            //foreach (var tcpclient in clientRouter.ConnnectionManager.ConnectedConnections)
-            //{
-            //   x+= tcpclient.GetHashCode() + " " + tcpclient.Connected + " " + Environment.NewLine;
-            //}
-            //MessageBox.Show(x);
+            var appender = LogManager.GetRepository(Program.LOGGER_REPO_NAME).GetAppenders()
+                .Where((o) =>o.GetType() == typeof(FileAppender)).First();
+            var filePath = ((FileAppender) appender).File;
 
             //记录日志
-            //string argument = "/select, \"" + loggerpath + "\"";
+            string argument = "/select, \"" + filePath + "\"";
             //Logging.Debug(argument);
-            //System.Diagnostics.Process.Start("explorer.exe", argument);
+            System.Diagnostics.Process.Start("explorer.exe", argument);
         }
     }
 }

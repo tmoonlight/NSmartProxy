@@ -6,22 +6,22 @@ namespace NSmartProxy.Data
     /// <summary>
     /// 客户端，包含一个客户端的信息
     /// </summary>
-    public class ClientModel:IByteSerializeable
+    public class ClientModel: ByteSerializeableObject
     {
         public int ClientId;        //2
         public List<App> AppList;   //3 * N
         public string IP;           //no serialize
-        public byte[] ToBytes()
+        public override byte[] ToBytes()
         {
             byte[] bytes = new byte[2 + AppList.Count * 3];
-            byte[] clientIdBytes = StringUtil.IntTo2Bytes(ClientId);
+            byte[] clientIdBytes = IntTo2Bytes(ClientId);
             List<Byte> listBytes = new List<byte>();
             listBytes.Add(clientIdBytes[0]);
             listBytes.Add(clientIdBytes[1]);
             foreach (var app in AppList)
             {
                 listBytes.Add((byte)app.AppId);
-                listBytes.AddRange(StringUtil.IntTo2Bytes(app.Port));
+                listBytes.AddRange(IntTo2Bytes(app.Port));
             }
             return listBytes.ToArray();
         }

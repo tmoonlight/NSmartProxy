@@ -3,14 +3,14 @@
     /// <summary>
     /// 客户端和appid的组合
     /// </summary>
-    public class ClientIdAppId : IByteSerializeable
+    public class ClientIdAppId : ByteSerializeableObject
     {
         public int ClientId;        //2
         public int AppId;           //1
-        public byte[] ToBytes()
+        public override byte[] ToBytes()
         {
             byte[] bytes = new byte[3];
-            byte[] clientIdBytres = StringUtil.IntTo2Bytes(ClientId);
+            byte[] clientIdBytres = IntTo2Bytes(ClientId);
             bytes[0] = clientIdBytres[0];
             bytes[1] = clientIdBytres[1];
             bytes[2] = (byte)AppId;
@@ -21,7 +21,7 @@
         {
             return new ClientIdAppId
             {
-                ClientId = StringUtil.DoubleBytesToInt(bytes[0], bytes[1]),
+                ClientId = DoubleBytesToInt(bytes[0], bytes[1]),
                 AppId = bytes[2]
             };
         }

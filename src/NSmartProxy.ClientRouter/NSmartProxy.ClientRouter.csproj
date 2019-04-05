@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
+    <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

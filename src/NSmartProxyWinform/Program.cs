@@ -17,8 +17,11 @@ namespace NSmartProxyWinform
         private static Mutex mutex = new Mutex(true, "{41ACBA9E-9699-4766-891B-57F325420A78}");
 
         public static IConfigurationRoot Configuration { get; set; }
-
         public static ILog Logger;
+
+        public static string LoggerPath= "log4net.config";
+        public static string LoggerConfigPath = "log4net.config";
+        public const string LOGGER_REPO_NAME = "NSmartClientRouterRepository";
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
@@ -33,8 +36,8 @@ namespace NSmartProxyWinform
                 return;
             }
 
-            var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
-            XmlConfigurator.Configure(loggerRepository, new FileInfo("log4net.config"));
+            var loggerRepository = LogManager.CreateRepository(LOGGER_REPO_NAME);
+            var config = XmlConfigurator.Configure(loggerRepository, new FileInfo(LoggerConfigPath));
             //BasicConfigurator.Configure(loggerRepository);
             Program.Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServerClient");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");

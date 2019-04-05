@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy.Client
 {
@@ -20,10 +21,15 @@ namespace NSmartProxy.Client
     public class ServerConnnectionManager
     {
         private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
-        private int ClientID = 0;
+        private int _clientID = 0;
 
         public List<TcpClient> ConnectedConnections;
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;  //key:appid value;ClientApp
+
+        public int ClientID
+        {
+            get => _clientID;
+        }
 
         private ServerConnnectionManager()
         {
@@ -38,9 +44,8 @@ namespace NSmartProxy.Client
         {
             ClientModel clientModel = await ReadConfigFromProvider();
 
-
             //要求服务端分配资源并获取服务端配置
-            this.ClientID = clientModel.ClientId;
+            this._clientID = clientModel.ClientId;
             //分配appid给不同的Client
             ServiceClientListCollection = new Dictionary<int, ClientAppWorker>();
             for (int i = 0; i < clientModel.AppList.Count; i++)
@@ -79,7 +84,7 @@ namespace NSmartProxy.Client
 
             //请求0 协议名
             byte requestByte0 = (byte)Protocol.ClientNewAppRequest;
-            await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
+            await configStream.WriteAndFlushAsync(new byte[] { requestByte0 }, 0, 1);
 
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
@@ -87,7 +92,7 @@ namespace NSmartProxy.Client
                 ClientId = 0,
                 ClientCount = config.Clients.Count(obj => obj.AppId == 0) //appid为0的则是未分配的
             }.ToBytes();
-            await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
+            await configStream.WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
 
             //请求2 分配端口
             //var requestBytes
@@ -100,7 +105,7 @@ namespace NSmartProxy.Client
                 requestBytes2[2 * i + 1] = portBytes[1];
                 i++;
             }
-            await configStream.WriteAsync(requestBytes2, 0, requestBytes2.Length);
+            await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
 
             //读端口配置
             byte[] serverConfig = new byte[256];
@@ -149,14 +154,14 @@ namespace NSmartProxy.Client
             await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
             //2.发送clientid和appid信息，向服务端申请连接
             //连接到位后增加相关的元素并且触发客户端连接事件
-            await client.GetStream().WriteAsync(requestBytes, 0, requestBytes.Length);
+            await client.GetStream().WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
             Router.Logger.Debug("ClientID:" + ClientID.ToString()
                                             + " AppId:" + appid.ToString() + " 已连接");
             app.TcpClientGroup.Add(client);
             clientList.Add(client);
             //统一管理连接
             ConnectedConnections.AddRange(clientList);
-           
+
             //事件循环1,这个方法必须放在最后
             ClientGroupConnected(this, new ClientGroupEventArgs()
             {
@@ -167,7 +172,7 @@ namespace NSmartProxy.Client
                     AppId = appid
                 }
             });
-            
+
         }
 
         public static ServerConnnectionManager Create()
@@ -186,33 +191,24 @@ namespace NSmartProxy.Client
             }
         }
 
-        public async Task StartHeartBeats(int interval,CancellationToken ct)
+        public async Task StartHeartBeats(int interval, CancellationToken ct)
         {
             var config = NSmartProxy.Client.Router.ClientConfig;
 
             //TODO 客户端开启心跳
             while (!ct.IsCancellationRequested)
             {
-                TcpClient configClient = new TcpClient();
-                var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
-                var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
-                //超时则dispose掉
-                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-                if (!connectAsync.IsCompleted)
-                {
-                    throw new Exception("连接超时");
-                }
-                var configStream = configClient.GetStream();
-                //请求0 协议名
-                byte requestByte0 = (byte)Protocol.Heartbeat;
-                byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
-                await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
-                await configStream.WriteAsync(requestByte1, 0, 2);
-                Console.WriteLine("tick.");
-                configClient.Close();
-                await Task.Delay(interval);
+                //byte requestByte0 = (byte)Protocol.Heartbeat;
+                // byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
+
+                await NetworkUtil.ConnectAndSend(config.ProviderAddress,
+                    config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
+
+                await Task.Delay(interval, ct);
             }
 
         }
+
+        
     }
 }

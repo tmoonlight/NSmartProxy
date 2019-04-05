@@ -32,9 +32,9 @@ namespace NSmartProxy.Client
 
     public class Router
     {
-        CancellationTokenSource CANCEL_TOKEN = new CancellationTokenSource();
-        CancellationTokenSource TRANSFERING_TOKEN = new CancellationTokenSource();
-        CancellationTokenSource HEARTBEAT_TOKEN = new CancellationTokenSource();
+        CancellationTokenSource CANCEL_TOKEN ;
+        CancellationTokenSource TRANSFERING_TOKEN;
+        CancellationTokenSource HEARTBEAT_TOKEN;
 
         public ServerConnnectionManager ConnnectionManager;
 
@@ -42,9 +42,14 @@ namespace NSmartProxy.Client
 
         internal static INSmartLogger Logger = new NullLogger();   //inject
 
-        public Router() { }
+        public Router()
+        {
+            CANCEL_TOKEN = new CancellationTokenSource();
+            TRANSFERING_TOKEN = new CancellationTokenSource();
+            HEARTBEAT_TOKEN = new CancellationTokenSource();
+        }
 
-        public Router(INSmartLogger logger)
+        public Router(INSmartLogger logger) : this()
         {
             Logger = logger;
         }
@@ -114,10 +119,18 @@ namespace NSmartProxy.Client
 
         }
 
-        public void Close()
+        public async Task Close()
         {
+            var config = NSmartProxy.Client.Router.ClientConfig;
+            //客户端关闭
+            CANCEL_TOKEN.Cancel();
+            TRANSFERING_TOKEN.Cancel();
+            HEARTBEAT_TOKEN.Cancel();
 
-            //throw new NotImplementedException();
+            //服务端关闭
+            await NetworkUtil.ConnectAndSend(config.ProviderAddress,
+                config.ProviderConfigPort, Protocol.CloseClient, StringUtil.IntTo2Bytes(this.ConnnectionManager.ClientID))
+                .ConfigureAwait(false);
         }
 
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
@@ -193,15 +206,22 @@ namespace NSmartProxy.Client
 
         private async Task<string> StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
-            await fromStream.CopyToAsync(toStream, 4096, ct);
+            using (fromStream)
+            using (toStream)
+            {
+                await fromStream.CopyToAsync(toStream, 4096, ct);
+            }
             return signal;
         }
 
 
         private async Task<string> ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
-
-            await fromStream.CopyToAsync(toStream, 4096, ct);
+            using (fromStream)
+            using (toStream)
+            {
+                await fromStream.CopyToAsync(toStream, 4096, ct);
+            }
             return signal;
         }
 
