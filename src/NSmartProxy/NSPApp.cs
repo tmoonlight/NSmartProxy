@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace NSmartProxy
         public BufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
         public List<TcpClient> ReverseClients;  //反向连接的socket
+
+        private bool _closed = false;
 
         public NSPApp()
         {
@@ -49,22 +52,30 @@ namespace NSmartProxy
         /// </summary>
         public int Close()
         {
-            int ClosedCount = 0;
-            Tunnels.ForEach((t) =>
+            if (!_closed)
             {
-                t.ClientServerClient.Close(); t.ConsumerClient.Close();
-                ClosedCount++;
-            });
-            //关闭循环和当前的侦听
-            CancelListenSource.Cancel();
-            Listener.Stop();
-            //弹出TcpClientBlocks
-            while (TcpClientBlocks.Count > 0)
-            {
-                TcpClientBlocks.Receive().Close();
+                int ClosedCount = 0;
+                Tunnels.ForEach((t) =>
+                {
+                    t.ClientServerClient.Close();
+                    t.ConsumerClient.Close();
+                    ClosedCount++;
+                });
+                //关闭循环和当前的侦听
+                CancelListenSource.Cancel();
+                Listener.Stop();
+                //弹出TcpClientBlocks
+                while (TcpClientBlocks.Count > 0)
+                {
+                    TcpClientBlocks.Receive().Close();
+                }
+                _closed = true;
+                return ClosedCount;
             }
-
-            return ClosedCount;
+            else
+            {
+                return 0;
+            }
         }
 
 

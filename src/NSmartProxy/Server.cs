@@ -108,7 +108,6 @@ namespace NSmartProxy
                 while (!cts.Token.IsCancellationRequested)
                 {
                     Server.Logger.Debug("开始心跳检测");
-                    // List<int> pendingRemovekey = new List<int>();
                     var outTimeClients = ConnectionManager.Clients.Where(
                         (cli) => DateTimeHelper.TimeRange(cli.LastUpdateTime, DateTime.Now) > interval).ToList();
 
@@ -116,7 +115,6 @@ namespace NSmartProxy
                     {
                         CloseAllSourceByClient(client.ClientID);
                     }
-                    // ConnectionManager.PortAppMap.Remove(port
                     Server.Logger.Debug("结束心跳检测");
                     await Task.Delay(interval);
                 }
@@ -128,7 +126,8 @@ namespace NSmartProxy
             }
             finally
             {
-                Logger.Debug("心跳检测异常终止。");
+                Logger.Debug("fatal error:心跳检测处理异常终止。");
+                //TODO 重新开始
             }
         }
 
@@ -139,7 +138,8 @@ namespace NSmartProxy
             foreach (var appKV in client.AppMap)
             {
                 int port = appKV.Value.ConsumePort;
-                //1.移除AppMap中的App
+                //1.关闭，并移除AppMap中的App
+                ConnectionManager.PortAppMap[port].Close();
                 ConnectionManager.PortAppMap.Remove(port);
                 msg += appKV.Value.ConsumePort + " ";
                 //2.移除端口占用
@@ -147,8 +147,15 @@ namespace NSmartProxy
             }
 
             //3.移除client
-            int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
-            Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
+            try
+            {
+                int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
+                Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
+            }
+            catch (Exception ex)
+            {
+                Server.Logger.Error($"CloseAllSourceByClient error:{ex.Message}", ex);
+            }
         }
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -352,7 +359,7 @@ namespace NSmartProxy
             //1.2 响应ACK
             await nstream.WriteAndFlushAsync(new byte[] { 1 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
-            
+
             //2.更新最后更新时间
             ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
             //3.接收完立即关闭

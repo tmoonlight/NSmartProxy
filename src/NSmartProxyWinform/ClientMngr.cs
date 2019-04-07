@@ -9,6 +9,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using log4net.Appender;
@@ -17,47 +18,38 @@ namespace NSmartProxyWinform
 {
     public partial class ClientMngr : Form
     {
-
-        public class Log4netLogger : INSmartLogger
-        {
-            public delegate void BeforeWriteLogDelegate(object message);
-            public BeforeWriteLogDelegate BeforeWriteLog;
-            public void Debug(object message)
-            {
-                BeforeWriteLog(message);
-                Program.Logger.Debug(message);
-            }
-
-            public void Error(object message, Exception ex)
-            {
-                BeforeWriteLog(message);
-                Program.Logger.Error(message, ex);
-            }
-
-            public void Info(object message)
-            {
-                BeforeWriteLog(message);
-                Program.Logger.Info(message);
-            }
-        }
         Router clientRouter;
+        private Log4netLogger logger;
+
         public ClientMngr()
         {
             InitializeComponent();
-           
+            //将日志写入窗体中。
+            logger = new Log4netLogger();
+            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            StartClientRouter();
+            button1.Enabled = false;
+            button2.Enabled = true;
+        }
 
-            Log4netLogger logger = new Log4netLogger();
-            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
+        private void StartClientRouter()
+        {
             clientRouter = new Router(logger);
+            clientRouter.DoServerNoResponse = () =>
+            {
+                clientRouter.Close();
+                logger.Info("服务器无响应，五秒后重试...");
+                Thread.Sleep(5000);
+                StartClientRouter(); 
+            };
+                
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             var tsk = clientRouter.ConnectToProvider().ConfigureAwait(false);
-            button1.Enabled = false;
-            button2.Enabled = true;
         }
 
         private void SetConfig(Router clientRouter)
@@ -79,7 +71,6 @@ namespace NSmartProxyWinform
                     ConsumerPort = confConsumerPort
                 });
             }
-            // Configuration.GetSection("1").
             clientRouter.SetConifiguration(config);
         }
 
@@ -99,20 +90,25 @@ namespace NSmartProxyWinform
         {
             button1.Enabled = true;
             button2.Enabled = false;
-            var tsk =clientRouter.Close().ConfigureAwait(false);
-           // MessageBox.Show("已关闭");
+            var tsk = clientRouter.Close().ConfigureAwait(false);
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             var appender = LogManager.GetRepository(Program.LOGGER_REPO_NAME).GetAppenders()
-                .Where((o) =>o.GetType() == typeof(FileAppender)).First();
-            var filePath = ((FileAppender) appender).File;
+                .Where((o) => o.GetType() == typeof(FileAppender)).First();
+            var filePath = ((FileAppender)appender).File;
 
             //记录日志
             string argument = "/select, \"" + filePath + "\"";
             //Logging.Debug(argument);
             System.Diagnostics.Process.Start("explorer.exe", argument);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            notifyIcon1.Dispose();
+            Application.Exit();
         }
     }
 }

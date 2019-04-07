@@ -1,5 +1,6 @@
 ﻿using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -146,13 +147,13 @@ namespace NSmartProxy
         public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
         {
             TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(TimeSpan.FromSeconds(30)).ContinueWith(_ => configClient.Dispose());
+            var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
             var connectAsync = configClient.ConnectAsync(addess, port);
             //超时则dispose掉
             var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
             if (!connectAsync.IsCompleted)
             {
-                throw new Exception("连接超时");
+                throw new Exception("ConnectAndSend连接超时");
             }
 
             var configStream = configClient.GetStream();

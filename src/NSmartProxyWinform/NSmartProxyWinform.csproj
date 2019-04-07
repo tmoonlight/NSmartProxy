@@ -101,6 +101,7 @@
     <Compile Include="ClientMngr.Designer.cs">
       <DependentUpon>ClientMngr.cs</DependentUpon>
     </Compile>
+    <Compile Include="Log4netLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ClientMngr.resx">

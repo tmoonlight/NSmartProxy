@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.Client
 {
@@ -72,13 +73,13 @@ namespace NSmartProxy.Client
             var config = NSmartProxy.Client.Router.ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(TimeSpan.FromSeconds(600)).ContinueWith(_ => configClient.Dispose());
+            var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
             var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
             //超时则dispose掉
             var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
             if (!connectAsync.IsCompleted)
             {
-                throw new Exception("连接超时");
+                throw new Exception("ReadConfigFromProvider连接超时");
             }
 
             var configStream = configClient.GetStream();
@@ -213,25 +214,35 @@ namespace NSmartProxy.Client
                 //TODO 客户端开启心跳
                 while (!ct.IsCancellationRequested)
                 {
-                    //byte requestByte0 = (byte)Protocol.Heartbeat;
-                    // byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
+                    TcpClient client;
+                    try
+                    {
+                        client = await NetworkUtil.ConnectAndSend(config.ProviderAddress,
+                            config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
+                    }
+                    catch (Exception ex)
+                    {
+                        Router.Logger.Debug(ex);
+                        ServerNoResponse();
+                        break;
+                    }
+
                     //1.发送心跳
-                    using (var client = await NetworkUtil.ConnectAndSend(config.ProviderAddress,
-                        config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID)))
+                    using (client)
                     {
                         //2.接收ack 超时则重发
                         byte[] onebyte = new byte[1];
                         Router.Logger.Debug("读ack");
-                        var delayDispose = Task.Delay(TimeSpan.FromSeconds(10)); //.ContinueWith(_ => client.Dispose());
-                       
+                        var delayDispose =
+                            Task.Delay(Global.DefaultWriteAckTimeout); //.ContinueWith(_ => client.Dispose());
+
                         var readBytes = client.GetStream().ReadAsync(onebyte, 0, 1);
-                        //Router.Logger.Debug("读ack2");
                         //超时则dispose掉
                         var comletedTask = await Task.WhenAny(delayDispose, readBytes);
-                       
+
                         if (!readBytes.IsCompleted)
                         {
-                            //TODO 连接超时
+                            //TODO 连接超时，需要外部处理，暂时无法内部处理
                             Router.Logger.Error("服务端心跳连接超时", new Exception("服务端心跳连接超时"));
                             ServerNoResponse();
                             break;
@@ -243,6 +254,7 @@ namespace NSmartProxy.Client
                             ServerNoResponse();
                             break;
                         }
+
                         Router.Logger.Debug("接收到ack");
                     }
 
@@ -251,8 +263,14 @@ namespace NSmartProxy.Client
             }
             catch (Exception ex)
             {
-                Router.Logger.Error(ex.Message, ex);
+                Router.Logger.Error("fatal error: Heartbeat错误:" + ex.Message, ex);
                 throw;
+            }
+            finally
+            {
+                Router.Logger.Debug("心跳连接终止。");
+                await Task.Delay(1000);
+                //TODO 重启
             }
 
         }

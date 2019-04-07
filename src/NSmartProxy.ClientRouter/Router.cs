@@ -36,11 +36,13 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN;
         CancellationTokenSource HEARTBEAT_TOKEN;
 
-        public ServerConnnectionManager ConnnectionManager;
+        public ServerConnnectionManager ConnectionManager;
 
         internal static Config ClientConfig;
-
         internal static INSmartLogger Logger = new NullLogger();   //inject
+
+
+        public Action DoServerNoResponse;
 
         public Router()
         {
@@ -69,9 +71,10 @@ namespace NSmartProxy.Client
             var appIdIpPortConfig = ClientConfig.Clients;
 
             //1.获取配置
-            ConnnectionManager = ServerConnnectionManager.Create();
-            ConnnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
-            var clientModel = await ConnnectionManager.InitConfig().ConfigureAwait(false);
+            ConnectionManager = ServerConnnectionManager.Create();
+            ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
+            ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
+            var clientModel = await ConnectionManager.InitConfig().ConfigureAwait(false);
             int counter = 0;
             //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
@@ -91,9 +94,9 @@ namespace NSmartProxy.Client
                      cApp.IP + ":" + cApp.TargetServicePort);
             }
             Logger.Debug("**************************************");
-            Task pollingTask = ConnnectionManager.PollingToProvider();
+            Task pollingTask = ConnectionManager.PollingToProvider();
             //3.创建心跳连接
-            ConnnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN.Token);
+            ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN.Token);
 
             try
             {
@@ -133,7 +136,7 @@ namespace NSmartProxy.Client
                     config.ProviderAddress,
                 config.ProviderConfigPort,
                     Protocol.CloseClient,
-                    StringUtil.IntTo2Bytes(this.ConnnectionManager.ClientID),
+                    StringUtil.IntTo2Bytes(this.ConnectionManager.ClientID),
                     true)
                 .ConfigureAwait(false);
         }
@@ -153,7 +156,7 @@ namespace NSmartProxy.Client
                     return;
                 }
                 //从空闲连接列表中移除
-                ConnnectionManager.RemoveClient(appId, providerClient);
+                ConnectionManager.RemoveClient(appId, providerClient);
                 //每移除一个链接则发起一个新的链接
                 Router.Logger.Debug(appId + "接收到连接请求");
                 TcpClient toTargetServer = new TcpClient();
@@ -162,7 +165,7 @@ namespace NSmartProxy.Client
 
                 //向服务端发起一次长连接，没有接收任何外来连接请求时，
                 //该方法会在write处会阻塞。
-                await ConnnectionManager.ConnectAppToServer(appId);
+                await ConnectionManager.ConnectAppToServer(appId);
                 Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口
                 toTargetServer.Connect(item.IP, item.TargetServicePort);
