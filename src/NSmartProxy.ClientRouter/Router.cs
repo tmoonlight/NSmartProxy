@@ -32,7 +32,7 @@ namespace NSmartProxy.Client
 
     public class Router
     {
-        CancellationTokenSource CANCEL_TOKEN ;
+        CancellationTokenSource CANCEL_TOKEN;
         CancellationTokenSource TRANSFERING_TOKEN;
         CancellationTokenSource HEARTBEAT_TOKEN;
 
@@ -61,6 +61,7 @@ namespace NSmartProxy.Client
 
         /// <summary>
         /// 重要：连接服务端，一般做为入口方法
+        /// 该方法主要操作一些配置和心跳
         /// </summary>
         /// <returns></returns>
         public async Task ConnectToProvider()
@@ -128,8 +129,12 @@ namespace NSmartProxy.Client
             HEARTBEAT_TOKEN.Cancel();
 
             //服务端关闭
-            await NetworkUtil.ConnectAndSend(config.ProviderAddress,
-                config.ProviderConfigPort, Protocol.CloseClient, StringUtil.IntTo2Bytes(this.ConnnectionManager.ClientID))
+            await NetworkUtil.ConnectAndSend(
+                    config.ProviderAddress,
+                config.ProviderConfigPort,
+                    Protocol.CloseClient,
+                    StringUtil.IntTo2Bytes(this.ConnnectionManager.ClientID),
+                    true)
                 .ConfigureAwait(false);
         }
 
@@ -169,9 +174,11 @@ namespace NSmartProxy.Client
                 //already close connection
 
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Debug(e);
+                Logger.Debug("传输时出错：" + ex);
+                //关闭传输连接，服务端也会相应处理，把0request发送给消费端
+                providerClient.Close();
                 throw;
             }
 

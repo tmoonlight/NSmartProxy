@@ -143,7 +143,7 @@ namespace NSmartProxy
         }
 
 
-        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data)
+        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
         {
             TcpClient configClient = new TcpClient();
             var delayDispose = Task.Delay(TimeSpan.FromSeconds(30)).ContinueWith(_ => configClient.Dispose());
@@ -155,16 +155,12 @@ namespace NSmartProxy
                 throw new Exception("连接超时");
             }
 
-            using (var configStream = configClient.GetStream())
-            {
-                //请求0 协议名
-                //byte requestByte0 = (byte) Protocol.Heartbeat;
-                //byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
-                await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
-                await configStream.WriteAndFlushAsync(data, 0, data.Length);
-                Console.Write(protocol.ToString() + " proceed.");
+            var configStream = configClient.GetStream();
+            await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
+            await configStream.WriteAndFlushAsync(data, 0, data.Length);
+            Console.Write(protocol.ToString() + " proceed.");
+            if (isClose)
                 configClient.Close();
-            }
             return configClient;
         }
 

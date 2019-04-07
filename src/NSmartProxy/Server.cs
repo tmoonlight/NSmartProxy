@@ -83,7 +83,7 @@ namespace NSmartProxy
 
             //3.开启心跳检测线程 
             //TODO 服务端心跳检测
-            ProcessHeartbeats(Global.HeartbeatCheckInterval, ctsConsumer);
+            ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
             //4.开启配置服务(常开)
             try
@@ -101,7 +101,7 @@ namespace NSmartProxy
             }
         }
 
-        private async Task ProcessHeartbeats(int interval, CancellationTokenSource cts)
+        private async Task ProcessHeartbeatsCheck(int interval, CancellationTokenSource cts)
         {
             try
             {
@@ -192,7 +192,7 @@ namespace NSmartProxy
         }
 
         /// <summary>
-        /// 同时侦听来自consumer的链接和到provider的链接
+        /// 主循环，处理所有来自外部的请求
         /// </summary>
         /// <param name="consumerlistener"></param>
         /// <param name="ct"></param>
@@ -207,35 +207,18 @@ namespace NSmartProxy
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                 var nspApp = ConnectionManager.PortAppMap[consumerPort];
                 consumerlistener.Start(1000);
-                //Token,Listener加入全局管理
                 nspApp.Listener = consumerlistener;
                 nspApp.CancelListenSource = cts;
 
-                //给两个listener，同时监听3端
+                //临时编下号，以便在日志里区分不同隧道的连接
                 var clientCounter = 0;
                 while (!ct.IsCancellationRequested)
                 {
-                    //目标的代理服务联通了，才去处理consumer端的请求。
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
+                    //I.主要对外侦听循环
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    //记录tcp隧道，消费端
-                    TcpTunnel tunnel = new TcpTunnel();
-                    tunnel.ConsumerClient = consumerClient;
-                    ClientConnectionManager.GetInstance().PortAppMap[consumerPort].Tunnels.Add(tunnel);
-                    Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
-                    //消费端连接成功,连接
-
-                    //TODO 此处是否新开线程异步处理？
-                    //需要端口
-                    TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
-                    //记录tcp隧道，客户端
-                    tunnel.ClientServerClient = s2pClient;
-                    //✳关键过程✳
-                    //连接完之后发送一个字节过去促使客户端建立转发隧道
-                    await s2pClient.GetStream().WriteAsync(new byte[] { 1 }, 0, 1);
                     clientCounter++;
-
-                    TcpTransferAsync(consumerlistener, consumerClient, s2pClient, clientCounter, ct);
+                    ProcessConsumeRequestAsync(consumerPort, clientCounter, consumerClient, ct);
                 }
             }
             catch (Exception e)
@@ -245,7 +228,26 @@ namespace NSmartProxy
             }
         }
 
-        #region 配置
+        private async Task ProcessConsumeRequestAsync(int consumerPort, int clientCounter, TcpClient consumerClient, CancellationToken ct)
+        {
+            TcpTunnel tunnel = new TcpTunnel();
+            tunnel.ConsumerClient = consumerClient;
+            ClientConnectionManager.GetInstance().PortAppMap[consumerPort].Tunnels.Add(tunnel);
+            Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
+
+            //II.弹出先前已经准备好的socket
+            TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
+
+            tunnel.ClientServerClient = s2pClient;
+            //✳关键过程✳
+            //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
+            //客户端接收到此消息后，会另外分配一个备用连接，此处异步发送性能较好
+            s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 1 }, 0, 1);
+
+            await TcpTransferAsync(consumerClient, s2pClient, clientCounter, ct);
+        }
+
+        #region 配置连接相关
         //配置服务，客户端可以通过这个服务接收现有的空闲端口
         //accept a config request.
         //request:
@@ -347,12 +349,14 @@ namespace NSmartProxy
                 CloseClient(client);
                 return;
             }
-
+            //1.2 响应ACK
+            await nstream.WriteAndFlushAsync(new byte[] { 1 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
+            
             //2.更新最后更新时间
             ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
             //3.接收完立即关闭
-            client.Close();
+            //client.Close();
         }
 
         private async Task<bool> ProcessAppRequestProtocol(TcpClient client)
@@ -410,7 +414,7 @@ namespace NSmartProxy
 
         #region datatransfer
         //3端互相传输数据
-        async Task TcpTransferAsync(TcpListener consumerlistener, TcpClient consumerClient, TcpClient providerClient,
+        async Task TcpTransferAsync(TcpClient consumerClient, TcpClient providerClient,
             int clientIndex,
             CancellationToken ct)
         {

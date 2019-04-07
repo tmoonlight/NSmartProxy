@@ -25,6 +25,7 @@ namespace NSmartProxy.Client
 
         public List<TcpClient> ConnectedConnections;
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;  //key:appid value;ClientApp
+        public Action ServerNoResponse = delegate { };
 
         public int ClientID
         {
@@ -150,13 +151,24 @@ namespace NSmartProxy.Client
             var clientList = new List<TcpClient>();
             //补齐
             TcpClient client = new TcpClient();
-            //1.连接服务端
-            await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
-            //2.发送clientid和appid信息，向服务端申请连接
-            //连接到位后增加相关的元素并且触发客户端连接事件
-            await client.GetStream().WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
-            Router.Logger.Debug("ClientID:" + ClientID.ToString()
-                                            + " AppId:" + appid.ToString() + " 已连接");
+            try
+            {
+                //1.连接服务端
+                await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
+                //2.发送clientid和appid信息，向服务端申请连接
+                //连接到位后增加相关的元素并且触发客户端连接事件
+                await client.GetStream().WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
+                Router.Logger.Debug("ClientID:" + ClientID.ToString()
+                                                + " AppId:" + appid.ToString() + " 已连接");
+            }
+            catch (Exception ex)
+            {
+                Router.Logger.Error("反向连接出错！:" + ex.Message, ex);
+
+                //TODO 回收隧道
+
+            }
+
             app.TcpClientGroup.Add(client);
             clientList.Add(client);
             //统一管理连接
@@ -172,8 +184,9 @@ namespace NSmartProxy.Client
                     AppId = appid
                 }
             });
-
         }
+
+
 
         public static ServerConnnectionManager Create()
         {
@@ -193,22 +206,57 @@ namespace NSmartProxy.Client
 
         public async Task StartHeartBeats(int interval, CancellationToken ct)
         {
-            var config = NSmartProxy.Client.Router.ClientConfig;
-
-            //TODO 客户端开启心跳
-            while (!ct.IsCancellationRequested)
+            try
             {
-                //byte requestByte0 = (byte)Protocol.Heartbeat;
-                // byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
+                var config = NSmartProxy.Client.Router.ClientConfig;
 
-                await NetworkUtil.ConnectAndSend(config.ProviderAddress,
-                    config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
+                //TODO 客户端开启心跳
+                while (!ct.IsCancellationRequested)
+                {
+                    //byte requestByte0 = (byte)Protocol.Heartbeat;
+                    // byte[] requestByte1 = StringUtil.IntTo2Bytes(this.ClientID);
+                    //1.发送心跳
+                    using (var client = await NetworkUtil.ConnectAndSend(config.ProviderAddress,
+                        config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID)))
+                    {
+                        //2.接收ack 超时则重发
+                        byte[] onebyte = new byte[1];
+                        Router.Logger.Debug("读ack");
+                        var delayDispose = Task.Delay(TimeSpan.FromSeconds(10)); //.ContinueWith(_ => client.Dispose());
+                       
+                        var readBytes = client.GetStream().ReadAsync(onebyte, 0, 1);
+                        //Router.Logger.Debug("读ack2");
+                        //超时则dispose掉
+                        var comletedTask = await Task.WhenAny(delayDispose, readBytes);
+                       
+                        if (!readBytes.IsCompleted)
+                        {
+                            //TODO 连接超时
+                            Router.Logger.Error("服务端心跳连接超时", new Exception("服务端心跳连接超时"));
+                            ServerNoResponse();
+                            break;
+                        }
+                        else if (readBytes.Result == 0)
+                        {
+                            //TODO 连接已关闭
+                            Router.Logger.Debug("服务端心跳连接已关闭");
+                            ServerNoResponse();
+                            break;
+                        }
+                        Router.Logger.Debug("接收到ack");
+                    }
 
-                await Task.Delay(interval, ct);
+                    await Task.Delay(interval, ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                Router.Logger.Error(ex.Message, ex);
+                throw;
             }
 
         }
 
-        
+
     }
 }
