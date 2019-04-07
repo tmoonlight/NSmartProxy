@@ -32,8 +32,8 @@ namespace NSmartProxyWinform
         private void button1_Click(object sender, EventArgs e)
         {
             StartClientRouter();
-            button1.Enabled = false;
-            button2.Enabled = true;
+            btnStart.Enabled = false;
+            btnEnd.Enabled = true;
         }
 
         private void StartClientRouter()
@@ -76,20 +76,20 @@ namespace NSmartProxyWinform
 
         public void ShowInfo(string info)
         {
-            textBox1.Invoke(
+            tbxLog.Invoke(
                 new Action(() =>
                 {
-                    textBox1.AppendText(info);
-                    textBox1.AppendText(Environment.NewLine);
-                    textBox1.ScrollToCaret();
+                    tbxLog.AppendText(info);
+                    tbxLog.AppendText(Environment.NewLine);
+                    tbxLog.ScrollToCaret();
                 }
             ));
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            button1.Enabled = true;
-            button2.Enabled = false;
+            btnStart.Enabled = true;
+            btnEnd.Enabled = false;
             var tsk = clientRouter.Close().ConfigureAwait(false);
         }
 
@@ -107,7 +107,7 @@ namespace NSmartProxyWinform
 
         private void button4_Click(object sender, EventArgs e)
         {
-            notifyIcon1.Dispose();
+            notifyIconNSPClient.Dispose();
             Application.Exit();
         }
     }

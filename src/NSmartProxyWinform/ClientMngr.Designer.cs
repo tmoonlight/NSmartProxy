@@ -30,88 +30,88 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClientMngr));
-            this.button1 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.button4 = new System.Windows.Forms.Button();
+            this.btnStart = new System.Windows.Forms.Button();
+            this.tbxLog = new System.Windows.Forms.TextBox();
+            this.btnEnd = new System.Windows.Forms.Button();
+            this.btnOpenInExplorer = new System.Windows.Forms.Button();
+            this.notifyIconNSPClient = new System.Windows.Forms.NotifyIcon(this.components);
+            this.cmsRightMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.btnExit = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(178, 371);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "开始";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnStart.Location = new System.Drawing.Point(178, 371);
+            this.btnStart.Name = "button1";
+            this.btnStart.Size = new System.Drawing.Size(75, 23);
+            this.btnStart.TabIndex = 0;
+            this.btnStart.Text = "开始";
+            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.button1_Click);
             // 
             // textBox1
             // 
-            this.textBox1.BackColor = System.Drawing.SystemColors.WindowText;
-            this.textBox1.ForeColor = System.Drawing.SystemColors.Info;
-            this.textBox1.Location = new System.Drawing.Point(12, 12);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(488, 353);
-            this.textBox1.TabIndex = 1;
+            this.tbxLog.BackColor = System.Drawing.SystemColors.WindowText;
+            this.tbxLog.ForeColor = System.Drawing.SystemColors.Info;
+            this.tbxLog.Location = new System.Drawing.Point(12, 12);
+            this.tbxLog.Multiline = true;
+            this.tbxLog.Name = "textBox1";
+            this.tbxLog.ReadOnly = true;
+            this.tbxLog.Size = new System.Drawing.Size(488, 353);
+            this.tbxLog.TabIndex = 1;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(259, 371);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 2;
-            this.button2.Text = "结束";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.btnEnd.Location = new System.Drawing.Point(259, 371);
+            this.btnEnd.Name = "button2";
+            this.btnEnd.Size = new System.Drawing.Size(75, 23);
+            this.btnEnd.TabIndex = 2;
+            this.btnEnd.Text = "结束";
+            this.btnEnd.UseVisualStyleBackColor = true;
+            this.btnEnd.Click += new System.EventHandler(this.button2_Click);
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(13, 372);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(113, 23);
-            this.button3.TabIndex = 3;
-            this.button3.Text = "资源管理器中打开";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.btnOpenInExplorer.Location = new System.Drawing.Point(13, 372);
+            this.btnOpenInExplorer.Name = "button3";
+            this.btnOpenInExplorer.Size = new System.Drawing.Size(113, 23);
+            this.btnOpenInExplorer.TabIndex = 3;
+            this.btnOpenInExplorer.Text = "资源管理器中打开";
+            this.btnOpenInExplorer.UseVisualStyleBackColor = true;
+            this.btnOpenInExplorer.Click += new System.EventHandler(this.button3_Click);
             // 
             // notifyIcon1
             // 
-            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
-            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "notifyIcon1";
-            this.notifyIcon1.Visible = true;
+            this.notifyIconNSPClient.ContextMenuStrip = this.cmsRightMenu;
+            this.notifyIconNSPClient.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIconNSPClient.Text = "notifyIcon1";
+            this.notifyIconNSPClient.Visible = true;
             // 
             // contextMenuStrip1
             // 
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
+            this.cmsRightMenu.Name = "contextMenuStrip1";
+            this.cmsRightMenu.Size = new System.Drawing.Size(61, 4);
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(425, 372);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(75, 23);
-            this.button4.TabIndex = 4;
-            this.button4.Text = "退出程序";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
+            this.btnExit.Location = new System.Drawing.Point(425, 372);
+            this.btnExit.Name = "button4";
+            this.btnExit.Size = new System.Drawing.Size(75, 23);
+            this.btnExit.TabIndex = 4;
+            this.btnExit.Text = "退出程序";
+            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Click += new System.EventHandler(this.button4_Click);
             // 
             // ClientMngr
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(512, 406);
-            this.Controls.Add(this.button4);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnExit);
+            this.Controls.Add(this.btnOpenInExplorer);
+            this.Controls.Add(this.btnEnd);
+            this.Controls.Add(this.tbxLog);
+            this.Controls.Add(this.btnStart);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -125,13 +125,13 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.NotifyIcon notifyIcon1;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.TextBox tbxLog;
+        private System.Windows.Forms.Button btnEnd;
+        private System.Windows.Forms.Button btnOpenInExplorer;
+        private System.Windows.Forms.NotifyIcon notifyIconNSPClient;
+        private System.Windows.Forms.ContextMenuStrip cmsRightMenu;
+        private System.Windows.Forms.Button btnExit;
     }
 }
 

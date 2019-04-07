@@ -118,7 +118,6 @@ namespace NSmartProxy
                     Server.Logger.Debug("结束心跳检测");
                     await Task.Delay(interval);
                 }
-
             }
             catch (Exception ex)
             {
@@ -170,7 +169,6 @@ namespace NSmartProxy
         {
             TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
 
-
             Logger.Debug("Listening config request on port " + ConfigServicePort.ToString() + "...");
             var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
@@ -210,7 +208,6 @@ namespace NSmartProxy
             var ct = cts.Token;
             try
             {
-
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                 var nspApp = ConnectionManager.PortAppMap[consumerPort];
                 consumerlistener.Start(1000);
@@ -417,7 +414,6 @@ namespace NSmartProxy
         }
 
         #endregion
-
 
         #region datatransfer
         //3端互相传输数据

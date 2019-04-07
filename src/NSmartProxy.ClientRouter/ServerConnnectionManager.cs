@@ -97,7 +97,6 @@ namespace NSmartProxy.Client
             await configStream.WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
 
             //请求2 分配端口
-            //var requestBytes
             byte[] requestBytes2 = new byte[config.Clients.Count * 2];
             int i = 0;
             foreach (var client in config.Clients)
