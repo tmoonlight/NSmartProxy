@@ -249,7 +249,7 @@ namespace NSmartProxy
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接，此处异步发送性能较好
-            s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 1 }, 0, 1);
+            s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
 
             await TcpTransferAsync(consumerClient, s2pClient, clientCounter, ct);
         }
@@ -308,7 +308,7 @@ namespace NSmartProxy
                         break;
                     default:
                         throw new Exception("接收到异常请求。");
-                        break;
+                        //break;
                 }
 
                 //if (await ProcessAppRequestProtocol(client)) return;
@@ -357,7 +357,7 @@ namespace NSmartProxy
                 return;
             }
             //1.2 响应ACK
-            await nstream.WriteAndFlushAsync(new byte[] { 1 }, 0, 1);
+            await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
 
             //2.更新最后更新时间

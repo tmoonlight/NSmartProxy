@@ -239,7 +239,7 @@ namespace NSmartProxy.Client
         {
             TcpClient tc = new TcpClient();
             tc.Connect("127.0.0.1", port);
-            tc.Client.Send(new byte[] { 0 });
+            tc.Client.Send(new byte[] { 0x00 });
         }
     }
 
