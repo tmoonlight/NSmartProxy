@@ -1,10 +1,15 @@
-﻿using System;
+﻿using NSmartProxy.Data;
+using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NSmartProxy
 {
@@ -136,6 +141,28 @@ namespace NSmartProxy
             {
                 mutex.ReleaseMutex();
             }
+        }
+
+
+        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
+        {
+            TcpClient configClient = new TcpClient();
+            var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
+            var connectAsync = configClient.ConnectAsync(addess, port);
+            //超时则dispose掉
+            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+            if (!connectAsync.IsCompleted)
+            {
+                throw new Exception("ConnectAndSend连接超时");
+            }
+
+            var configStream = configClient.GetStream();
+            await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
+            await configStream.WriteAndFlushAsync(data, 0, data.Length);
+            Console.Write(protocol.ToString() + " proceed.");
+            if (isClose)
+                configClient.Close();
+            return configClient;
         }
 
     }

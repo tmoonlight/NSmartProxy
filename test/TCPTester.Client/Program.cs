@@ -13,53 +13,36 @@ namespace TCPTester.Client
     {
         static void Main(string[] args)
         {
-            Thread.Sleep(2000);
-            for (int i = 0; i < 3000; i++)
+            TcpClient tcpClient = new TcpClient();
+            tcpClient.Connect("127.0.0.1", 5900);
+            //tcpClient.Connect("192.168.1.2", 12306);
+            var stream = tcpClient.GetStream();
+
+            Task.Run(() =>
             {
-                Thread.Sleep(100);
-                Task.Run(() =>
+
+                byte[] buffer = new byte[4096];
+                while (true)
                 {
+                    int readResultLength = stream.Read(buffer, 0, buffer.Length);
+                    //if(readResultLength)
+                    Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, readResultLength).Trim());
+                }
+            });
 
-                    // int port = int.Parse(args[0]);
-                    TcpClient tcpClient = new TcpClient();
-                    //tcpClient.Connect("192.168.1.168", port);
-                    tcpClient.Connect("127.0.0.1", 20003);
-                    var stream = tcpClient.GetStream();
-                    Console.WriteLine("连接数"+i.ToString());
-                    
-                    //Task.Run(() =>
-                    //{
+            while (true)
+            {
+                string str = Console.ReadLine();
+                if (str == "c")
+                {
+                    tcpClient.Close();
+                    break;
+                }
 
-                    //    byte[] buffer = new byte[4096];
-                    //    while (true)
-                    //    {
-                    //        int readResultLength = stream.Read(buffer, 0, buffer.Length);
-                    //        //if(readResultLength)
-                    //        Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, readResultLength).Trim());
-                    //    }
-                    //});
-
-
-
-                    //while (true)
-                    //{
-                    //    string str = "testmessage" + Thread.CurrentThread.ManagedThreadId.ToString();
-                    //    if (str == "c")
-                    //    {
-                    //        tcpClient.Close();
-                    //        break;
-                    //    }
-
-                    //    byte[] allbBytes = ASCIIEncoding.ASCII.GetBytes(str);
-                    //    stream.Write(allbBytes, 0, allbBytes.Length);
-                    //    Thread.Sleep(3000);
-                    //}
-                });
-                
+                byte[] allbBytes = ASCIIEncoding.ASCII.GetBytes(str);
+                stream.WriteTimeout = 3000;
+                stream.Write(allbBytes, 0, allbBytes.Length);
             }
-
-            Console.Read();
-
 
         }
     }

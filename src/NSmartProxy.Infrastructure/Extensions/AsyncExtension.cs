@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace NSmartProxy
+namespace NSmartProxy.Infrastructure
 {
     public sealed class DisposableScope : IDisposable
     {

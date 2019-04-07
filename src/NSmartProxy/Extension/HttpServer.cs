@@ -84,7 +84,7 @@ namespace NSmartProxy
                 json.Append(KV2Json("port", app.Key)).C();
                 json.Append(KV2Json("clientId", app.Value.ClientId)).C();
                 json.Append(KV2Json("appId", app.Value.AppId)).C();
-
+                json.Append(KV2Json("blocksCount", app.Value.TcpClientBlocks.Count)).C();
                 //反向连接
                 json.Append(KV2Json("revconns"));
                 json.Append("[ ");

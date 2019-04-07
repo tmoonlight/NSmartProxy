@@ -4,6 +4,7 @@
     {
         Heartbeat = 1,
         ClientNewAppRequest = 2,
-        ModifyApp = 3
+        ModifyApp = 3,
+        CloseClient
     }
 }
