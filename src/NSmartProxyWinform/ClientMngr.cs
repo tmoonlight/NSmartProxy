@@ -110,5 +110,16 @@ namespace NSmartProxyWinform
             notifyIconNSPClient.Dispose();
             Application.Exit();
         }
+
+        private void ClientMngr_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            this.Hide();
+        }
+
+        private void notifyIconNSPClient_DoubleClick(object sender, EventArgs e)
+        {
+            this.Show();
+        }
     }
 }

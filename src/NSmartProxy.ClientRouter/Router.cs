@@ -149,6 +149,8 @@ namespace NSmartProxy.Client
                 byte[] buffer = new byte[1];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
+                //TODO此处需要保活
+               // providerClient.keep
                 int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                 if (readByteCount == 0)
                 {
