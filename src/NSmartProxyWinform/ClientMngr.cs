@@ -44,9 +44,9 @@ namespace NSmartProxyWinform
                 clientRouter.Close();
                 logger.Info("服务器无响应，五秒后重试...");
                 Thread.Sleep(5000);
-                StartClientRouter(); 
+                StartClientRouter();
             };
-                
+
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
             var tsk = clientRouter.ConnectToProvider().ConfigureAwait(false);
@@ -108,7 +108,8 @@ namespace NSmartProxyWinform
         private void button4_Click(object sender, EventArgs e)
         {
             notifyIconNSPClient.Dispose();
-            Application.Exit();
+            //Application.Exit();
+            Environment.Exit(0);
         }
 
         private void ClientMngr_FormClosing(object sender, FormClosingEventArgs e)

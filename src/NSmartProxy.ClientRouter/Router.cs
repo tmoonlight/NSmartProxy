@@ -125,20 +125,26 @@ namespace NSmartProxy.Client
 
         public async Task Close()
         {
-            var config = NSmartProxy.Client.Router.ClientConfig;
-            //客户端关闭
-            CANCEL_TOKEN.Cancel();
-            TRANSFERING_TOKEN.Cancel();
-            HEARTBEAT_TOKEN.Cancel();
+            try
+            {
+                var config = NSmartProxy.Client.Router.ClientConfig;
+                //客户端关闭
+                CANCEL_TOKEN.Cancel();
+                TRANSFERING_TOKEN.Cancel();
+                HEARTBEAT_TOKEN.Cancel();
 
-            //服务端关闭
-            await NetworkUtil.ConnectAndSend(
-                    config.ProviderAddress,
-                config.ProviderConfigPort,
-                    Protocol.CloseClient,
-                    StringUtil.IntTo2Bytes(this.ConnectionManager.ClientID),
-                    true)
-                .ConfigureAwait(false);
+                //服务端关闭
+                await NetworkUtil.ConnectAndSend(
+                        config.ProviderAddress,
+                    config.ProviderConfigPort,
+                        Protocol.CloseClient,
+                        StringUtil.IntTo2Bytes(this.ConnectionManager.ClientID),
+                        true)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex){
+                Router.Logger.Debug("关闭失败！" + ex);
+            }
         }
 
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
@@ -150,7 +156,8 @@ namespace NSmartProxy.Client
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
                 //TODO此处需要保活
-               // providerClient.keep
+                // providerClient.keep
+               // providerClient.Client.
                 int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                 if (readByteCount == 0)
                 {

@@ -210,6 +210,7 @@ namespace NSmartProxy
             {
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                 var nspApp = ConnectionManager.PortAppMap[consumerPort];
+                
                 consumerlistener.Start(1000);
                 nspApp.Listener = consumerlistener;
                 nspApp.CancelListenSource = cts;
@@ -221,6 +222,7 @@ namespace NSmartProxy
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
+                    consumerClient.SetKeepAlive(out _);
                     clientCounter++;
                     ProcessConsumeRequestAsync(consumerPort, clientCounter, consumerClient, ct);
                 }
@@ -245,7 +247,7 @@ namespace NSmartProxy
             tunnel.ClientServerClient = s2pClient;
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
-            //客户端接收到此消息后，会另外分配一个备用连接，此处异步发送性能较好
+            //客户端接收到此消息后，会另外分配一个备用连接
             s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
 
             await TcpTransferAsync(consumerClient, s2pClient, clientCounter, ct);

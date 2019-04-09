@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NSmartProxy;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -24,6 +25,8 @@ namespace TCPTester.Server
                 while (true)
                 {
                     client = tcpListener.AcceptTcpClient();
+                    client.SetKeepAlive(out _);
+
                     //Task.Run(() =>
                     //{
                     //    var stream = client.GetStream();

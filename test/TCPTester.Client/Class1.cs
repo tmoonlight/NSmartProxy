@@ -1,6 +1,4 @@
-﻿using NSmartProxy.Data;
-using NSmartProxy.Infrastructure;
-using NSmartProxy.Shared;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -144,30 +142,11 @@ namespace NSmartProxy
         }
 
 
-        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
-        {
-            TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
-            var connectAsync = configClient.ConnectAsync(addess, port);
-            //超时则dispose掉
-            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-            if (!connectAsync.IsCompleted)
-            {
-                throw new Exception("ConnectAndSend连接超时");
-            }
-
-            var configStream = configClient.GetStream();
-            await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
-            await configStream.WriteAndFlushAsync(data, 0, data.Length);
-            Console.Write(protocol.ToString() + " proceed.");
-            if (isClose)
-                configClient.Close();
-            return configClient;
-        }
+      
 
         public static void SetKeepAlive(this TcpClient tcpClient, out string ErrorMsg)
         {
-            
+
             ErrorMsg = "";
             // not all platforms support IOControl
             //try
@@ -195,23 +174,23 @@ namespace NSmartProxy
 
             //return socket;
 
-            try
-            {
-                tcpClient.Client.IOControl(IOControlCode.KeepAliveValues, GetKeepAlivePkg(1, 10000, 20000), null);
-            }
-            catch (PlatformNotSupportedException)
-            {
-                // most platforms should support this call to SetSocketOption, but just in case call it in a try/catch also
-                try
-                {
-                    tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-                }
-                catch (PlatformNotSupportedException ex)
-                {
-                    //平台不支持
-                    ErrorMsg = ex.Message;
-                }
-            }
+            //try
+            //{
+                tcpClient.Client.IOControl(IOControlCode.KeepAliveValues, GetKeepAlivePkg(1, 1000, 20000), null);
+            //}
+            //catch (PlatformNotSupportedException)
+            //{
+            //    // most platforms should support this call to SetSocketOption, but just in case call it in a try/catch also
+            //    try
+            //    {
+            //        tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            //    }
+            //    catch (PlatformNotSupportedException ex)
+            //    {
+            //        //平台不支持
+            //        ErrorMsg = ex.Message;
+            //    }
+            //}
 
         }
 
