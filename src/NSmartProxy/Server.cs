@@ -149,7 +149,7 @@ namespace NSmartProxy
             try
             {
                 int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
-                Server.Logger.Info(msg + $"已移除,{closedClients},个传输已终止。");
+                Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 {closedClients}个传输已终止。");
             }
             catch (Exception ex)
             {

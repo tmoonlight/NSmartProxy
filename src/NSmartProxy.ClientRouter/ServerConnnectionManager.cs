@@ -231,7 +231,7 @@ namespace NSmartProxy.Client
                     {
                         //2.接收ack 超时则重发
                         byte[] onebyte = new byte[1];
-                        Router.Logger.Debug("读ack");
+                        //Router.Logger.Debug("读ack");
                         var delayDispose =
                             Task.Delay(Global.DefaultWriteAckTimeout); //.ContinueWith(_ => client.Dispose());
 
@@ -254,7 +254,7 @@ namespace NSmartProxy.Client
                             break;
                         }
 
-                        Router.Logger.Debug("接收到ack");
+                        //Router.Logger.Debug("接收到ack");
                     }
 
                     await Task.Delay(interval, ct);

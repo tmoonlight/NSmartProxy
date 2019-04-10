@@ -57,8 +57,8 @@ namespace NSmartProxy
                 int ClosedCount = 0;
                 Tunnels.ForEach((t) =>
                 {
-                    t.ClientServerClient.Close();
-                    t.ConsumerClient.Close();
+                    t.ClientServerClient?.Close();
+                    t.ConsumerClient?.Close();
                     ClosedCount++;
                 });
                 //关闭循环和当前的侦听

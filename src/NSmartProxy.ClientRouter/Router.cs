@@ -142,7 +142,8 @@ namespace NSmartProxy.Client
                         true)
                     .ConfigureAwait(false);
             }
-            catch (Exception ex){
+            catch (Exception ex)
+            {
                 Router.Logger.Debug("关闭失败！" + ex);
             }
         }
@@ -157,7 +158,7 @@ namespace NSmartProxy.Client
                 //接收首条消息，首条消息中返回的是appid和客户端
                 //TODO此处需要保活
                 // providerClient.keep
-               // providerClient.Client.
+                // providerClient.Client.
                 int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                 if (readByteCount == 0)
                 {
@@ -225,21 +226,32 @@ namespace NSmartProxy.Client
 
         private async Task<string> StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
-            using (fromStream)
-            using (toStream)
+            try
             {
                 await fromStream.CopyToAsync(toStream, 4096, ct);
             }
+            catch (Exception ex)
+            {
+                Router.Logger.Debug(ex.ToString());
+                throw;
+            }
+
+
+
             return signal;
         }
 
 
         private async Task<string> ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
         {
-            using (fromStream)
-            using (toStream)
+            try
             {
                 await fromStream.CopyToAsync(toStream, 4096, ct);
+            }
+            catch (Exception ex)
+            {
+                Router.Logger.Debug(ex.ToString());
+                throw;
             }
             return signal;
         }
