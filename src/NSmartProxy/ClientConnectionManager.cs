@@ -47,7 +47,10 @@ namespace NSmartProxy
             while (true)
             {
                 TcpClient incomeClient = await listener.AcceptTcpClientAsync();
-                Server.Logger.Debug("已建立一个空连接");
+                Server.Logger.Debug("已建立一个空连接" +
+                    incomeClient.Client.LocalEndPoint.ToString() + "-" +
+                    incomeClient.Client.RemoteEndPoint.ToString());
+                incomeClient.SetKeepAlive(out _);
                 ProcessReverseRequest(incomeClient);
             }
 

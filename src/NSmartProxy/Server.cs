@@ -222,7 +222,7 @@ namespace NSmartProxy
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    consumerClient.SetKeepAlive(out _);
+                   
                     clientCounter++;
                     ProcessConsumeRequestAsync(consumerPort, clientCounter, consumerClient, ct);
                 }
