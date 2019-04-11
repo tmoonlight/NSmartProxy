@@ -73,14 +73,25 @@ namespace NSmartProxy.Client
             var config = NSmartProxy.Client.Router.ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
-            var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
-            //超时则dispose掉
-            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-            if (!connectAsync.IsCompleted)
+            bool isConnected = false;
+            for (int j = 0; j < 3; j++)
             {
-                throw new Exception("ReadConfigFromProvider连接超时");
+                var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
+                var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
+                //超时则dispose掉
+                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+                if (!connectAsync.IsCompleted)
+                {
+                    Router.Logger.Debug("ReadConfigFromProvider连接超时，5秒后重试。");
+                    await Task.Delay(5000);
+                }
+                else
+                {
+                    isConnected = true;
+                    break;
+                }
             }
+            if (!isConnected) { Router.Logger.Debug("重试次数达到限制。");throw new Exception("重试次数达到限制。"); }
 
             var configStream = configClient.GetStream();
 

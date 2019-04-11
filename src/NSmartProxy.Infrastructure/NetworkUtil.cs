@@ -147,14 +147,25 @@ namespace NSmartProxy
         public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
         {
             TcpClient configClient = new TcpClient();
-            var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
-            var connectAsync = configClient.ConnectAsync(addess, port);
-            //超时则dispose掉
-            var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-            if (!connectAsync.IsCompleted)
+            bool isConnected = false;
+            for (int j = 0; j < 3; j++)
             {
-                throw new Exception("ConnectAndSend连接超时");
+                var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
+                var connectAsync = configClient.ConnectAsync(addess, port);
+                //超时则dispose掉
+                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+                if (!connectAsync.IsCompleted)
+                {
+                    Console.WriteLine("ConnectAndSend连接超时,5秒后重试");
+                    await Task.Delay(5000);
+                }
+                else
+                {
+                    isConnected = true;
+                    break;
+                }
             }
+            if (!isConnected) { Console.WriteLine("重试次数达到限制。"); throw new Exception("重试次数达到限制。"); }
 
             var configStream = configClient.GetStream();
             await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);

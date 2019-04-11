@@ -7,7 +7,7 @@
     {
         public const string LogFormat = "";
         public const int HeartbeatInterval = 30000;  //心跳间隔（毫秒）
-        public const int HeartbeatCheckInterval = 60000;  //心跳检测间隔（毫秒）
+        public const int HeartbeatCheckInterval = 90000;  //心跳检测间隔（毫秒）
         public const int DefaultConnectTimeout = 30000; //默认连接超时时间
         public const int DefaultWriteAckTimeout = 10000;//调用具备ack确认协议的等待时间
     }
