@@ -22,11 +22,13 @@ namespace NSmartProxyWinform
         public static string LoggerPath= "log4net.config";
         public static string LoggerConfigPath = "log4net.config";
         public const string LOGGER_REPO_NAME = "NSmartClientRouterRepository";
+
+        public static string[] Args;
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             if (!mutex.WaitOne(3, false))
             {

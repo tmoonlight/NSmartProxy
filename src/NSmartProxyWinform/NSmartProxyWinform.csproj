@@ -104,6 +104,7 @@
     <Compile Include="Log4netLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\AutoStartup.cs" />
     <EmbeddedResource Include="ClientMngr.resx">
       <DependentUpon>ClientMngr.cs</DependentUpon>
     </EmbeddedResource>

@@ -107,9 +107,17 @@ namespace NSmartProxyWinform
 
         private void button4_Click(object sender, EventArgs e)
         {
-            notifyIconNSPClient.Dispose();
-            //Application.Exit();
-            Environment.Exit(0);
+            ExitProgram();
+        }
+
+        private void ExitProgram()
+        {
+            if (MessageBox.Show("确认退出？", "NSmartProxy", MessageBoxButtons.OKCancel) == DialogResult.OK)
+            {
+                notifyIconNSPClient.Dispose();
+                //Application.Exit();
+                Environment.Exit(0);
+            }
         }
 
         private void ClientMngr_FormClosing(object sender, FormClosingEventArgs e)
@@ -121,6 +129,16 @@ namespace NSmartProxyWinform
         private void notifyIconNSPClient_DoubleClick(object sender, EventArgs e)
         {
             this.Show();
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //节点配置显示
+        }
+
+        private void 退出程序ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExitProgram();
         }
     }
 }

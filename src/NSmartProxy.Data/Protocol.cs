@@ -2,9 +2,9 @@
 {
     public enum Protocol : byte
     {
-        Heartbeat = 1,
-        ClientNewAppRequest = 2,
-        ModifyApp = 3,
-        CloseClient
+        Heartbeat = 0x01,
+        ClientNewAppRequest = 0x02,
+        ModifyApp = 0x03,
+        CloseClient = 0x04
     }
 }

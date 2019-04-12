@@ -171,6 +171,7 @@ namespace NSmartProxy.Client
                 Router.Logger.Debug(appId + "接收到连接请求");
                 TcpClient toTargetServer = new TcpClient();
                 //根据clientid_appid发送到固定的端口
+                //TODO 序列没有匹配元素？
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
 
                 //向服务端发起一次长连接，没有接收任何外来连接请求时，

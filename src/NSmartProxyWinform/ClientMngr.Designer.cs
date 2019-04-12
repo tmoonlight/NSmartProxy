@@ -39,22 +39,39 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tbxLog = new System.Windows.Forms.TextBox();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.btnAddClient = new System.Windows.Forms.Button();
+            this.btnDuplicate = new System.Windows.Forms.Button();
+            this.btnDelete = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.tbxTargetServerAddr = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.tbxPort = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbxTargetServerPort = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tbxProviderAddr = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.tbxConfigPort = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbxReversePort = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.退出程序ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.配置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.tabServerConfig.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(178, 371);
+            this.btnStart.Location = new System.Drawing.Point(208, 371);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 0;
@@ -64,7 +81,7 @@
             // 
             // btnEnd
             // 
-            this.btnEnd.Location = new System.Drawing.Point(259, 371);
+            this.btnEnd.Location = new System.Drawing.Point(289, 371);
             this.btnEnd.Name = "btnEnd";
             this.btnEnd.Size = new System.Drawing.Size(75, 23);
             this.btnEnd.TabIndex = 2;
@@ -92,12 +109,16 @@
             // 
             // cmsRightMenu
             // 
+            this.cmsRightMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.配置ToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.退出程序ToolStripMenuItem});
             this.cmsRightMenu.Name = "contextMenuStrip1";
-            this.cmsRightMenu.Size = new System.Drawing.Size(61, 4);
+            this.cmsRightMenu.Size = new System.Drawing.Size(125, 54);
             // 
             // btnExit
             // 
-            this.btnExit.Location = new System.Drawing.Point(425, 372);
+            this.btnExit.Location = new System.Drawing.Point(466, 372);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 23);
             this.btnExit.TabIndex = 4;
@@ -111,7 +132,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(480, 328);
+            this.tabPage2.Size = new System.Drawing.Size(525, 328);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "日志";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -125,99 +146,232 @@
             this.tbxLog.Multiline = true;
             this.tbxLog.Name = "tbxLog";
             this.tbxLog.ReadOnly = true;
-            this.tbxLog.Size = new System.Drawing.Size(474, 322);
+            this.tbxLog.Size = new System.Drawing.Size(519, 322);
             this.tbxLog.TabIndex = 1;
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.textBox3);
-            this.tabPage1.Controls.Add(this.textBox2);
-            this.tabPage1.Controls.Add(this.textBox1);
-            this.tabPage1.Controls.Add(this.label3);
-            this.tabPage1.Controls.Add(this.label2);
-            this.tabPage1.Controls.Add(this.label1);
+            this.tabPage1.Controls.Add(this.btnAddClient);
+            this.tabPage1.Controls.Add(this.btnDuplicate);
+            this.tabPage1.Controls.Add(this.btnDelete);
+            this.tabPage1.Controls.Add(this.groupBox2);
+            this.tabPage1.Controls.Add(this.groupBox1);
+            this.tabPage1.Controls.Add(this.listBox1);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(480, 328);
+            this.tabPage1.Size = new System.Drawing.Size(525, 328);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "应用";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnAddClient
+            // 
+            this.btnAddClient.Location = new System.Drawing.Point(21, 286);
+            this.btnAddClient.Name = "btnAddClient";
+            this.btnAddClient.Size = new System.Drawing.Size(75, 23);
+            this.btnAddClient.TabIndex = 11;
+            this.btnAddClient.Text = "添加";
+            this.btnAddClient.UseVisualStyleBackColor = true;
+            // 
+            // btnDuplicate
+            // 
+            this.btnDuplicate.Location = new System.Drawing.Point(182, 286);
+            this.btnDuplicate.Name = "btnDuplicate";
+            this.btnDuplicate.Size = new System.Drawing.Size(75, 23);
+            this.btnDuplicate.TabIndex = 10;
+            this.btnDuplicate.Text = "复制";
+            this.btnDuplicate.UseVisualStyleBackColor = true;
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.Location = new System.Drawing.Point(101, 286);
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Size = new System.Drawing.Size(75, 23);
+            this.btnDelete.TabIndex = 9;
+            this.btnDelete.Text = "删除";
+            this.btnDelete.UseVisualStyleBackColor = true;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.tbxTargetServerAddr);
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Controls.Add(this.tbxPort);
+            this.groupBox2.Controls.Add(this.label5);
+            this.groupBox2.Controls.Add(this.tbxTargetServerPort);
+            this.groupBox2.Controls.Add(this.label6);
+            this.groupBox2.Location = new System.Drawing.Point(329, 77);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(190, 232);
+            this.groupBox2.TabIndex = 8;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "节点配置";
+            // 
+            // tbxTargetServerAddr
+            // 
+            this.tbxTargetServerAddr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxTargetServerAddr.Location = new System.Drawing.Point(102, 20);
+            this.tbxTargetServerAddr.Name = "tbxTargetServerAddr";
+            this.tbxTargetServerAddr.Size = new System.Drawing.Size(82, 21);
+            this.tbxTargetServerAddr.TabIndex = 3;
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(43, 23);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(53, 12);
+            this.label4.TabIndex = 0;
+            this.label4.Text = "内网地址";
+            // 
+            // tbxPort
+            // 
+            this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxPort.Location = new System.Drawing.Point(102, 74);
+            this.tbxPort.Name = "tbxPort";
+            this.tbxPort.Size = new System.Drawing.Size(82, 21);
+            this.tbxPort.TabIndex = 5;
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(43, 50);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(53, 12);
+            this.label5.TabIndex = 1;
+            this.label5.Text = "内网端口";
+            // 
+            // tbxTargetServerPort
+            // 
+            this.tbxTargetServerPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 47);
+            this.tbxTargetServerPort.Name = "tbxTargetServerPort";
+            this.tbxTargetServerPort.Size = new System.Drawing.Size(82, 21);
+            this.tbxTargetServerPort.TabIndex = 4;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(7, 77);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(95, 12);
+            this.label6.TabIndex = 2;
+            this.label6.Text = "外网端口(*可选)";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.tbxProviderAddr);
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.tbxConfigPort);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.tbxReversePort);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Location = new System.Drawing.Point(6, 6);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(513, 57);
+            this.groupBox1.TabIndex = 7;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "外网服务器";
+            // 
+            // tbxProviderAddr
+            // 
+            this.tbxProviderAddr.Location = new System.Drawing.Point(81, 20);
+            this.tbxProviderAddr.Name = "tbxProviderAddr";
+            this.tbxProviderAddr.Size = new System.Drawing.Size(164, 21);
+            this.tbxProviderAddr.TabIndex = 3;
+            this.tbxProviderAddr.Text = "2017studio.imwork.net";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(13, 23);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(65, 12);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "服务器地址";
+            // 
+            // tbxConfigPort
+            // 
+            this.tbxConfigPort.Location = new System.Drawing.Point(448, 20);
+            this.tbxConfigPort.Name = "tbxConfigPort";
+            this.tbxConfigPort.Size = new System.Drawing.Size(55, 21);
+            this.tbxConfigPort.TabIndex = 5;
+            this.tbxConfigPort.Text = "12308";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(251, 23);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(53, 12);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "连接端口";
+            // 
+            // tbxReversePort
+            // 
+            this.tbxReversePort.Location = new System.Drawing.Point(310, 20);
+            this.tbxReversePort.Name = "tbxReversePort";
+            this.tbxReversePort.Size = new System.Drawing.Size(55, 21);
+            this.tbxReversePort.TabIndex = 4;
+            this.tbxReversePort.Text = "19974";
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(41, 73);
+            this.label3.Location = new System.Drawing.Point(389, 23);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(53, 12);
             this.label3.TabIndex = 2;
             this.label3.Text = "配置端口";
             // 
-            // label2
+            // listBox1
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(17, 46);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(77, 12);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "反向连接端口";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(41, 21);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 12);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "服务器IP";
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 12;
+            this.listBox1.Items.AddRange(new object[] {
+            "2017studio.imwork.net:20001 => 127.0.0.1:80"});
+            this.listBox1.Location = new System.Drawing.Point(11, 84);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(303, 196);
+            this.listBox1.TabIndex = 6;
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // tabServerConfig
             // 
             this.tabServerConfig.Controls.Add(this.tabPage1);
             this.tabServerConfig.Controls.Add(this.tabPage2);
-            this.tabServerConfig.Controls.Add(this.tabPage3);
             this.tabServerConfig.Location = new System.Drawing.Point(12, 12);
             this.tabServerConfig.Name = "tabServerConfig";
             this.tabServerConfig.SelectedIndex = 0;
-            this.tabServerConfig.Size = new System.Drawing.Size(488, 354);
+            this.tabServerConfig.Size = new System.Drawing.Size(533, 354);
             this.tabServerConfig.TabIndex = 5;
             // 
-            // tabPage3
+            // 退出程序ToolStripMenuItem
             // 
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(480, 328);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "服务器";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            this.退出程序ToolStripMenuItem.Name = "退出程序ToolStripMenuItem";
+            this.退出程序ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.退出程序ToolStripMenuItem.Text = "退出程序";
+            this.退出程序ToolStripMenuItem.Click += new System.EventHandler(this.退出程序ToolStripMenuItem_Click);
             // 
-            // textBox1
+            // 配置ToolStripMenuItem
             // 
-            this.textBox1.Location = new System.Drawing.Point(109, 18);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 21);
-            this.textBox1.TabIndex = 3;
+            this.配置ToolStripMenuItem.Name = "配置ToolStripMenuItem";
+            this.配置ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.配置ToolStripMenuItem.Text = "配置...";
             // 
-            // textBox2
+            // toolStripSeparator1
             // 
-            this.textBox2.Location = new System.Drawing.Point(109, 43);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 21);
-            this.textBox2.TabIndex = 4;
-            // 
-            // textBox3
-            // 
-            this.textBox3.Location = new System.Drawing.Point(109, 70);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(100, 21);
-            this.textBox3.TabIndex = 5;
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
             // ClientMngr
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(512, 406);
+            this.ClientSize = new System.Drawing.Size(557, 406);
             this.Controls.Add(this.tabServerConfig);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnOpenInExplorer);
@@ -228,12 +382,16 @@
             this.MaximizeBox = false;
             this.Name = "ClientMngr";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "日志查看器";
+            this.Text = "配置对话框";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClientMngr_FormClosing);
+            this.cmsRightMenu.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.tabPage1.ResumeLayout(false);
-            this.tabPage1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.tabServerConfig.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -247,18 +405,31 @@
         private System.Windows.Forms.NotifyIcon notifyIconNSPClient;
         private System.Windows.Forms.ContextMenuStrip cmsRightMenu;
         private System.Windows.Forms.Button btnExit;
-       
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TextBox tbxLog;
-        private System.Windows.Forms.TabControl tabServerConfig;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TextBox tbxConfigPort;
+        private System.Windows.Forms.TextBox tbxReversePort;
+        private System.Windows.Forms.TextBox tbxProviderAddr;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TabControl tabServerConfig;
+        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox tbxTargetServerAddr;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox tbxPort;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbxTargetServerPort;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button btnDelete;
+        private System.Windows.Forms.Button btnDuplicate;
+        private System.Windows.Forms.Button btnAddClient;
+        private System.Windows.Forms.ToolStripMenuItem 退出程序ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 配置ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 

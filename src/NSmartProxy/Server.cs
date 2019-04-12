@@ -355,7 +355,7 @@ namespace NSmartProxy
                 CloseClient(client);
                 return;
             }
-            //1.2 响应ACK
+            //1.2 响应ACK 
             await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
 
