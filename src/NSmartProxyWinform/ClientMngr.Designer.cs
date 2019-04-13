@@ -31,18 +31,24 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClientMngr));
             this.btnStart = new System.Windows.Forms.Button();
-            this.btnEnd = new System.Windows.Forms.Button();
             this.btnOpenInExplorer = new System.Windows.Forms.Button();
             this.notifyIconNSPClient = new System.Windows.Forms.NotifyIcon(this.components);
             this.cmsRightMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.启动内网穿透ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.配置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.退出程序ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnExit = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tbxLog = new System.Windows.Forms.TextBox();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnSaveConfig = new System.Windows.Forms.Button();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.btnAddClient = new System.Windows.Forms.Button();
             this.btnDuplicate = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.tbxTargetServerAddr = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.tbxPort = new System.Windows.Forms.TextBox();
@@ -58,51 +64,41 @@
             this.label3 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
-            this.退出程序ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.配置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabServerConfig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(208, 371);
+            this.btnStart.Location = new System.Drawing.Point(247, 398);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 0;
+            this.btnStart.Tag = "1";
             this.btnStart.Text = "开始";
             this.btnStart.UseVisualStyleBackColor = true;
-            this.btnStart.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // btnEnd
-            // 
-            this.btnEnd.Location = new System.Drawing.Point(289, 371);
-            this.btnEnd.Name = "btnEnd";
-            this.btnEnd.Size = new System.Drawing.Size(75, 23);
-            this.btnEnd.TabIndex = 2;
-            this.btnEnd.Text = "结束";
-            this.btnEnd.UseVisualStyleBackColor = true;
-            this.btnEnd.Click += new System.EventHandler(this.button2_Click);
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // btnOpenInExplorer
             // 
-            this.btnOpenInExplorer.Location = new System.Drawing.Point(13, 372);
+            this.btnOpenInExplorer.Location = new System.Drawing.Point(12, 398);
             this.btnOpenInExplorer.Name = "btnOpenInExplorer";
             this.btnOpenInExplorer.Size = new System.Drawing.Size(113, 23);
             this.btnOpenInExplorer.TabIndex = 3;
             this.btnOpenInExplorer.Text = "资源管理器中打开";
             this.btnOpenInExplorer.UseVisualStyleBackColor = true;
-            this.btnOpenInExplorer.Click += new System.EventHandler(this.button3_Click);
+            this.btnOpenInExplorer.Click += new System.EventHandler(this.ShowInExplorer_Click);
             // 
             // notifyIconNSPClient
             // 
             this.notifyIconNSPClient.ContextMenuStrip = this.cmsRightMenu;
-            this.notifyIconNSPClient.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIconNSPClient.Icon")));
             this.notifyIconNSPClient.Text = "notifyIcon1";
             this.notifyIconNSPClient.Visible = true;
             this.notifyIconNSPClient.DoubleClick += new System.EventHandler(this.notifyIconNSPClient_DoubleClick);
@@ -110,21 +106,50 @@
             // cmsRightMenu
             // 
             this.cmsRightMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.启动内网穿透ToolStripMenuItem,
             this.配置ToolStripMenuItem,
             this.toolStripSeparator1,
             this.退出程序ToolStripMenuItem});
             this.cmsRightMenu.Name = "contextMenuStrip1";
-            this.cmsRightMenu.Size = new System.Drawing.Size(125, 54);
+            this.cmsRightMenu.Size = new System.Drawing.Size(149, 76);
+            // 
+            // 启动内网穿透ToolStripMenuItem
+            // 
+            this.启动内网穿透ToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.White;
+            this.启动内网穿透ToolStripMenuItem.Name = "启动内网穿透ToolStripMenuItem";
+            this.启动内网穿透ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.启动内网穿透ToolStripMenuItem.Text = "启动内网穿透";
+            this.启动内网穿透ToolStripMenuItem.Click += new System.EventHandler(this.启动内网穿透ToolStripMenuItem_Click);
+            this.启动内网穿透ToolStripMenuItem.Paint += new System.Windows.Forms.PaintEventHandler(this.启动内网穿透ToolStripMenuItem_Paint);
+            // 
+            // 配置ToolStripMenuItem
+            // 
+            this.配置ToolStripMenuItem.Name = "配置ToolStripMenuItem";
+            this.配置ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.配置ToolStripMenuItem.Text = "配置...";
+            this.配置ToolStripMenuItem.Click += new System.EventHandler(this.配置ToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(145, 6);
+            // 
+            // 退出程序ToolStripMenuItem
+            // 
+            this.退出程序ToolStripMenuItem.Name = "退出程序ToolStripMenuItem";
+            this.退出程序ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.退出程序ToolStripMenuItem.Text = "退出程序";
+            this.退出程序ToolStripMenuItem.Click += new System.EventHandler(this.退出程序ToolStripMenuItem_Click);
             // 
             // btnExit
             // 
-            this.btnExit.Location = new System.Drawing.Point(466, 372);
+            this.btnExit.Location = new System.Drawing.Point(466, 398);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 23);
             this.btnExit.TabIndex = 4;
             this.btnExit.Text = "退出程序";
             this.btnExit.UseVisualStyleBackColor = true;
-            this.btnExit.Click += new System.EventHandler(this.button4_Click);
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // tabPage2
             // 
@@ -132,7 +157,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(525, 328);
+            this.tabPage2.Size = new System.Drawing.Size(525, 354);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "日志";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -146,11 +171,13 @@
             this.tbxLog.Multiline = true;
             this.tbxLog.Name = "tbxLog";
             this.tbxLog.ReadOnly = true;
-            this.tbxLog.Size = new System.Drawing.Size(519, 322);
+            this.tbxLog.Size = new System.Drawing.Size(519, 348);
             this.tbxLog.TabIndex = 1;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnSaveConfig);
+            this.tabPage1.Controls.Add(this.btnRefresh);
             this.tabPage1.Controls.Add(this.btnAddClient);
             this.tabPage1.Controls.Add(this.btnDuplicate);
             this.tabPage1.Controls.Add(this.btnDelete);
@@ -160,10 +187,30 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(525, 328);
+            this.tabPage1.Size = new System.Drawing.Size(525, 354);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "应用";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnSaveConfig
+            // 
+            this.btnSaveConfig.Location = new System.Drawing.Point(114, 316);
+            this.btnSaveConfig.Name = "btnSaveConfig";
+            this.btnSaveConfig.Size = new System.Drawing.Size(75, 23);
+            this.btnSaveConfig.TabIndex = 14;
+            this.btnSaveConfig.Text = "保存配置";
+            this.btnSaveConfig.UseVisualStyleBackColor = true;
+            this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Location = new System.Drawing.Point(21, 315);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 13;
+            this.btnRefresh.Text = "还原配置";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // btnAddClient
             // 
@@ -173,27 +220,31 @@
             this.btnAddClient.TabIndex = 11;
             this.btnAddClient.Text = "添加";
             this.btnAddClient.UseVisualStyleBackColor = true;
+            this.btnAddClient.Click += new System.EventHandler(this.btnAddClient_Click);
             // 
             // btnDuplicate
             // 
-            this.btnDuplicate.Location = new System.Drawing.Point(182, 286);
+            this.btnDuplicate.Location = new System.Drawing.Point(206, 286);
             this.btnDuplicate.Name = "btnDuplicate";
             this.btnDuplicate.Size = new System.Drawing.Size(75, 23);
             this.btnDuplicate.TabIndex = 10;
             this.btnDuplicate.Text = "复制";
             this.btnDuplicate.UseVisualStyleBackColor = true;
+            this.btnDuplicate.Click += new System.EventHandler(this.btnDuplicate_Click);
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(101, 286);
+            this.btnDelete.Location = new System.Drawing.Point(114, 286);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 9;
             this.btnDelete.Text = "删除";
             this.btnDelete.UseVisualStyleBackColor = true;
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.tbxTargetServerAddr);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.tbxPort);
@@ -207,6 +258,14 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "节点配置";
             // 
+            // label7
+            // 
+            this.label7.Location = new System.Drawing.Point(17, 110);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(163, 60);
+            this.label7.TabIndex = 6;
+            this.label7.Text = "* : 外网端口为0或者空则代表端口由服务端自动分派。";
+            // 
             // tbxTargetServerAddr
             // 
             this.tbxTargetServerAddr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -214,6 +273,7 @@
             this.tbxTargetServerAddr.Name = "tbxTargetServerAddr";
             this.tbxTargetServerAddr.Size = new System.Drawing.Size(82, 21);
             this.tbxTargetServerAddr.TabIndex = 3;
+            this.tbxTargetServerAddr.Leave += new System.EventHandler(this.targetServer_TextChanged);
             // 
             // label4
             // 
@@ -229,9 +289,12 @@
             // 
             this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxPort.Location = new System.Drawing.Point(102, 74);
+            this.tbxPort.MaxLength = 5;
             this.tbxPort.Name = "tbxPort";
             this.tbxPort.Size = new System.Drawing.Size(82, 21);
             this.tbxPort.TabIndex = 5;
+            this.tbxPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
+            this.tbxPort.Leave += new System.EventHandler(this.targetServer_TextChanged);
             // 
             // label5
             // 
@@ -247,9 +310,12 @@
             // 
             this.tbxTargetServerPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 47);
+            this.tbxTargetServerPort.MaxLength = 5;
             this.tbxTargetServerPort.Name = "tbxTargetServerPort";
             this.tbxTargetServerPort.Size = new System.Drawing.Size(82, 21);
             this.tbxTargetServerPort.TabIndex = 4;
+            this.tbxTargetServerPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
+            this.tbxTargetServerPort.Leave += new System.EventHandler(this.targetServer_TextChanged);
             // 
             // label6
             // 
@@ -280,9 +346,10 @@
             // 
             this.tbxProviderAddr.Location = new System.Drawing.Point(81, 20);
             this.tbxProviderAddr.Name = "tbxProviderAddr";
-            this.tbxProviderAddr.Size = new System.Drawing.Size(164, 21);
+            this.tbxProviderAddr.Size = new System.Drawing.Size(140, 21);
             this.tbxProviderAddr.TabIndex = 3;
             this.tbxProviderAddr.Text = "2017studio.imwork.net";
+            this.tbxProviderAddr.TextChanged += new System.EventHandler(this.ConfigValueChanged);
             // 
             // label1
             // 
@@ -296,10 +363,13 @@
             // tbxConfigPort
             // 
             this.tbxConfigPort.Location = new System.Drawing.Point(448, 20);
+            this.tbxConfigPort.MaxLength = 5;
             this.tbxConfigPort.Name = "tbxConfigPort";
             this.tbxConfigPort.Size = new System.Drawing.Size(55, 21);
             this.tbxConfigPort.TabIndex = 5;
             this.tbxConfigPort.Text = "12308";
+            this.tbxConfigPort.TextChanged += new System.EventHandler(this.ConfigValueChanged);
+            this.tbxConfigPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
             // 
             // label2
             // 
@@ -313,10 +383,13 @@
             // tbxReversePort
             // 
             this.tbxReversePort.Location = new System.Drawing.Point(310, 20);
+            this.tbxReversePort.MaxLength = 5;
             this.tbxReversePort.Name = "tbxReversePort";
             this.tbxReversePort.Size = new System.Drawing.Size(55, 21);
             this.tbxReversePort.TabIndex = 4;
             this.tbxReversePort.Text = "19974";
+            this.tbxReversePort.TextChanged += new System.EventHandler(this.ConfigValueChanged);
+            this.tbxReversePort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
             // 
             // label3
             // 
@@ -337,7 +410,9 @@
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(303, 196);
             this.listBox1.TabIndex = 6;
+            this.listBox1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBox1_DrawItem);
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            this.listBox1.Leave += new System.EventHandler(this.listBox1_Leave);
             // 
             // tabServerConfig
             // 
@@ -346,36 +421,25 @@
             this.tabServerConfig.Location = new System.Drawing.Point(12, 12);
             this.tabServerConfig.Name = "tabServerConfig";
             this.tabServerConfig.SelectedIndex = 0;
-            this.tabServerConfig.Size = new System.Drawing.Size(533, 354);
+            this.tabServerConfig.Size = new System.Drawing.Size(533, 380);
             this.tabServerConfig.TabIndex = 5;
             // 
-            // 退出程序ToolStripMenuItem
+            // timer1
             // 
-            this.退出程序ToolStripMenuItem.Name = "退出程序ToolStripMenuItem";
-            this.退出程序ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.退出程序ToolStripMenuItem.Text = "退出程序";
-            this.退出程序ToolStripMenuItem.Click += new System.EventHandler(this.退出程序ToolStripMenuItem_Click);
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // 配置ToolStripMenuItem
+            // errorProvider1
             // 
-            this.配置ToolStripMenuItem.Name = "配置ToolStripMenuItem";
-            this.配置ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.配置ToolStripMenuItem.Text = "配置...";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.errorProvider1.ContainerControl = this;
             // 
             // ClientMngr
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(557, 406);
+            this.ClientSize = new System.Drawing.Size(557, 433);
             this.Controls.Add(this.tabServerConfig);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnOpenInExplorer);
-            this.Controls.Add(this.btnEnd);
             this.Controls.Add(this.btnStart);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -384,6 +448,7 @@
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "配置对话框";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClientMngr_FormClosing);
+            this.Load += new System.EventHandler(this.ClientMngr_Load);
             this.cmsRightMenu.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
@@ -393,6 +458,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabServerConfig.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -400,7 +466,6 @@
         #endregion
 
         private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.Button btnEnd;
         private System.Windows.Forms.Button btnOpenInExplorer;
         private System.Windows.Forms.NotifyIcon notifyIconNSPClient;
         private System.Windows.Forms.ContextMenuStrip cmsRightMenu;
@@ -430,6 +495,12 @@
         private System.Windows.Forms.ToolStripMenuItem 退出程序ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 配置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem 启动内网穿透ToolStripMenuItem;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnSaveConfig;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ErrorProvider errorProvider1;
     }
 }
 

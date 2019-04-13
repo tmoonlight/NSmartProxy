@@ -22,6 +22,7 @@ namespace NSmartProxyWinform
         public static string LoggerPath= "log4net.config";
         public static string LoggerConfigPath = "log4net.config";
         public const string LOGGER_REPO_NAME = "NSmartClientRouterRepository";
+        public const string CONFIG_FILE_PATH = "./appsettings.json";
 
         public static string[] Args;
         /// <summary>
@@ -45,7 +46,7 @@ namespace NSmartProxyWinform
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
             var builder = new ConfigurationBuilder()
              .SetBasePath(Directory.GetCurrentDirectory())
-             .AddJsonFile("appsettings.json");
+             .AddJsonFile(CONFIG_FILE_PATH);
             Configuration = builder.Build();
 
             Application.EnableVisualStyles();

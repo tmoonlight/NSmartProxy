@@ -108,7 +108,8 @@ namespace NSmartProxy.Client
                 throw;
             }
 
-            await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
+            //TODO 返回错误码
+            //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)

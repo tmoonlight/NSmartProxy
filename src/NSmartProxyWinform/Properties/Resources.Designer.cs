@@ -69,5 +69,35 @@ namespace NSmartProxyWinform.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Icon servicepaused {
+            get {
+                object obj = ResourceManager.GetObject("servicepaused", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Icon servicerunning {
+            get {
+                object obj = ResourceManager.GetObject("servicerunning", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Icon servicestopped {
+            get {
+                object obj = ResourceManager.GetObject("servicestopped", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }

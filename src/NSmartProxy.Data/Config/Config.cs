@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NSmartProxy.Client
-{
+namespace NSmartProxy.Data
+{ 
     public class Config
     {
         public int ProviderPort;                    //代理转发服务端口
