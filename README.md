@@ -21,7 +21,7 @@ NSmartProxy包含两个服务程序：<br />
 ## 启动准备
 #### Linux/Windows/MacOS
 1. 安装[.NET Core Runtime](https://dotnet.microsoft.com/download)<br />
-2. 下载[NSmartProxy客户端](https://github.com/tmoonlight/NSmartProxy/files/2964762/client.zip)
+2. 下载最新版本的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
@@ -38,6 +38,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
     {
       "IP": "127.0.0.1",           //反向代理机器的ip
       "TargetServicePort": "3389"  //反向代理服务的端口
+      "ConsumerPort":3389          //外网访问端口，如被占用，则会从20000开始按顺序分配端口
     },
     {
       "IP": "127.0.0.1",
