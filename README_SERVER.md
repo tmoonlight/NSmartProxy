@@ -1,5 +1,5 @@
 
-<img src="https://github.com/tmoonlight/NSmartProxy/blob/img/NSmaryProxy.png">
+<img src="https://github.com/tmoonlight/NSmartProxy/blob/img/NSmaryProxyNew.png">
 
 # NSmartProxy ServerHost
 
