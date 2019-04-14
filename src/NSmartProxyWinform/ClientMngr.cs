@@ -184,7 +184,6 @@ namespace NSmartProxyWinform
 
             //记录日志
             string argument = "/select, \"" + filePath + "\"";
-            //Logging.Debug(argument);
             System.Diagnostics.Process.Start("explorer.exe", argument);
         }
 
@@ -247,8 +246,6 @@ namespace NSmartProxyWinform
                 tbxTargetServerAddr.Text = strParts[2].Trim();
                 tbxTargetServerPort.Text = strParts[3].Trim();
             }
-
-
         }
 
 
@@ -323,11 +320,6 @@ namespace NSmartProxyWinform
             }
         }
 
-        private void listBox1_DrawItem(object sender, DrawItemEventArgs e)
-        {
-
-        }
-
         private void 启动内网穿透ToolStripMenuItem_Paint(object sender, PaintEventArgs e)
         {
             if (IsStarted)
@@ -372,12 +364,6 @@ namespace NSmartProxyWinform
             }
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            //1.刷新配置
-
-            //2.保存配置到文件
-        }
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {

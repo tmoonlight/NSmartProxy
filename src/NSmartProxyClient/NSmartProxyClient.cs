@@ -68,9 +68,9 @@ namespace NSmartProxy
             {
                 Logger.Error(e.Message);
             }
-
-            Logger.Info("Client terminated,press any key to continue.");
             Console.Read();
+            Logger.Info("Client terminated,press any key to continue.");
+           
         }
 
         private static async Task StartClient()

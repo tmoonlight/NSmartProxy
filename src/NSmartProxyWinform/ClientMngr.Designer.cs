@@ -64,7 +64,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -410,7 +409,6 @@
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(303, 196);
             this.listBox1.TabIndex = 6;
-            this.listBox1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBox1_DrawItem);
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.listBox1.Leave += new System.EventHandler(this.listBox1_Leave);
             // 
@@ -426,7 +424,7 @@
             // 
             // timer1
             // 
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+           
             // 
             // errorProvider1
             // 
@@ -496,7 +494,6 @@
         private System.Windows.Forms.ToolStripMenuItem 配置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem 启动内网穿透ToolStripMenuItem;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Button btnSaveConfig;
         private System.Windows.Forms.Label label7;
