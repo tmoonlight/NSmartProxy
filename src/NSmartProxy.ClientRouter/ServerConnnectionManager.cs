@@ -80,10 +80,15 @@ namespace NSmartProxy.Client
                 var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
                 //超时则dispose掉
                 var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
-                if (!connectAsync.IsCompleted)
+                if (!connectAsync.IsCompleted) //超时
                 {
                     Router.Logger.Debug("ReadConfigFromProvider连接超时，5秒后重试。");
                     await Task.Delay(5000);
+                }
+                else if (connectAsync.IsFaulted)//出错
+                {
+                    Router.Logger.Error(connectAsync.Exception.Message, connectAsync.Exception);
+                    throw connectAsync.Exception;
                 }
                 else
                 {

@@ -79,7 +79,7 @@ namespace NSmartProxy
             Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
-            Task tsk = clientRouter.ConnectToProvider();
+            Task tsk = clientRouter.Start();
             try
             {
                 await tsk;

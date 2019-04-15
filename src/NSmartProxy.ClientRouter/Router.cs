@@ -46,9 +46,7 @@ namespace NSmartProxy.Client
 
         public Router()
         {
-            CANCEL_TOKEN = new CancellationTokenSource();
-            TRANSFERING_TOKEN = new CancellationTokenSource();
-            HEARTBEAT_TOKEN = new CancellationTokenSource();
+
         }
 
         public Router(INSmartLogger logger) : this()
@@ -66,15 +64,29 @@ namespace NSmartProxy.Client
         /// 该方法主要操作一些配置和心跳
         /// </summary>
         /// <returns></returns>
-        public async Task ConnectToProvider()
+        public async Task Start()
         {
+            CANCEL_TOKEN = new CancellationTokenSource();
+            TRANSFERING_TOKEN = new CancellationTokenSource();
+            HEARTBEAT_TOKEN = new CancellationTokenSource();
+
             var appIdIpPortConfig = ClientConfig.Clients;
 
             //1.获取配置
             ConnectionManager = ServerConnnectionManager.Create();
             ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
             ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
-            var clientModel = await ConnectionManager.InitConfig().ConfigureAwait(false);
+            ClientModel clientModel = null;//
+            try
+            {
+                clientModel = await ConnectionManager.InitConfig().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                //TODO 状态码：连接失败
+                Router.Logger.Error("连接失败：" + ex.Message, ex);
+                throw;
+            }
             int counter = 0;
             //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
             foreach (var app in appIdIpPortConfig)
@@ -117,7 +129,6 @@ namespace NSmartProxy.Client
             var args = (ClientGroupEventArgs)e;
             foreach (TcpClient providerClient in args.NewClients)
             {
-
                 Router.Logger.Debug("Open server connection.");
                 OpenTrasferation(args.App.AppId, providerClient);
             }
@@ -157,14 +168,21 @@ namespace NSmartProxy.Client
                 byte[] buffer = new byte[1];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
-                //TODO此处需要保活
+                //TODO 客户端长连接，需要保活，终止则说明服务端断开
                 // providerClient.keep
                 // providerClient.Client.
-                int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
-                if (readByteCount == 0)
+                try
                 {
-                    Router.Logger.Debug("服务器状态异常，已断开连接");
-                    return;
+                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
+                    if (readByteCount == 0)
+                    {
+                        Router.Logger.Debug("服务器状态异常，已断开连接");
+                        return;
+                    }
+                }
+                catch
+                {
+                    //此线程出错后，应用程序需要重置，并重启
                 }
                 //从空闲连接列表中移除
                 ConnectionManager.RemoveClient(appId, providerClient);

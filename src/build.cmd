@@ -1,4 +1,6 @@
 rem NSP v0.3
+@ECHO off
+
 set Ver=v0.3
 set BuildPath=%~dp0/../build
 
@@ -25,3 +27,6 @@ rem compress
 powershell Compress-Archive -Path '%nsp_server_path%/*.*' -DestinationPath '%BuildPath%/nspclient_%Ver%.zip' -Force 
 powershell Compress-Archive -Path '%nsp_client_path%/*.*' -DestinationPath '%BuildPath%/nspserver_%Ver%.zip' -Force 
 powershell Compress-Archive -Path '%nsp_client_winfform_path%/*.*' -DestinationPath '%BuildPath%/nspclient_winform_%Ver%.zip' -Force 
+
+explorer %BuildPath%
+pause
