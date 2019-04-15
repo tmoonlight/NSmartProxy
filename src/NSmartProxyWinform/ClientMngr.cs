@@ -100,66 +100,62 @@ namespace NSmartProxyWinform
             return true;
         }
 
+        //TODO ***状态控制
         private void StartOrStop()
         {
             btnStart.Enabled = false;
             Task tsk;
             if (btnStart.Tag.ToString() == START_TAG_TEXT)
             {
-                tsk = StartClientRouter(config);
+                StartClientRouter(config, () =>
+                {
+                    btnStart.Invoke(new Action(
+                        () =>
+                        {
+                            notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
+                            listBox1.ForeColor = Color.Green;
+                            foreach (var item in listBox1.Items)
+                            {
+                                notifyIconNSPClient.BalloonTipText += "\r\n" + item.ToString();
+                            }
+                            notifyIconNSPClient.ShowBalloonTip(5000);
+                            btnStart.Text = "停止";
+                            btnStart.Tag = END_TAG_TEXT;
+                            notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
+                            btnStart.Enabled = true;
+                        }
+                        ));
+                   
+                });
 
             }
             else
             {
                 tsk = clientRouter.Close();
-            }
-
-
-            tsk.ContinueWith(t => btnStart.Invoke(new Action(
-                () =>
-                {
-                    if (t.IsFaulted) { logger.Error("客户端启动/关闭失败", null); btnStart.Enabled = true; return; }
-
-                    if (IsStarted)
+                tsk.ContinueWith(t => btnStart.Invoke(new Action(
+                    () =>
                     {
+                        if (t.IsFaulted) { logger.Error("客户端启动/关闭失败", null); btnStart.Enabled = true; return; }
                         listBox1.ForeColor = Color.Black;
                         btnStart.Text = "开始";
                         btnStart.Tag = START_TAG_TEXT;
                         notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
+
+                        btnStart.Enabled = true;
                     }
-                    else
-                    {
-                        notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
-                        listBox1.ForeColor = Color.Green;
-                        foreach (var item in listBox1.Items)
-                        {
-                            notifyIconNSPClient.BalloonTipText += "\r\n" + item.ToString();
-                        }
-                        notifyIconNSPClient.ShowBalloonTip(5000);
-                        btnStart.Text = "停止";
-                        btnStart.Tag = END_TAG_TEXT;
-                        notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
-                    }
-                    btnStart.Enabled = true;
-                }
-            )));
+                )));
+            }
         }
 
-        private async Task StartClientRouter(Config config)
+        private void StartClientRouter(Config config, Action loaded)
         {
             clientRouter = new Router(logger);
-            //clientRouter.DoServerNoResponse = () =>
-            //{
-            //    clientRouter.Close().ConfigureAwait(false);
-            //    logger.Info("服务器无响应，五秒后重试...");
-            //    Thread.Sleep(5000);
-            //    StartClientRouter(config);
-            //};
 
             //read config from config file.
             SetConfig(clientRouter, config);// clientRouter.SetConifiguration();
+            clientRouter.AllAppConnected = loaded;
             var tsk = clientRouter.Start();
-            await tsk.ConfigureAwait(false);
+            tsk.ConfigureAwait(false);
         }
 
         private void SetConfig(Router clientRouter, Config config)

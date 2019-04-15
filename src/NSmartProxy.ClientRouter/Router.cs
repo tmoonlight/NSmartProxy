@@ -35,6 +35,7 @@ namespace NSmartProxy.Client
         CancellationTokenSource CANCEL_TOKEN;
         CancellationTokenSource TRANSFERING_TOKEN;
         CancellationTokenSource HEARTBEAT_TOKEN;
+        TaskCompletionSource<object> _waiter;
 
         public ServerConnnectionManager ConnectionManager;
 
@@ -42,7 +43,8 @@ namespace NSmartProxy.Client
         internal static INSmartLogger Logger = new NullLogger();   //inject
 
 
-        public Action DoServerNoResponse;
+        public Action DoServerNoResponse= delegate { };
+        public Action AllAppConnected = delegate { };
 
         public Router()
         {
@@ -69,7 +71,7 @@ namespace NSmartProxy.Client
             CANCEL_TOKEN = new CancellationTokenSource();
             TRANSFERING_TOKEN = new CancellationTokenSource();
             HEARTBEAT_TOKEN = new CancellationTokenSource();
-
+            _waiter = new TaskCompletionSource<object>();
             var appIdIpPortConfig = ClientConfig.Clients;
 
             //1.获取配置
@@ -106,19 +108,21 @@ namespace NSmartProxy.Client
                      cApp.IP + ":" + cApp.TargetServicePort);
             }
             Logger.Debug("**************************************");
-            Task pollingTask = ConnectionManager.PollingToProvider();
+            ConnectionManager.PollingToProvider(AllAppConnected);
             //3.创建心跳连接
             ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN.Token);
 
-            try
-            {
-                await pollingTask.ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
-                throw;
-            }
+            //try
+            //{
+            //    await pollingTask.ConfigureAwait(false);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
+            //    throw;
+            //}
+            Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;
+            //出错重试
 
             //TODO 返回错误码
             //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
@@ -211,6 +215,8 @@ namespace NSmartProxy.Client
             {
                 Logger.Debug("传输时出错：" + ex);
                 //关闭传输连接，服务端也会相应处理，把0request发送给消费端
+                //TODO ***: 连接时出错，重启客户端
+                _waiter.TrySetResult(ex);
                 providerClient.Close();
                 throw;
             }
