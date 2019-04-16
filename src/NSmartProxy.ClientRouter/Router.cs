@@ -30,25 +30,33 @@ namespace NSmartProxy.Client
         }
     }
 
+    public enum ClientStatus
+    {
+        Stopped = 0,
+        Started = 1
+    }
+
     public class Router
     {
-        CancellationTokenSource CANCEL_TOKEN;
-        CancellationTokenSource TRANSFERING_TOKEN;
-        CancellationTokenSource HEARTBEAT_TOKEN;
+        CancellationTokenSource ONE_LIVE_TOKEN_SRC;
+        CancellationTokenSource CANCEL_TOKEN_SRC;
+        CancellationTokenSource TRANSFERING_TOKEN_SRC;
+        CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         TaskCompletionSource<object> _waiter;
 
         public ServerConnnectionManager ConnectionManager;
+        public bool IsStarted = false;
 
-        internal static Config ClientConfig;
+        internal Config ClientConfig;
         internal static INSmartLogger Logger = new NullLogger();   //inject
 
 
-        public Action DoServerNoResponse= delegate { };
-        public Action AllAppConnected = delegate { };
+        public Action DoServerNoResponse = delegate { };
+        public Action<ClientStatus> StatusChanged = delegate { };
 
         public Router()
         {
-
+            ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
         }
 
         public Router(INSmartLogger logger) : this()
@@ -68,64 +76,81 @@ namespace NSmartProxy.Client
         /// <returns></returns>
         public async Task Start()
         {
-            CANCEL_TOKEN = new CancellationTokenSource();
-            TRANSFERING_TOKEN = new CancellationTokenSource();
-            HEARTBEAT_TOKEN = new CancellationTokenSource();
-            _waiter = new TaskCompletionSource<object>();
-            var appIdIpPortConfig = ClientConfig.Clients;
+            var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
+            while (!oneLiveToken.IsCancellationRequested)
+            {
+                CANCEL_TOKEN_SRC = new CancellationTokenSource();
+                TRANSFERING_TOKEN_SRC = new CancellationTokenSource();
+                HEARTBEAT_TOKEN_SRC = new CancellationTokenSource();
+                _waiter = new TaskCompletionSource<object>();
+                var appIdIpPortConfig = ClientConfig.Clients;
 
-            //1.获取配置
-            ConnectionManager = ServerConnnectionManager.Create();
-            ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
-            ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
-            ClientModel clientModel = null;//
-            try
-            {
-                clientModel = await ConnectionManager.InitConfig().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                //TODO 状态码：连接失败
-                Router.Logger.Error("连接失败：" + ex.Message, ex);
-                throw;
-            }
-            int counter = 0;
-            //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
-            foreach (var app in appIdIpPortConfig)
-            {
-                if (app.AppId == 0)
+                //1.获取配置
+                ConnectionManager = ServerConnnectionManager.Create();
+                ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
+                ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
+                ClientModel clientModel = null;//
+                try
                 {
-                    app.AppId = clientModel.AppList[counter].AppId;
-                    counter++;
+                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
                 }
+                catch (Exception ex)
+                {
+                    //TODO 状态码：连接失败
+                    Router.Logger.Error("连接失败：" + ex.Message, ex);
+                    //throw;
+                }
+                if (clientModel != null)
+                {
+                    int counter = 0;
+                    //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
+                    foreach (var app in appIdIpPortConfig)
+                    {
+                        if (app.AppId == 0)
+                        {
+                            app.AppId = clientModel.AppList[counter].AppId;
+                            counter++;
+                        }
+                    }
+                    Logger.Debug("****************port list*************");
+
+                    foreach (var ap in clientModel.AppList)
+                    {
+                        var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
+                        Logger.Debug(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
+                             cApp.IP + ":" + cApp.TargetServicePort);
+                    }
+                    Logger.Debug("**************************************");
+                    ConnectionManager.PollingToProvider(StatusChanged);
+                    //3.创建心跳连接
+                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token);
+
+                    //try
+                    //{
+                    //    await pollingTask.ConfigureAwait(false);
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
+                    //    throw;
+                    //}
+                    IsStarted = true;
+                    Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;
+                    Router.Logger.Debug($"程序异常终止:{exception.Message}。");
+                }
+                else
+                {
+                    Router.Logger.Debug($"程序启动失败。");
+                    //如果程序从未启动过就出错，则终止程序，否则重试。
+                    if (IsStarted == false) { StatusChanged(ClientStatus.Stopped); return; }
+
+                }
+                //出错重试
+                await Task.Delay(3000, ONE_LIVE_TOKEN_SRC.Token);
+                //TODO 返回错误码
+                //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
             }
-            Logger.Debug("****************port list*************");
-
-            foreach (var ap in clientModel.AppList)
-            {
-                var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
-                Logger.Debug(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
-                     cApp.IP + ":" + cApp.TargetServicePort);
-            }
-            Logger.Debug("**************************************");
-            ConnectionManager.PollingToProvider(AllAppConnected);
-            //3.创建心跳连接
-            ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN.Token);
-
-            //try
-            //{
-            //    await pollingTask.ConfigureAwait(false);
-            //}
-            //catch (Exception ex)
-            //{
-            //    Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
-            //    throw;
-            //}
-            Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;
-            //出错重试
-
-            //TODO 返回错误码
-            //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
+            //正常终止
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)
@@ -143,12 +168,13 @@ namespace NSmartProxy.Client
         {
             try
             {
-                var config = NSmartProxy.Client.Router.ClientConfig;
+                var config = ClientConfig;
                 //客户端关闭
-                CANCEL_TOKEN.Cancel();
-                TRANSFERING_TOKEN.Cancel();
-                HEARTBEAT_TOKEN.Cancel();
-
+                CANCEL_TOKEN_SRC.Cancel();
+                TRANSFERING_TOKEN_SRC.Cancel();
+                HEARTBEAT_TOKEN_SRC.Cancel();
+                ONE_LIVE_TOKEN_SRC.Cancel();
+                _waiter.SetCanceled();
                 //服务端关闭
                 await NetworkUtil.ConnectAndSend(
                         config.ProviderAddress,
@@ -166,6 +192,7 @@ namespace NSmartProxy.Client
 
         private async Task OpenTrasferation(int appId, TcpClient providerClient)
         {
+            TcpClient toTargetServer = new TcpClient();
             //事件循环2
             try
             {
@@ -175,24 +202,25 @@ namespace NSmartProxy.Client
                 //TODO 客户端长连接，需要保活，终止则说明服务端断开
                 // providerClient.keep
                 // providerClient.Client.
-                try
+
+                //try
+                //{
+                int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
+                if (readByteCount == 0)
                 {
-                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
-                    if (readByteCount == 0)
-                    {
-                        Router.Logger.Debug("服务器状态异常，已断开连接");
-                        return;
-                    }
+                    Router.Logger.Debug("服务器状态异常，已断开连接");
+                    return;
                 }
-                catch
-                {
-                    //此线程出错后，应用程序需要重置，并重启
-                }
+                //}
+                //catch
+                //{
+                //    //此线程出错后，应用程序需要重置，并重启
+                //}
+
                 //从空闲连接列表中移除
                 ConnectionManager.RemoveClient(appId, providerClient);
                 //每移除一个链接则发起一个新的链接
                 Router.Logger.Debug(appId + "接收到连接请求");
-                TcpClient toTargetServer = new TcpClient();
                 //根据clientid_appid发送到固定的端口
                 //TODO 序列没有匹配元素？
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
@@ -217,6 +245,7 @@ namespace NSmartProxy.Client
                 //关闭传输连接，服务端也会相应处理，把0request发送给消费端
                 //TODO ***: 连接时出错，重启客户端
                 _waiter.TrySetResult(ex);
+                toTargetServer.Close();
                 providerClient.Close();
                 throw;
             }
@@ -230,8 +259,8 @@ namespace NSmartProxy.Client
             {
                 Router.Logger.Debug("Looping start.");
                 //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN.Token, targetServceStream, providerStream, "T2P");
-                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN.Token, providerStream, targetServceStream, "P2T");
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, "T2P");
+                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, "P2T");
 
                 //close connnection,whether client or server stopped transferring.
                 var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);

@@ -107,22 +107,30 @@ namespace NSmartProxyWinform
             Task tsk;
             if (btnStart.Tag.ToString() == START_TAG_TEXT)
             {
-                StartClientRouter(config, () =>
+                StartClientRouter(config, (status) =>
                 {
                     btnStart.Invoke(new Action(
                         () =>
                         {
-                            notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
-                            listBox1.ForeColor = Color.Green;
-                            foreach (var item in listBox1.Items)
+                            if (status == ClientStatus.Started)
                             {
-                                notifyIconNSPClient.BalloonTipText += "\r\n" + item.ToString();
+                                notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
+                                listBox1.ForeColor = Color.Green;
+                                foreach (var item in listBox1.Items)
+                                {
+                                    notifyIconNSPClient.BalloonTipText += "\r\n" + item.ToString();
+                                }
+                                notifyIconNSPClient.ShowBalloonTip(5000);
+                                btnStart.Text = "停止";
+                                btnStart.Tag = END_TAG_TEXT;
+                                notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
+                                btnStart.Enabled = true;
                             }
-                            notifyIconNSPClient.ShowBalloonTip(5000);
-                            btnStart.Text = "停止";
-                            btnStart.Tag = END_TAG_TEXT;
-                            notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
-                            btnStart.Enabled = true;
+                            else
+                            {
+                                MessageBox.Show("客户端连接失败，详情请查看日志。");
+                                btnStart.Enabled = true;
+                            }
                         }
                         ));
                    
@@ -139,7 +147,7 @@ namespace NSmartProxyWinform
                         listBox1.ForeColor = Color.Black;
                         btnStart.Text = "开始";
                         btnStart.Tag = START_TAG_TEXT;
-                        notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
+                        notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
 
                         btnStart.Enabled = true;
                     }
@@ -147,13 +155,13 @@ namespace NSmartProxyWinform
             }
         }
 
-        private void StartClientRouter(Config config, Action loaded)
+        private void StartClientRouter(Config config, Action<ClientStatus> loaded)
         {
             clientRouter = new Router(logger);
 
             //read config from config file.
             SetConfig(clientRouter, config);// clientRouter.SetConifiguration();
-            clientRouter.AllAppConnected = loaded;
+            clientRouter.StatusChanged = loaded;
             var tsk = clientRouter.Start();
             tsk.ConfigureAwait(false);
         }

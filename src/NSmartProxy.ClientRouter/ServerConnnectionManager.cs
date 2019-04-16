@@ -27,6 +27,7 @@ namespace NSmartProxy.Client
         public List<TcpClient> ConnectedConnections;
         public Dictionary<int, ClientAppWorker> ServiceClientListCollection;  //key:appid value;ClientApp
         public Action ServerNoResponse = delegate { };
+        public Config ClientConfig;
 
         public int ClientID
         {
@@ -42,8 +43,9 @@ namespace NSmartProxy.Client
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
         /// <returns></returns>
-        public async Task<ClientModel> InitConfig()
+        public async Task<ClientModel> InitConfig(Config config)
         {
+            ClientConfig = config;
             ClientModel clientModel = await ReadConfigFromProvider();
 
             //要求服务端分配资源并获取服务端配置
@@ -70,7 +72,7 @@ namespace NSmartProxy.Client
         private async Task<ClientModel> ReadConfigFromProvider()
         {
             //《c#并发编程经典实例》 9.3 超时后取消
-            var config = NSmartProxy.Client.Router.ClientConfig;
+            var config =ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
             bool isConnected = false;
@@ -102,15 +104,15 @@ namespace NSmartProxy.Client
 
             //请求0 协议名
             byte requestByte0 = (byte)Protocol.ClientNewAppRequest;
-            await configStream.WriteAndFlushAsync(new byte[] { requestByte0 }, 0, 1);
+            await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
                 ClientId = 0,
-                ClientCount = config.Clients.Count(obj => obj.AppId == 0) //appid为0的则是未分配的
+                ClientCount = config.Clients.Count//(obj => obj.AppId == 0) //appid为0的则是未分配的 <- 取消这条规则，总是重新分配
             }.ToBytes();
-            await configStream.WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);
+            await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
 
             //请求2 分配端口
             byte[] requestBytes2 = new byte[config.Clients.Count * 2];
@@ -141,9 +143,9 @@ namespace NSmartProxy.Client
         /// 将所有的app循环连接服务端
         /// </summary>
         /// <returns></returns>
-        public async Task PollingToProvider(Action allAppConnected)
+        public async Task PollingToProvider(Action<ClientStatus> statusChanged)
         {
-            var config = NSmartProxy.Client.Router.ClientConfig;
+            var config = ClientConfig;
             if (ClientID == 0) { Router.Logger.Debug("error:未连接客户端"); return; };
             //int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
@@ -157,13 +159,13 @@ namespace NSmartProxy.Client
 
             }
             //TODO ***连接完成 回调
-            allAppConnected();
+            statusChanged(ClientStatus.Started);
         }
 
         public async Task ConnectAppToServer(int appid)
         {
             var app = this.ServiceClientListCollection[appid];
-            var config = NSmartProxy.Client.Router.ClientConfig;
+            var config =ClientConfig;
             // ClientAppWorker app = kv.Value;
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
             var clientList = new List<TcpClient>();
@@ -226,7 +228,7 @@ namespace NSmartProxy.Client
         {
             try
             {
-                var config = NSmartProxy.Client.Router.ClientConfig;
+                var config = ClientConfig;
 
                 //TODO 客户端开启心跳
                 while (!ct.IsCancellationRequested)
