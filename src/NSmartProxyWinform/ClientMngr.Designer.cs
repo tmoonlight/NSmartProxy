@@ -98,7 +98,7 @@
             // notifyIconNSPClient
             // 
             this.notifyIconNSPClient.ContextMenuStrip = this.cmsRightMenu;
-            this.notifyIconNSPClient.Text = "notifyIcon1";
+            this.notifyIconNSPClient.Text = "NSmartProxy v0.3";
             this.notifyIconNSPClient.Visible = true;
             this.notifyIconNSPClient.DoubleClick += new System.EventHandler(this.notifyIconNSPClient_DoubleClick);
             // 
@@ -421,10 +421,6 @@
             this.tabServerConfig.SelectedIndex = 0;
             this.tabServerConfig.Size = new System.Drawing.Size(533, 380);
             this.tabServerConfig.TabIndex = 5;
-            // 
-            // timer1
-            // 
-           
             // 
             // errorProvider1
             // 

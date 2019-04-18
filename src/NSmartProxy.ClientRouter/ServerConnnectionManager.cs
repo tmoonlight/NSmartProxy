@@ -129,7 +129,7 @@ namespace NSmartProxy.Client
             //读端口配置
             byte[] serverConfig = new byte[256];
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
-            if (readBytesCount == 0) Router.Logger.Debug("服务器状态异常，已断开连接");
+            if (readBytesCount == 0) Router.Logger.Debug("服务器关闭了本次连接");
 
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
@@ -213,6 +213,21 @@ namespace NSmartProxy.Client
             return new ServerConnnectionManager();
         }
 
+        /// <summary>
+        /// 判断客户端是否还存在于连接列表当中，如果没有则说明是已被消费的连接，或者残留的无用的连接
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public bool ExistClient(int appId, TcpClient client)
+        {
+            if (ServiceClientListCollection[appId].TcpClientGroup.IndexOf(client) < 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public TcpClient RemoveClient(int appId, TcpClient client)
         {
             if (ServiceClientListCollection[appId].TcpClientGroup.Remove(client))
@@ -220,7 +235,7 @@ namespace NSmartProxy.Client
                 return client;
             else
             {
-                throw new Exception("无此client");
+                return null;
             }
         }
 
