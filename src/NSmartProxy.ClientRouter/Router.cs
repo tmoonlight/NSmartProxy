@@ -43,6 +43,7 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
         CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         TaskCompletionSource<object> _waiter;
+        //bool HasConnected = false;
 
         public ServerConnnectionManager ConnectionManager;
         public bool IsStarted = false;
@@ -92,7 +93,8 @@ namespace NSmartProxy.Client
                 ClientModel clientModel = null;//
                 try
                 {
-                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
+                    //TODO 非第一次则算作重连，发送clientid过去
+                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig,IsStarted).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -100,6 +102,8 @@ namespace NSmartProxy.Client
                     Router.Logger.Error("连接失败：" + ex.Message, ex);
                     //throw;
                 }
+
+                //HasConnected = true;
                 if (clientModel != null)
                 {
                     int counter = 0;
