@@ -151,7 +151,7 @@ namespace NSmartProxy.Client
         /// 将所有的app循环连接服务端
         /// </summary>
         /// <returns></returns>
-        public async Task PollingToProvider(Action<ClientStatus> statusChanged)
+        public async Task PollingToProvider(Action<ClientStatus, List<string>> statusChanged, List<string> tunnelStrs)
         {
             var config = ClientConfig;
             if (ClientID == 0) { Router.Logger.Debug("error:未连接客户端"); return; };
@@ -166,8 +166,8 @@ namespace NSmartProxy.Client
 
 
             }
-            //TODO ***连接完成 回调
-            statusChanged(ClientStatus.Started);
+            //TODO ***连接完成 回调客户端状态和连接隧道的状态
+            statusChanged(ClientStatus.Started, tunnelStrs);
         }
 
         public async Task ConnectAppToServer(int appid)
