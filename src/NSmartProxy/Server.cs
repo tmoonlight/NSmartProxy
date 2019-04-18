@@ -132,28 +132,35 @@ namespace NSmartProxy
 
         private void CloseAllSourceByClient(int clientId)
         {
-            NSPClient client = ConnectionManager.Clients[clientId];
-            string msg = "";
-            foreach (var appKV in client.AppMap)
+            if (ConnectionManager.Clients.ContainsKey(clientId))
             {
-                int port = appKV.Value.ConsumePort;
-                //1.关闭，并移除AppMap中的App
-                ConnectionManager.PortAppMap[port].Close();
-                ConnectionManager.PortAppMap.Remove(port);
-                msg += appKV.Value.ConsumePort + " ";
-                //2.移除端口占用
-                NetworkUtil.ReleasePort(port);
-            }
+                NSPClient client = ConnectionManager.Clients[clientId];
+                string msg = "";
+                foreach (var appKV in client.AppMap)
+                {
+                    int port = appKV.Value.ConsumePort;
+                    //1.关闭，并移除AppMap中的App
+                    ConnectionManager.PortAppMap[port].Close();
+                    ConnectionManager.PortAppMap.Remove(port);
+                    msg += appKV.Value.ConsumePort + " ";
+                    //2.移除端口占用
+                    NetworkUtil.ReleasePort(port);
+                }
 
-            //3.移除client
-            try
-            {
-                int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
-                Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 {closedClients}个传输已终止。");
+                //3.移除client
+                try
+                {
+                    int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
+                    Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 {closedClients}个传输已终止。");
+                }
+                catch (Exception ex)
+                {
+                    Server.Logger.Error($"CloseAllSourceByClient error:{ex.Message}", ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Server.Logger.Error($"CloseAllSourceByClient error:{ex.Message}", ex);
+                Server.Logger.Debug($"无此id: {clientId},可能已关闭过");
             }
         }
 
@@ -210,7 +217,7 @@ namespace NSmartProxy
             {
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                 var nspApp = ConnectionManager.PortAppMap[consumerPort];
-                
+
                 consumerlistener.Start(1000);
                 nspApp.Listener = consumerlistener;
                 nspApp.CancelListenSource = cts;
@@ -222,7 +229,7 @@ namespace NSmartProxy
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                   
+
                     clientCounter++;
                     ProcessConsumeRequestAsync(consumerPort, clientCounter, consumerClient, ct);
                 }
@@ -305,6 +312,9 @@ namespace NSmartProxy
                     case Protocol.CloseClient:
                         await ProcessCloseClientProtocol(client);
                         break;
+                    case Protocol.Reconnect:
+                        await ProcessAppRequestProtocol(client, true);
+                        break;
                     default:
                         throw new Exception("接收到异常请求。");
                         //break;
@@ -365,11 +375,30 @@ namespace NSmartProxy
             //client.Close();
         }
 
-        private async Task<bool> ProcessAppRequestProtocol(TcpClient client)
+        private async Task<bool> ProcessAppRequestProtocol(TcpClient client, bool IsReconnect = false)
         {
             Server.Logger.Debug("Now processing request protocol....");
             NetworkStream nstream = client.GetStream();
+
+
             //1.读取配置请求1
+            //如果是重连请求，则读取接下来5个字符，清
+            //空服务端所有与该client相关的所有连接配置
+            if (IsReconnect)
+            {
+                int clientIdRequestLength = 2;
+                byte[] clientRequestBytes = new byte[clientIdRequestLength];
+                int resultByte0 = await nstream.ReadAsync(clientRequestBytes);
+                if (resultByte0 == 0)
+                {
+                    CloseClient(client);
+                    return true;
+                }
+                //
+                //CloseClient(
+                CloseAllSourceByClient(StringUtil.DoubleBytesToInt(clientRequestBytes));
+            }
+
             int configRequestLength = 3;
             byte[] appRequestBytes = new byte[configRequestLength];
             int resultByte = await nstream.ReadAsync(appRequestBytes);
@@ -379,6 +408,7 @@ namespace NSmartProxy
                 CloseClient(client);
                 return true;
             }
+
 
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];

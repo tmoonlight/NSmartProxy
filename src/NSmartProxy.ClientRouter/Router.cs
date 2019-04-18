@@ -43,6 +43,7 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
         CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         TaskCompletionSource<object> _waiter;
+        //bool HasConnected = false;
 
         public ServerConnnectionManager ConnectionManager;
         public bool IsStarted = false;
@@ -92,7 +93,8 @@ namespace NSmartProxy.Client
                 ClientModel clientModel = null;//
                 try
                 {
-                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
+                    //TODO 非第一次则算作重连，发送clientid过去
+                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig,IsStarted).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -100,6 +102,8 @@ namespace NSmartProxy.Client
                     Router.Logger.Error("连接失败：" + ex.Message, ex);
                     //throw;
                 }
+
+                //HasConnected = true;
                 if (clientModel != null)
                 {
                     int counter = 0;
@@ -217,8 +221,21 @@ namespace NSmartProxy.Client
                 //    //此线程出错后，应用程序需要重置，并重启
                 //}
 
-                //从空闲连接列表中移除
-                ConnectionManager.RemoveClient(appId, providerClient);
+                //连接后从TcpClientGroup空闲连接列表中移除该client
+                if (ConnectionManager.ExistClient(appId, providerClient))
+                {
+                    var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
+                    if (removedClient == null)
+                    {
+
+                        return;
+                    }
+                }
+                else
+                {
+                    Router.Logger.Debug($"已无法在{appId}中找到客户端 hash:{providerClient.GetHashCode()}.");
+                    return;
+                }
                 //每移除一个链接则发起一个新的链接
                 Router.Logger.Debug(appId + "接收到连接请求");
                 //根据clientid_appid发送到固定的端口

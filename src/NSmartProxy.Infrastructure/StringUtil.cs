@@ -48,6 +48,11 @@ namespace NSmartProxy
             return (hByte << 8) + lByte;
         }
 
+        public static int DoubleBytesToInt(byte[] bytes)
+        {
+            return (bytes[0] << 8) + bytes[1];
+        }
+
         /// <summary>
         /// comma
         /// </summary>

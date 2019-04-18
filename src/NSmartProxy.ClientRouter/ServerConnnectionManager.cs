@@ -43,10 +43,10 @@ namespace NSmartProxy.Client
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
         /// <returns></returns>
-        public async Task<ClientModel> InitConfig(Config config)
+        public async Task<ClientModel> InitConfig(Config config, bool isStarted)
         {
             ClientConfig = config;
-            ClientModel clientModel = await ReadConfigFromProvider();
+            ClientModel clientModel = await ReadConfigFromProvider(isStarted);
 
             //要求服务端分配资源并获取服务端配置
             this._clientID = clientModel.ClientId;
@@ -69,10 +69,10 @@ namespace NSmartProxy.Client
         /// 从服务端读取配置
         /// </summary>
         /// <returns></returns>
-        private async Task<ClientModel> ReadConfigFromProvider()
+        private async Task<ClientModel> ReadConfigFromProvider(bool isStarted)
         {
             //《c#并发编程经典实例》 9.3 超时后取消
-            var config =ClientConfig;
+            var config = ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
             bool isConnected = false;
@@ -98,14 +98,22 @@ namespace NSmartProxy.Client
                     break;
                 }
             }
-            if (!isConnected) { Router.Logger.Debug("重试次数达到限制。");throw new Exception("重试次数达到限制。"); }
+            if (!isConnected) { Router.Logger.Debug("重试次数达到限制。"); throw new Exception("重试次数达到限制。"); }
 
             var configStream = configClient.GetStream();
 
             //请求0 协议名
-            byte requestByte0 = (byte)Protocol.ClientNewAppRequest;
+            byte requestByte0;
+            if (isStarted) requestByte0 = (byte)Protocol.Reconnect;
+            else requestByte0 = (byte)Protocol.ClientNewAppRequest;
+
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
+            if (isStarted)
+            {
+                //请求0.5 重连客户端id
+                await configStream.WriteAsync(StringUtil.IntTo2Bytes(this.ClientID), 0, 2);
+            }
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
@@ -129,7 +137,7 @@ namespace NSmartProxy.Client
             //读端口配置
             byte[] serverConfig = new byte[256];
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
-            if (readBytesCount == 0) Router.Logger.Debug("服务器状态异常，已断开连接");
+            if (readBytesCount == 0) Router.Logger.Debug("服务器关闭了本次连接");
 
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
@@ -165,7 +173,7 @@ namespace NSmartProxy.Client
         public async Task ConnectAppToServer(int appid)
         {
             var app = this.ServiceClientListCollection[appid];
-            var config =ClientConfig;
+            var config = ClientConfig;
             // ClientAppWorker app = kv.Value;
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
             var clientList = new List<TcpClient>();
@@ -213,6 +221,21 @@ namespace NSmartProxy.Client
             return new ServerConnnectionManager();
         }
 
+        /// <summary>
+        /// 判断客户端是否还存在于连接列表当中，如果没有则说明是已被消费的连接，或者残留的无用的连接
+        /// </summary>
+        /// <param name="appId"></param>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public bool ExistClient(int appId, TcpClient client)
+        {
+            if (ServiceClientListCollection[appId].TcpClientGroup.IndexOf(client) < 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public TcpClient RemoveClient(int appId, TcpClient client)
         {
             if (ServiceClientListCollection[appId].TcpClientGroup.Remove(client))
@@ -220,7 +243,7 @@ namespace NSmartProxy.Client
                 return client;
             else
             {
-                throw new Exception("无此client");
+                return null;
             }
         }
 
