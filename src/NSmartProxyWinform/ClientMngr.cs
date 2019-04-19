@@ -22,7 +22,7 @@ namespace NSmartProxyWinform
 {
     public partial class ClientMngr : Form
     {
-        Router clientRouter;
+        public Router clientRouter;
         private Log4netLogger logger;
         private bool configChanged = false;
         private Config config;

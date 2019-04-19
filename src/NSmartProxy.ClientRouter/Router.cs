@@ -210,19 +210,22 @@ namespace NSmartProxy.Client
                 // providerClient.keep
                 // providerClient.Client.
 
-                //try
-                //{
-                int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
-                if (readByteCount == 0)
+                try
                 {
-                    Router.Logger.Debug("服务器状态异常，已断开连接");
-                    return;
+                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
+                    if (readByteCount == 0)
+                    {
+                        Router.Logger.Debug("服务器状态异常，已断开连接");
+                        return;
+                    }
                 }
-                //}
-                //catch
-                //{
-                //    //此线程出错后，应用程序需要重置，并重启
-                //}
+                catch(Exception ex)
+                {
+                    //反弹连接出错为致命错误
+                    //此处出错后，应用程序需要重置，并重启
+                    _waiter.TrySetResult(ex);
+                    throw;
+                }
 
                 //连接后从TcpClientGroup空闲连接列表中移除该client
                 if (ConnectionManager.ExistClient(appId, providerClient))
@@ -250,7 +253,14 @@ namespace NSmartProxy.Client
                 await ConnectionManager.ConnectAppToServer(appId);
                 Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口
-                toTargetServer.Connect(item.IP, item.TargetServicePort);
+                try
+                {
+                    toTargetServer.Connect(item.IP, item.TargetServicePort);
+                }
+                catch
+                {
+                    throw new Exception($"对内网服务的 {item.IP}：{item.TargetServicePort} 连接失败。");
+                }
                 Router.Logger.Debug("已连接目标服务:" + item.IP.ToString() + ":" + item.TargetServicePort.ToString());
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
@@ -264,7 +274,6 @@ namespace NSmartProxy.Client
                 Logger.Debug("传输时出错：" + ex);
                 //关闭传输连接，服务端也会相应处理，把0request发送给消费端
                 //TODO ***: 连接时出错，重启客户端
-                _waiter.TrySetResult(ex);
                 toTargetServer.Close();
                 providerClient.Close();
                 throw;
