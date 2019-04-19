@@ -107,7 +107,7 @@ namespace NSmartProxyWinform
             Task tsk;
             if (btnStart.Tag.ToString() == START_TAG_TEXT)
             {
-                StartClientRouter(config, (status) =>
+                StartClientRouter(config, (status, tunelStr) =>
                 {
                     btnStart.Invoke(new Action(
                         () =>
@@ -116,9 +116,11 @@ namespace NSmartProxyWinform
                             {
                                 notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
                                 listBox1.ForeColor = Color.Green;
-                                foreach (var item in listBox1.Items)
+                                listBox1.Items.Clear();
+                                foreach (var tunnel in tunelStr)
                                 {
-                                    notifyIconNSPClient.BalloonTipText += "\r\n" + item.ToString();
+                                    notifyIconNSPClient.BalloonTipText += "\r\n" + tunnel.ToString();
+                                    listBox1.Items.Add(tunnel.Substring(tunnel.IndexOf(':') + 1).Trim());
                                 }
                                 notifyIconNSPClient.ShowBalloonTip(5000);
                                 btnStart.Text = "停止";
@@ -133,7 +135,7 @@ namespace NSmartProxyWinform
                             }
                         }
                         ));
-                   
+
                 });
 
             }
@@ -155,7 +157,7 @@ namespace NSmartProxyWinform
             }
         }
 
-        private void StartClientRouter(Config config, Action<ClientStatus> loaded)
+        private void StartClientRouter(Config config, Action<ClientStatus, List<string>> loaded)
         {
             clientRouter = new Router(logger);
 

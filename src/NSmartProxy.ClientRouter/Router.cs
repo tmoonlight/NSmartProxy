@@ -53,7 +53,7 @@ namespace NSmartProxy.Client
 
 
         public Action DoServerNoResponse = delegate { };
-        public Action<ClientStatus> StatusChanged = delegate { };
+        public Action<ClientStatus, List<string>> StatusChanged = delegate { };
 
         public Router()
         {
@@ -94,7 +94,7 @@ namespace NSmartProxy.Client
                 try
                 {
                     //TODO 非第一次则算作重连，发送clientid过去
-                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig,IsStarted).ConfigureAwait(false);
+                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig, IsStarted).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -117,15 +117,18 @@ namespace NSmartProxy.Client
                         }
                     }
                     Logger.Debug("****************port list*************");
-
+                    List<string> tunnelstrs = new List<string>();
                     foreach (var ap in clientModel.AppList)
                     {
                         var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
-                        Logger.Debug(ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" + ap.Port.ToString() + "=>" +
-                             cApp.IP + ":" + cApp.TargetServicePort);
+                        var tunnelStr = ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" +
+                                        ap.Port.ToString() + "=>" +
+                                        cApp.IP + ":" + cApp.TargetServicePort;
+                        Logger.Debug(tunnelStr);
+                        tunnelstrs.Add(tunnelStr);
                     }
                     Logger.Debug("**************************************");
-                    ConnectionManager.PollingToProvider(StatusChanged);
+                    ConnectionManager.PollingToProvider(StatusChanged, tunnelstrs);
                     //3.创建心跳连接
                     ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token);
 
@@ -146,7 +149,7 @@ namespace NSmartProxy.Client
                 {
                     Router.Logger.Debug($"程序启动失败。");
                     //如果程序从未启动过就出错，则终止程序，否则重试。
-                    if (IsStarted == false) { StatusChanged(ClientStatus.Stopped); return; }
+                    if (IsStarted == false) { StatusChanged(ClientStatus.Stopped, null); return; }
 
                 }
                 //出错重试
