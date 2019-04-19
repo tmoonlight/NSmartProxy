@@ -17,6 +17,7 @@ using log4net.Appender;
 using log4net.Repository;
 using Newtonsoft.Json;
 using NSmartProxy.Infrastructure;
+using NSmartProxyWinform.Util;
 
 namespace NSmartProxyWinform
 {
@@ -354,10 +355,10 @@ namespace NSmartProxyWinform
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            RefreshFormFormConfig();
+            RefreshFormFromConfig();
         }
 
-        private void RefreshFormFormConfig()
+        private void RefreshFormFromConfig()
         {
             Config conf = ConfigHelper.ReadAllConfig(Program.CONFIG_FILE_PATH);
             tbxProviderAddr.Text = conf.ProviderAddress;
@@ -417,7 +418,42 @@ namespace NSmartProxyWinform
 
         private void ClientMngr_Load(object sender, EventArgs e)
         {
-            RefreshFormFormConfig();
+            RefreshFormFromConfig();
+            RegisterHotKey();
+        }
+
+        private void RegisterHotKey()
+        {
+            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift, Keys.O);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_HOTKEY = 0x0312;
+            //按快捷键    
+            switch (m.Msg)
+            {
+                case WM_HOTKEY:
+                    switch (m.WParam.ToInt32())
+                    {
+                        case 100:    //按下的是Shift+O   
+                            {
+                                if (this.Visible == true)
+                                {
+                                    this.Hide();
+                                    this.notifyIconNSPClient.Visible = false;
+                                }
+                                else
+                                {
+                                    this.Show();
+                                    this.notifyIconNSPClient.Visible = true;
+                                }
+                            }; break;
+
+                    }
+                    break;
+            }
+            base.WndProc(ref m);
         }
     }
 }
