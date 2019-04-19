@@ -123,6 +123,9 @@
     <None Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="FodyWeavers.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -155,6 +158,7 @@
     <None Include="Resources\base_checkmark_32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="FodyWeavers.xml" />
     <Content Include="nsp.ico" />
     <Content Include="Resources\servicepaused.ico" />
     <Content Include="Resources\servicerunning.ico" />
