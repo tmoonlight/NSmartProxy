@@ -82,7 +82,6 @@ namespace NSmartProxy
             }
 
             //3.开启心跳检测线程 
-            //TODO 服务端心跳检测
             ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
             //4.开启配置服务(常开)
@@ -306,7 +305,6 @@ namespace NSmartProxy
                         await ProcessAppRequestProtocol(client);
                         break;
                     case Protocol.Heartbeat:
-                        //TODO 记录服务端更新时间
                         await ProcessHeartbeatProtocol(client);
                         break;
                     case Protocol.CloseClient:

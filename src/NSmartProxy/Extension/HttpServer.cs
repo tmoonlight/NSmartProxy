@@ -61,6 +61,8 @@ namespace NSmartProxy
                 response.ContentEncoding = Encoding.UTF8;
                 response.ContentType = "text/html;charset=utf-8";
 
+                //TODO ***通过request来的值进行接口调用
+
                 //getJson
                 var json = GetClientsInfoJson();
                 await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));

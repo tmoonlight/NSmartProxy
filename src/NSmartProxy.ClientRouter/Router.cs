@@ -93,7 +93,7 @@ namespace NSmartProxy.Client
                 ClientModel clientModel = null;//
                 try
                 {
-                    //TODO 非第一次则算作重连，发送clientid过去
+                    //非第一次则算作重连，发送clientid过去
                     clientModel = await ConnectionManager.InitConfig(this.ClientConfig, IsStarted).ConfigureAwait(false);
                 }
                 catch (Exception ex)
@@ -206,7 +206,7 @@ namespace NSmartProxy.Client
                 byte[] buffer = new byte[1];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
-                //TODO 客户端长连接，需要保活，终止则说明服务端断开
+                //TODO 消费端长连接，需要在server端保活
                 // providerClient.keep
                 // providerClient.Client.
 
