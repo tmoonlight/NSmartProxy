@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Shared;
+using System.IO;
 
 namespace NSmartProxy.Client
 {
@@ -38,6 +39,7 @@ namespace NSmartProxy.Client
 
     public class Router
     {
+        private const string NSMART_CLIENT_CACHE_PATH = "./cli_cache.cache";
         CancellationTokenSource ONE_LIVE_TOKEN_SRC;
         CancellationTokenSource CANCEL_TOKEN_SRC;
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
@@ -58,6 +60,8 @@ namespace NSmartProxy.Client
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
+            
+
         }
 
         public Router(INSmartLogger logger) : this()
@@ -85,16 +89,34 @@ namespace NSmartProxy.Client
                 HEARTBEAT_TOKEN_SRC = new CancellationTokenSource();
                 _waiter = new TaskCompletionSource<object>();
                 var appIdIpPortConfig = ClientConfig.Clients;
+                int clientId = 0;
 
+                //0.5 如果有文件，取出缓存中的clientid
+                try
+                {
+                    if (File.Exists(NSMART_CLIENT_CACHE_PATH))
+                    {
+                        using (var stream = File.OpenRead(NSMART_CLIENT_CACHE_PATH))
+                        {
+                            byte[] bytes = new byte[2];
+                            stream.Read(bytes, 0, bytes.Length);
+                            clientId = StringUtil.DoubleBytesToInt(bytes);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex.Message, ex);
+                }
                 //1.获取配置
-                ConnectionManager = ServerConnnectionManager.Create();
+                ConnectionManager = ServerConnnectionManager.Create(clientId);
                 ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
                 ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
                 ClientModel clientModel = null;//
                 try
                 {
                     //非第一次则算作重连，发送clientid过去
-                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig, IsStarted).ConfigureAwait(false);
+                    clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -107,6 +129,9 @@ namespace NSmartProxy.Client
                 if (clientModel != null)
                 {
                     int counter = 0;
+
+                    //1.5 写入缓存
+                    File.WriteAllBytes(NSMART_CLIENT_CACHE_PATH, StringUtil.IntTo2Bytes(clientModel.ClientId));
                     //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
                     foreach (var app in appIdIpPortConfig)
                     {
@@ -219,7 +244,7 @@ namespace NSmartProxy.Client
                         return;
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     //反弹连接出错为致命错误
                     //此处出错后，应用程序需要重置，并重启

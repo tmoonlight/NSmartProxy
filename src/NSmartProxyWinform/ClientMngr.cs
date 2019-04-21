@@ -146,7 +146,7 @@ namespace NSmartProxyWinform
                 tsk.ContinueWith(t => btnStart.Invoke(new Action(
                     () =>
                     {
-                        if (t.IsFaulted) { logger.Error("客户端启动/关闭失败", null); btnStart.Enabled = true; return; }
+                        if (t.IsFaulted) { logger.Error("客户端关闭失败", null); btnStart.Enabled = true; return; }
                         listBox1.ForeColor = Color.Black;
                         btnStart.Text = "开始";
                         btnStart.Tag = START_TAG_TEXT;

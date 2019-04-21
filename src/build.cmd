@@ -1,7 +1,7 @@
-rem NSP v0.3
+rem NSP v0.4_bugfix
 @ECHO off
 
-set Ver=v0.3
+set Ver=v0.4_bugfix
 set BuildPath=%~dp0/../build
 
 set nsp_server_path=%BuildPath%/nspclient_%Ver%

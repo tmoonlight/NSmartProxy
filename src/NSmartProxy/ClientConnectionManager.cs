@@ -140,8 +140,7 @@ namespace NSmartProxy
 
                             clientModel.ClientId = tempClientId;
                             clientId = tempClientId;
-                            //注册客户端
-                            Clients.RegisterNewClient(tempClientId);
+                            
                             break;
                         }
                     }
@@ -151,6 +150,9 @@ namespace NSmartProxy
             {
                 clientModel.ClientId = clientId;
             }
+
+            //注册客户端
+            Clients.RegisterNewClient(clientModel.ClientId);
             lock (_lockObject2)
             {
                 //注册app

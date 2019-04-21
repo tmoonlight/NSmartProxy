@@ -43,10 +43,10 @@ namespace NSmartProxy.Client
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
         /// <returns></returns>
-        public async Task<ClientModel> InitConfig(Config config, bool isStarted)
+        public async Task<ClientModel> InitConfig(Config config)
         {
             ClientConfig = config;
-            ClientModel clientModel = await ReadConfigFromProvider(isStarted);
+            ClientModel clientModel = await ReadConfigFromProvider();
 
             //要求服务端分配资源并获取服务端配置
             this._clientID = clientModel.ClientId;
@@ -69,13 +69,14 @@ namespace NSmartProxy.Client
         /// 从服务端读取配置
         /// </summary>
         /// <returns></returns>
-        private async Task<ClientModel> ReadConfigFromProvider(bool isStarted)
+        private async Task<ClientModel> ReadConfigFromProvider()
         {
             //《c#并发编程经典实例》 9.3 超时后取消
             var config = ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
             bool isConnected = false;
+            bool isReconn = (this.ClientID != 0); //TODO XXX如果clientid已经分配到了id 则算作重连
             for (int j = 0; j < 3; j++)
             {
                 var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
@@ -104,12 +105,12 @@ namespace NSmartProxy.Client
 
             //请求0 协议名
             byte requestByte0;
-            if (isStarted) requestByte0 = (byte)Protocol.Reconnect;
+            if (isReconn) requestByte0 = (byte)Protocol.Reconnect;
             else requestByte0 = (byte)Protocol.ClientNewAppRequest;
 
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
-            if (isStarted)
+            if (isReconn)
             {
                 //请求0.5 重连客户端id
                 await configStream.WriteAsync(StringUtil.IntTo2Bytes(this.ClientID), 0, 2);
@@ -117,7 +118,7 @@ namespace NSmartProxy.Client
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
-                ClientId = 0,
+                ClientId = this.ClientID,
                 ClientCount = config.Clients.Count//(obj => obj.AppId == 0) //appid为0的则是未分配的 <- 取消这条规则，总是重新分配
             }.ToBytes();
             await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
@@ -134,7 +135,8 @@ namespace NSmartProxy.Client
             }
             await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
 
-            //读端口配置
+            //读端口配置，此处数组的长度会限制使用的节点数（targetserver）
+            //如果您的机器够给力，可以调高此值
             byte[] serverConfig = new byte[256];
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0) Router.Logger.Debug("服务器关闭了本次连接");
@@ -214,11 +216,16 @@ namespace NSmartProxy.Client
             });
         }
 
-
-
-        public static ServerConnnectionManager Create()
+        /// <summary>
+        /// 获取一个新的连接管理类
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public static ServerConnnectionManager Create(int clientId)
         {
-            return new ServerConnnectionManager();
+            var scm = new ServerConnnectionManager();
+            scm._clientID = clientId;
+            return scm;
         }
 
         /// <summary>

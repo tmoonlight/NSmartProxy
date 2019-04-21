@@ -9,4 +9,8 @@
     <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="FileCache\" />
+  </ItemGroup>
+
 </Project>
