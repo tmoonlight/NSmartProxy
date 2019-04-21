@@ -240,8 +240,9 @@ namespace NSmartProxy.Client
                     int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                     if (readByteCount == 0)
                     {
-                        Router.Logger.Debug("服务器状态异常，已断开连接");
-                        return;
+                        //TODO XXX
+                        //抛出错误以便上层重启客户端。
+                        throw new Exception("连接被服务器主动切断，已断开连接");
                     }
                 }
                 catch (Exception ex)
