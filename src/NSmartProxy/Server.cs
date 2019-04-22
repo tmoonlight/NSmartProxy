@@ -352,7 +352,7 @@ namespace NSmartProxy
         private async Task ProcessHeartbeatProtocol(TcpClient client)
         {
             //1.读取clientID
-            Server.Logger.Debug("Now processing Heartbeat protocol....");
+
             NetworkStream nstream = client.GetStream();
             int heartBeatLength = 2;
             byte[] appRequestBytes = new byte[heartBeatLength];
@@ -366,7 +366,7 @@ namespace NSmartProxy
             //1.2 响应ACK 
             await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
-
+            Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
             //2.更新最后更新时间
             ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
             //3.接收完立即关闭
