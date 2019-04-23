@@ -400,17 +400,26 @@ namespace NSmartProxyWinform
                 }, StringSplitOptions.None);
                 if (strParts.Length != 4)
                 {
-                    MessageBox.Show("节点列表数据非法");
+                    MessageBox.Show($"发现非法节点数据：“{item}”");
                     listBox1.BackColor = Color.LightCoral;
 
                     return false;
                 }
-                config.Clients.Add(new ClientApp
+
+                try
                 {
-                    ConsumerPort = Convert.ToInt32(strParts[1]),
-                    IP = strParts[2].Trim(),
-                    TargetServicePort = Convert.ToInt32(strParts[3])
-                });
+                    config.Clients.Add(new ClientApp
+                    {
+                        ConsumerPort = Convert.ToInt32(strParts[1]),
+                        IP = strParts[2].Trim(),
+                        TargetServicePort = Convert.ToInt32(strParts[3])
+                    });
+                }
+                catch
+                {
+                    MessageBox.Show($"发现非法节点数据：“{item}”");
+                    return false;
+                }
             }
             config.SaveChanges(Program.CONFIG_FILE_PATH);
             return true;

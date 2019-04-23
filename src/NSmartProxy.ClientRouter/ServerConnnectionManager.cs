@@ -307,15 +307,16 @@ namespace NSmartProxy.Client
 
                     await Task.Delay(interval, ct);
                 }
+                Router.Logger.Debug("心跳循环被取消。");
             }
             catch (Exception ex)
             {
-                Router.Logger.Error("fatal error: Heartbeat错误:" + ex.Message, ex);
-                throw;
+                Router.Logger.Error("心跳连接出错:" + ex.Message, ex);
+                return;
             }
             finally
             {
-                Router.Logger.Debug("心跳连接终止。");
+                Router.Logger.Debug("心跳循环已终止。");
                 await Task.Delay(1000);
                 //TODO 重启
             }

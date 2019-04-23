@@ -242,7 +242,9 @@ namespace NSmartProxy.Client
                     {
                         //TODO XXX
                         //抛出错误以便上层重启客户端。
-                        throw new Exception("连接被服务器主动切断，已断开连接");
+                        Router.Logger.Debug($"连接{appId}被服务器主动切断，已断开连接");
+                        return;
+                        
                     }
                 }
                 catch (Exception ex)
