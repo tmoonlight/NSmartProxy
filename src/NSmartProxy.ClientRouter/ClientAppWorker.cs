@@ -9,7 +9,8 @@ namespace NSmartProxy.Client
     {
         private bool isWorking = false;
 
-        public List<TcpClient> TcpClientGroup = new List<TcpClient>();
+        //public List<TcpClient> TcpClientGroup = new List<TcpClient>();
+        public TcpClient Client;
         public int AppId;  //1~255
         public int Port;   //0~65535
 

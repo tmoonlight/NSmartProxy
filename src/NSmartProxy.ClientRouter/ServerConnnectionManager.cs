@@ -25,7 +25,7 @@ namespace NSmartProxy.Client
         private int _clientID = 0;
 
         public List<TcpClient> ConnectedConnections;
-        public Dictionary<int, ClientAppWorker> ServiceClientListCollection;  //key:appid value;ClientApp
+        public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
         public Action ServerNoResponse = delegate { };
         public Config ClientConfig;
 
@@ -51,15 +51,15 @@ namespace NSmartProxy.Client
             //要求服务端分配资源并获取服务端配置
             this._clientID = clientModel.ClientId;
             //分配appid给不同的Client
-            ServiceClientListCollection = new Dictionary<int, ClientAppWorker>();
+            ServiceClientList = new ServiceClientListCollection();
             for (int i = 0; i < clientModel.AppList.Count; i++)
             {
                 var app = clientModel.AppList[i];
-                ServiceClientListCollection.Add(clientModel.AppList[i].AppId, new ClientAppWorker()
+                ServiceClientList.Add(clientModel.AppList[i].AppId, new ClientAppWorker()
                 {
                     AppId = app.AppId,
                     Port = app.Port,
-                    TcpClientGroup = new List<TcpClient>(MAX_CONNECT_SIZE)
+                    Client = new TcpClient()
                 });
             }
             return clientModel;
@@ -160,13 +160,11 @@ namespace NSmartProxy.Client
             //int hungryNumber = MAX_CONNECT_SIZE / 2;
             byte[] clientBytes = StringUtil.IntTo2Bytes(ClientID);
 
-            foreach (var kv in ServiceClientListCollection)
+            foreach (var kv in ServiceClientList)
             {
 
                 int appid = kv.Key;
                 await ConnectAppToServer(appid);
-
-
             }
             //TODO ***连接完成 回调客户端状态和连接隧道的状态
             statusChanged(ClientStatus.Started, tunnelStrs);
@@ -174,7 +172,7 @@ namespace NSmartProxy.Client
 
         public async Task ConnectAppToServer(int appid)
         {
-            var app = this.ServiceClientListCollection[appid];
+            var app = this.ServiceClientList[appid];
             var config = ClientConfig;
             // ClientAppWorker app = kv.Value;
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
@@ -199,7 +197,7 @@ namespace NSmartProxy.Client
 
             }
 
-            app.TcpClientGroup.Add(client);
+            app.Client = client;
             clientList.Add(client);
             //统一管理连接
             ConnectedConnections.AddRange(clientList);
@@ -236,7 +234,7 @@ namespace NSmartProxy.Client
         /// <returns></returns>
         public bool ExistClient(int appId, TcpClient client)
         {
-            if (ServiceClientListCollection[appId].TcpClientGroup.IndexOf(client) < 0)
+            if (ServiceClientList[appId].Client == null)
             {
                 return false;
             }
@@ -245,7 +243,7 @@ namespace NSmartProxy.Client
 
         public TcpClient RemoveClient(int appId, TcpClient client)
         {
-            if (ServiceClientListCollection[appId].TcpClientGroup.Remove(client))
+            if (ServiceClientList[appId].Client == null)
 
                 return client;
             else

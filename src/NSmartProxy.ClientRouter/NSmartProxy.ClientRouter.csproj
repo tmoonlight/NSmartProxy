@@ -5,12 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
-    <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
+    <Compile Remove="FileCache\**" />
+    <EmbeddedResource Remove="FileCache\**" />
+    <None Remove="FileCache\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="FileCache\" />
+    <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
+    <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

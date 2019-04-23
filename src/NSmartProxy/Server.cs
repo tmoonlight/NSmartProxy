@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using NSmartProxy.Data;
+using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;

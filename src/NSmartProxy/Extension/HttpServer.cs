@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Interfaces;
 
-namespace NSmartProxy
+namespace NSmartProxy.Extension
 {
     class HttpServer
     {
@@ -76,6 +77,7 @@ namespace NSmartProxy
             }
         }
 
+
         private string GetClientsInfoJson()
         {
             var ConnectionManager = ClientConnectionManager.GetInstance();
@@ -115,12 +117,21 @@ namespace NSmartProxy
                 foreach (var tunnel in app.Value.Tunnels)
                 {
                     json.Append("{ ");
-                    if (tunnel.ClientServerClient != null && tunnel.ClientServerClient.Connected)
+                    if (tunnel.ClientServerClient != null)
+                    {
+                        Socket sktClient = tunnel.ClientServerClient.Client;
+                        if (tunnel.ClientServerClient.Connected)
 
-                        json.Append(KV2Json("clientServerClient", tunnel.ClientServerClient?.Client.LocalEndPoint.ToString()))
-                            .C();
-                    if (tunnel.ConsumerClient != null && tunnel.ConsumerClient.Connected)
-                        json.Append(KV2Json("consumerClient", tunnel.ConsumerClient?.Client.LocalEndPoint.ToString())).C();
+                            json.Append(KV2Json("clientServerClient", $"{sktClient.LocalEndPoint}-{sktClient.RemoteEndPoint}"))
+                                .C();
+                    }
+                    if (tunnel.ConsumerClient != null)
+                    {
+                        Socket sktConsumer = tunnel.ConsumerClient.Client;
+                        if (tunnel.ConsumerClient.Connected)
+                            json.Append(KV2Json("consumerClient", $"{sktConsumer.LocalEndPoint}-{sktConsumer.RemoteEndPoint}"))
+                                .C();
+                    }
 
                     json.D();
                     //json.Append(KV2Json("p", c)).C();
