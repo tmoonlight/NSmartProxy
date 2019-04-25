@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using NSmartProxy.Data;
+using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
@@ -82,7 +83,6 @@ namespace NSmartProxy
             }
 
             //3.开启心跳检测线程 
-            //TODO 服务端心跳检测
             ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
             //4.开启配置服务(常开)
@@ -223,25 +223,27 @@ namespace NSmartProxy
                 nspApp.CancelListenSource = cts;
 
                 //临时编下号，以便在日志里区分不同隧道的连接
-                var clientCounter = 0;
+                string clientApp = $"clientapp:{nspApp.ClientId}-{nspApp.AppId}";
                 while (!ct.IsCancellationRequested)
                 {
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
+                    //Task.Factory.StartNew(consumerlistener.AcceptTcpClientAsync())
                     TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
-
-                    clientCounter++;
-                    ProcessConsumeRequestAsync(consumerPort, clientCounter, consumerClient, ct);
+                    ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
                 }
             }
-            catch (Exception e)
+            catch (ObjectDisposedException ode)
             {
-                Logger.Debug(e);
-                cts.Cancel();
+                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止");
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug($"外网端口{consumerPort}侦听时出错{ex}");
             }
         }
 
-        private async Task ProcessConsumeRequestAsync(int consumerPort, int clientCounter, TcpClient consumerClient, CancellationToken ct)
+        private async Task ProcessConsumeRequestAsync(int consumerPort, string clientApp, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel();
             tunnel.ConsumerClient = consumerClient;
@@ -257,7 +259,7 @@ namespace NSmartProxy
             //客户端接收到此消息后，会另外分配一个备用连接
             s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
 
-            await TcpTransferAsync(consumerClient, s2pClient, clientCounter, ct);
+            await TcpTransferAsync(consumerClient, s2pClient, clientApp, ct);
         }
 
         #region 配置连接相关
@@ -306,7 +308,6 @@ namespace NSmartProxy
                         await ProcessAppRequestProtocol(client);
                         break;
                     case Protocol.Heartbeat:
-                        //TODO 记录服务端更新时间
                         await ProcessHeartbeatProtocol(client);
                         break;
                     case Protocol.CloseClient:
@@ -354,7 +355,7 @@ namespace NSmartProxy
         private async Task ProcessHeartbeatProtocol(TcpClient client)
         {
             //1.读取clientID
-            Server.Logger.Debug("Now processing Heartbeat protocol....");
+
             NetworkStream nstream = client.GetStream();
             int heartBeatLength = 2;
             byte[] appRequestBytes = new byte[heartBeatLength];
@@ -368,9 +369,17 @@ namespace NSmartProxy
             //1.2 响应ACK 
             await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
-
+            Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
             //2.更新最后更新时间
-            ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
+            if (ConnectionManager.Clients.ContainsKey(clientID))
+            {
+                ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
+            }
+            else
+            {
+                Server.Logger.Debug($"clientId为{clientID}客户端已经被清除。");
+            }
+
             //3.接收完立即关闭
             //client.Close();
         }
@@ -450,24 +459,24 @@ namespace NSmartProxy
         #region datatransfer
         //3端互相传输数据
         async Task TcpTransferAsync(TcpClient consumerClient, TcpClient providerClient,
-            int clientIndex,
+            string clientApp,
             CancellationToken ct)
         {
             try
             {
-                Server.Logger.Debug($"New client ({clientIndex}) connected");
+                Server.Logger.Debug($"New client ({clientApp}) connected");
 
                 CancellationTokenSource transfering = new CancellationTokenSource();
 
                 var providerStream = providerClient.GetStream();
                 var consumerStream = consumerClient.GetStream();
-                Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream);
-                Task taskP2CLooping = StreamTransfer(transfering.Token, providerStream, consumerStream);
+                Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, clientApp);
+                Task taskP2CLooping = StreamTransfer(transfering.Token, providerStream, consumerStream, clientApp);
 
                 //任何一端传输中断或者故障，则关闭所有连接
                 var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
                 //comletedTask.
-                Logger.Debug($"Transferring ({clientIndex}) STOPPED");
+                Logger.Debug($"Transferring ({clientApp}) STOPPED");
                 consumerClient.Close();
                 providerClient.Close();
                 transfering.Cancel();
@@ -480,16 +489,23 @@ namespace NSmartProxy
 
         }
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
         {
-            await fromStream.CopyToAsync(toStream, ct);
+            using (fromStream)
+            {
+                await fromStream.CopyToAsync(toStream, ct);
+            }
+            Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
-        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, Func<byte[], Task<bool>> beforeTransferHandle = null)
+        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
         {
             //单独
-            await fromStream.CopyToAsync(toStream, ct);
-
+            using (fromStream)
+            {
+                await fromStream.CopyToAsync(toStream, ct);
+            }
+            Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
             //byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
             //try
             //{

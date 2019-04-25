@@ -7,11 +7,14 @@ using System.Reflection;
 using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
+using System.Threading;
 
 namespace NSmartProxy.ServerHost
 {
     class ServerHost
     {
+
+        private static Mutex mutex = new Mutex(true, "{8639B0AD-A27C-4F15-B3D9-08035D0FC6D6}");
         #region logger
         public class Log4netLogger : INSmartLogger
         {
@@ -39,6 +42,14 @@ namespace NSmartProxy.ServerHost
 
         static void Main(string[] args)
         {
+            if (!mutex.WaitOne(3, false))
+            {
+                string msg = "Another instance of the program is running.";
+                //Logger.Error(msg, new Exception(msg));
+                Console.Write(msg);
+                return;
+            }
+
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartServerRepository");
             XmlConfigurator.ConfigureAndWatch(loggerRepository, new FileInfo("log4net.config"));

@@ -17,12 +17,13 @@ using log4net.Appender;
 using log4net.Repository;
 using Newtonsoft.Json;
 using NSmartProxy.Infrastructure;
+using NSmartProxyWinform.Util;
 
 namespace NSmartProxyWinform
 {
     public partial class ClientMngr : Form
     {
-        Router clientRouter;
+        public Router clientRouter;
         private Log4netLogger logger;
         private bool configChanged = false;
         private Config config;
@@ -145,7 +146,7 @@ namespace NSmartProxyWinform
                 tsk.ContinueWith(t => btnStart.Invoke(new Action(
                     () =>
                     {
-                        if (t.IsFaulted) { logger.Error("客户端启动/关闭失败", null); btnStart.Enabled = true; return; }
+                        if (t.IsFaulted) { logger.Error("客户端关闭失败", null); btnStart.Enabled = true; return; }
                         listBox1.ForeColor = Color.Black;
                         btnStart.Text = "开始";
                         btnStart.Tag = START_TAG_TEXT;
@@ -354,10 +355,10 @@ namespace NSmartProxyWinform
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            RefreshFormFormConfig();
+            RefreshFormFromConfig();
         }
 
-        private void RefreshFormFormConfig()
+        private void RefreshFormFromConfig()
         {
             Config conf = ConfigHelper.ReadAllConfig(Program.CONFIG_FILE_PATH);
             tbxProviderAddr.Text = conf.ProviderAddress;
@@ -399,17 +400,26 @@ namespace NSmartProxyWinform
                 }, StringSplitOptions.None);
                 if (strParts.Length != 4)
                 {
-                    MessageBox.Show("节点列表数据非法");
+                    MessageBox.Show($"发现非法节点数据：“{item}”");
                     listBox1.BackColor = Color.LightCoral;
 
                     return false;
                 }
-                config.Clients.Add(new ClientApp
+
+                try
                 {
-                    ConsumerPort = Convert.ToInt32(strParts[1]),
-                    IP = strParts[2].Trim(),
-                    TargetServicePort = Convert.ToInt32(strParts[3])
-                });
+                    config.Clients.Add(new ClientApp
+                    {
+                        ConsumerPort = Convert.ToInt32(strParts[1]),
+                        IP = strParts[2].Trim(),
+                        TargetServicePort = Convert.ToInt32(strParts[3])
+                    });
+                }
+                catch
+                {
+                    MessageBox.Show($"发现非法节点数据：“{item}”");
+                    return false;
+                }
             }
             config.SaveChanges(Program.CONFIG_FILE_PATH);
             return true;
@@ -417,7 +427,42 @@ namespace NSmartProxyWinform
 
         private void ClientMngr_Load(object sender, EventArgs e)
         {
-            RefreshFormFormConfig();
+            RefreshFormFromConfig();
+            RegisterHotKey();
+        }
+
+        private void RegisterHotKey()
+        {
+            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift, Keys.O);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_HOTKEY = 0x0312;
+            //按快捷键    
+            switch (m.Msg)
+            {
+                case WM_HOTKEY:
+                    switch (m.WParam.ToInt32())
+                    {
+                        case 100:    //按下的是Shift+O   
+                            {
+                                if (this.Visible == true)
+                                {
+                                    this.Hide();
+                                    this.notifyIconNSPClient.Visible = false;
+                                }
+                                else
+                                {
+                                    this.Show();
+                                    this.notifyIconNSPClient.Visible = true;
+                                }
+                            }; break;
+
+                    }
+                    break;
+            }
+            base.WndProc(ref m);
         }
     }
 }

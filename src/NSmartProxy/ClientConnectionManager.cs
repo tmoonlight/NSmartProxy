@@ -103,6 +103,7 @@ namespace NSmartProxy
             var clientID = PortAppMap[consumerPort].ClientId;
             var appID = PortAppMap[consumerPort].AppId;
 
+            //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
             TcpClient client = await Clients[clientID].AppMap[appID].PopClientAsync();
             PortAppMap[consumerPort].ReverseClients.Add(client);
             return client;
@@ -139,8 +140,7 @@ namespace NSmartProxy
 
                             clientModel.ClientId = tempClientId;
                             clientId = tempClientId;
-                            //注册客户端
-                            Clients.RegisterNewClient(tempClientId);
+                            
                             break;
                         }
                     }
@@ -150,6 +150,9 @@ namespace NSmartProxy
             {
                 clientModel.ClientId = clientId;
             }
+
+            //注册客户端
+            Clients.RegisterNewClient(clientModel.ClientId);
             lock (_lockObject2)
             {
                 //注册app
