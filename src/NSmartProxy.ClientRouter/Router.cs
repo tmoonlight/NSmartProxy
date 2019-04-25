@@ -60,7 +60,7 @@ namespace NSmartProxy.Client
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
-            
+
 
         }
 
@@ -244,7 +244,7 @@ namespace NSmartProxy.Client
                         //抛出错误以便上层重启客户端。
                         Router.Logger.Debug($"连接{appId}被服务器主动切断，已断开连接");
                         return;
-                        
+
                     }
                 }
                 catch (Exception ex)
@@ -255,13 +255,14 @@ namespace NSmartProxy.Client
                     throw;
                 }
 
-                //连接后从TcpClientGroup空闲连接列表中移除该client
+                //TODO 遗留代码，待优化
+                //连接后设置client为null 
                 if (ConnectionManager.ExistClient(appId, providerClient))
                 {
                     var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
-                    if (removedClient == null)
+                    if (removedClient == false)
                     {
-
+                        Router.Logger.Debug($"没有移除{appId}任何的对象，对象不存在. hash:{providerClient.GetHashCode()}");
                         return;
                     }
                 }
@@ -289,11 +290,12 @@ namespace NSmartProxy.Client
                 {
                     throw new Exception($"对内网服务的 {item.IP}：{item.TargetServicePort} 连接失败。");
                 }
-                Router.Logger.Debug("已连接目标服务:" + item.IP.ToString() + ":" + item.TargetServicePort.ToString());
+                string epString = item.IP.ToString() + ":" + item.TargetServicePort.ToString();
+                Router.Logger.Debug("已连接目标服务:" + epString);
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
                 //targetServerStream.Write(buffer, 0, readByteCount);
-                TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer);
+                TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString);
                 //already close connection
 
             }
@@ -310,14 +312,14 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream, TcpClient providerClient, TcpClient toTargetServer)
+        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream, TcpClient providerClient, TcpClient toTargetServer, string epString)
         {
             try
             {
                 Router.Logger.Debug("Looping start.");
                 //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, "T2P");
-                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, "P2T");
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream,epString);
+                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString);
 
                 //close connnection,whether client or server stopped transferring.
                 var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
@@ -330,42 +332,30 @@ namespace NSmartProxy.Client
             catch (Exception ex)
             {
                 Router.Logger.Debug(ex.ToString());
-                throw;
             }
         }
 
 
 
-        private async Task<string> StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,string epString)
         {
-            try
+            using (fromStream)
             {
                 await fromStream.CopyToAsync(toStream, 4096, ct);
             }
-            catch (Exception ex)
-            {
-                Router.Logger.Debug(ex.ToString());
-                throw;
-            }
+            Router.Logger.Debug($"{epString}对节点传输关闭。");
 
 
-
-            return signal;
         }
 
 
-        private async Task<string> ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string signal, Func<byte[], Task<bool>> beforeTransfer = null)
+        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string epString)
         {
-            try
+            using (fromStream)
             {
                 await fromStream.CopyToAsync(toStream, 4096, ct);
             }
-            catch (Exception ex)
-            {
-                Router.Logger.Debug(ex.ToString());
-                throw;
-            }
-            return signal;
+            Router.Logger.Debug($"{epString}反向链接传输关闭。");
         }
 
         private void SendZero(int port)

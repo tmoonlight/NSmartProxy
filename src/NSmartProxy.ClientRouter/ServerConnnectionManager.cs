@@ -238,17 +238,23 @@ namespace NSmartProxy.Client
             {
                 return false;
             }
-            return true;
-        }
-
-        public TcpClient RemoveClient(int appId, TcpClient client)
-        {
-            if (ServiceClientList[appId].Client == null)
-
-                return client;
             else
             {
-                return null;
+                return true;
+            }
+            
+        }
+
+        public bool RemoveClient(int appId, TcpClient client)
+        {
+            if (ServiceClientList[appId].Client == null)
+            {
+                return false;
+            }
+            else
+            {
+
+                return true;
             }
         }
 
