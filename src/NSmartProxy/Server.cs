@@ -15,6 +15,7 @@ using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
+using NSmartProxy.Database;
 
 namespace NSmartProxy
 {
@@ -46,12 +47,15 @@ namespace NSmartProxy
         public static int ConfigServicePort = 12307;  //服务端配置通讯端口
         public static int WebManagementPort = 0;    //远端管理端口
 
+        public const string USER_DB_NAME = "./nsmart_user";
         public ClientConnectionManager ConnectionManager = null;
+        public NSmartDb NspDb;
 
         internal static INSmartLogger Logger; //inject
 
         public Server(INSmartLogger logger)
         {
+            //initialize
             Logger = logger;
         }
 
@@ -64,6 +68,7 @@ namespace NSmartProxy
 
         public async Task Start()
         {
+            NspDb = new NSmartDb(USER_DB_NAME, USER_DB_NAME + "_index");
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             CancellationTokenSource ctsConfig = new CancellationTokenSource();
             CancellationTokenSource ctsHttp = new CancellationTokenSource();
@@ -98,6 +103,7 @@ namespace NSmartProxy
             {
                 Logger.Debug("all closed");
                 ctsConfig.Cancel(); ctsHttp.Cancel(); ctsConsumer.Cancel();
+                NspDb.Close();
             }
         }
 
