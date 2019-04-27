@@ -501,7 +501,7 @@ namespace NSmartProxy
             {
                 await fromStream.CopyToAsync(toStream, ct);
             }
-            Server.Logger.Debug($"{clientApp}对服务端端传输关闭。");
+            Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
