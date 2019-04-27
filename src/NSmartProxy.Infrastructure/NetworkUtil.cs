@@ -176,6 +176,16 @@ namespace NSmartProxy
             return configClient;
         }
 
+        /// <summary>
+        ///linux需要添加或修改以下值以手动实现keepalive
+        /// vim /etc/sysctl.conf
+        ///net.ipv4.tcp_keepalive_time = 300
+        ///net.ipv4.tcp_keepalive_intvl = 10
+        ///net.ipv4.tcp_keepalive_probes = 10
+        /// sysctl -p+-
+        /// </summary>
+        /// <param name="tcpClient"></param>
+        /// <param name="ErrorMsg"></param>
         public static void SetKeepAlive(this TcpClient tcpClient, out string ErrorMsg)
         {
             
