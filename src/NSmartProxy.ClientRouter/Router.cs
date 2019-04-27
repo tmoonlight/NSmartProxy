@@ -157,30 +157,27 @@ namespace NSmartProxy.Client
                     //3.创建心跳连接
                     ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token);
 
-                    //try
-                    //{
-                    //    await pollingTask.ConfigureAwait(false);
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    Logger.Error("Thread:" + Thread.CurrentThread.ManagedThreadId + " crashed.\n", ex);
-                    //    throw;
-                    //}
                     IsStarted = true;
                     Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;
-                    Router.Logger.Debug($"程序异常终止:{exception.Message}。");
+                    if (exception != null)
+                        Router.Logger.Debug($"程序异常终止:{exception.Message}。");
+                    else Router.Logger.Debug($"未知异常。");
                 }
                 else
                 {
                     Router.Logger.Debug($"程序启动失败。");
                     //如果程序从未启动过就出错，则终止程序，否则重试。
                     if (IsStarted == false) { StatusChanged(ClientStatus.Stopped, null); return; }
-
                 }
+
+                Router.Logger.Debug($"连接故障，尝试关闭连接并重试");
+                if (ConnectionManager != null)
+                    ConnectionManager.CloseAllConnections();//关闭所有连接
                 //出错重试
                 await Task.Delay(3000, ONE_LIVE_TOKEN_SRC.Token);
                 //TODO 返回错误码
                 //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
+                Router.Logger.Debug($"连接关闭，开启重试");
             }
             //正常终止
         }
@@ -196,6 +193,10 @@ namespace NSmartProxy.Client
 
         }
 
+        /// <summary>
+        /// 彻底关闭客户端并且不再重试
+        /// </summary>
+        /// <returns></returns>
         public async Task Close()
         {
             try
@@ -242,7 +243,7 @@ namespace NSmartProxy.Client
                     {
                         //TODO XXX
                         //抛出错误以便上层重启客户端。
-                        Router.Logger.Debug($"连接{appId}被服务器主动切断，已断开连接");
+                        _waiter.TrySetResult(new Exception($"连接{appId}被服务器主动切断，已断开连接"));
                         return;
 
                     }
@@ -318,7 +319,7 @@ namespace NSmartProxy.Client
             {
                 Router.Logger.Debug("Looping start.");
                 //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream,epString);
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, epString);
                 var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString);
 
                 //close connnection,whether client or server stopped transferring.
@@ -337,7 +338,7 @@ namespace NSmartProxy.Client
 
 
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,string epString)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string epString)
         {
             using (fromStream)
             {

@@ -242,7 +242,7 @@ namespace NSmartProxy.Client
             {
                 return true;
             }
-            
+
         }
 
         public bool RemoveClient(int appId, TcpClient client)
@@ -253,8 +253,37 @@ namespace NSmartProxy.Client
             }
             else
             {
-
                 return true;
+            }
+        }
+
+        public void CloseAllConnections()
+        {
+            try
+            {
+                if (ServiceClientList != null)
+                {
+                    foreach (var kv in ServiceClientList)
+                    {
+                        if (kv.Value.Client != null && kv.Value.Client.Connected)
+                            kv.Value.Client.Close();
+                    }
+                }
+
+                if (ConnectedConnections != null)
+                {
+                    foreach (var conn in ConnectedConnections)
+                    {
+                        if (conn.Connected) conn.Close();
+                    }
+                }
+
+                Router.Logger.Debug($"关闭反向链接：{ConnectedConnections?.Count}，关闭节点连接：{ServiceClientList?.Count}");
+
+            }
+            catch (Exception ex)
+            {
+                Router.Logger.Debug("关闭失败" + ex);
             }
         }
 

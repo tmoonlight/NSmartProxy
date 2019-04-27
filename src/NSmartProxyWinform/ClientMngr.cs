@@ -161,12 +161,13 @@ namespace NSmartProxyWinform
         private void StartClientRouter(Config config, Action<ClientStatus, List<string>> loaded)
         {
             clientRouter = new Router(logger);
-
+            //TaskScheduler.UnobservedTaskException +=
+            //    (_, ev) => logger.Error(ev.Exception.Message, ev.Exception);
             //read config from config file.
             SetConfig(clientRouter, config);// clientRouter.SetConifiguration();
             clientRouter.StatusChanged = loaded;
             var tsk = clientRouter.Start();
-            tsk.ConfigureAwait(false);
+            tsk.ConfigureAwait(false);//异步会导致无法抛出错误,同步又会导致锁死，必须再invoke一次？
         }
 
         private void SetConfig(Router clientRouter, Config config)
