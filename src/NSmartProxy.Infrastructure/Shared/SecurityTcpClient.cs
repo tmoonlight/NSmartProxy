@@ -25,9 +25,15 @@ namespace NSmartProxy.Authorize
         Error
     }
 
+    public enum ClientTypeEnum
+    {
+        Server,
+        Client
+    }
     /// <summary>
     /// 标识位        token长度    token值
     /// 2位固定0xF9   2            n
+    /// 服务端需要指定持久化逻辑，客户端只需token
     /// </summary>
     public class SecurityTcpClient : TcpClient
     {
@@ -38,12 +44,30 @@ namespace NSmartProxy.Authorize
         public String ErrorMessage = "";
         //TODO 是否校验
         public bool IsValid;
+        public ClientTypeEnum ClientType;
 
-        public SecurityTcpClient(string secureToken, IDbOperator dbOp) : base()
+        /// <summary>
+        /// 客户端使用这个来初始化
+        /// </summary>
+        /// <param name="secureToken"></param>
+        /// <param name="dbOp"></param>
+        private SecurityTcpClient(string secureToken, IDbOperator dbOp, ClientTypeEnum clientType) : base()
         {
             Token = secureToken;
             DbOp = dbOp;
+            ClientType = clientType;
         }
+
+        public static SecurityTcpClient CreateClient(string secureToken)
+        {
+            return new SecurityTcpClient(secureToken, null, ClientTypeEnum.Client);
+        }
+
+        public static SecurityTcpClient CreateServer(IDbOperator dbOp)
+        {
+            return new SecurityTcpClient(null, dbOp, ClientTypeEnum.Server);
+        }
+
 
         /// <summary>
         /// 带加密串传输
@@ -63,8 +87,8 @@ namespace NSmartProxy.Authorize
 
             var stream = this.GetStream();
             await base.ConnectAsync(host, port);
-            await stream.WriteAsync(new byte[] { F9 });//1标识
-            await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length));//2token长度
+            await stream.WriteAsync(new byte[] { F9 }, 0, 1);//1标识 长度1
+            await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length), 0, 2);//2token长度 长度2
             await stream.WriteAndFlushAsync(ASCIIEncoding.ASCII.GetBytes(Token));//3token
         }
 
@@ -128,7 +152,7 @@ namespace NSmartProxy.Authorize
                 //keep your prikey safe!
                 string userid = EncodeHelper.AES_Decrypt(token);
                 //
-                if (DbOp.Exsit(userid))
+                if (DbOp.Exist(userid))
                 {
                     res.ResultState = AuthState.Success;
                 }

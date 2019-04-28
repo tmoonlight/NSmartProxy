@@ -9,6 +9,6 @@
         void Delete(int index);
         long GetLength();
         void Close();
-        bool Exsit(string key);
+        bool Exist(string key);
     }
 }
