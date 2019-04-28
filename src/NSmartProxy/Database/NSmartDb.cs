@@ -9,7 +9,7 @@ namespace NSmartProxy.Database
     /// <summary>
     /// NSmartDb，只是为了造轮子
     /// </summary>
-    public class NSmartDb
+    public class NSmartDbOperator : IDbOperator
     {
         private SequenceFile seqf;
         private HashFile hashf;
@@ -20,9 +20,9 @@ namespace NSmartProxy.Database
 
         public bool IsClosed { get => isClosed; set => isClosed = value; }
 
-        public NSmartDb(String file, string indexFile)
+        public NSmartDbOperator(String file, string indexFile)
         {
-           // if (indexFile == null) indexFile = "idx_" + file;
+            // if (indexFile == null) indexFile = "idx_" + file;
             hashfFile = file;
             seqfFile = indexFile;
             Open();
@@ -83,6 +83,16 @@ namespace NSmartProxy.Database
             hashf.Remove(BitConverter.GetBytes(key));
         }
 
+        public string GetOne(string key)
+        {
+            return Bytes2String(hashf.Get(String2Bytes(key)));
+        }
+
+        public bool Exist(string key)
+        {
+            return hashf.Exist(String2Bytes(key));
+        }
+
         public long GetLength()
         {
             return seqf.Get(-1);
@@ -96,6 +106,16 @@ namespace NSmartProxy.Database
                 hashf.Close();
                 IsClosed = true;
             }
+        }
+
+        private string Bytes2String(byte[] bytes)
+        {
+            return ASCIIEncoding.ASCII.GetString(bytes);
+        }
+
+        private byte[] String2Bytes(string str)
+        {
+            return ASCIIEncoding.ASCII.GetBytes(str);
         }
     }
 }

@@ -160,5 +160,15 @@ namespace NSmartProxy.Extension
         }
 
         #endregion
+        //TODO XXXX
+        //API login
+
+        //API Users
+        //REST
+        //AddUser
+        //RemoveUser
+        //
+        
+        //NoApi Auth
     }
 }

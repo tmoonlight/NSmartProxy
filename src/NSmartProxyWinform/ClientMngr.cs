@@ -434,7 +434,7 @@ namespace NSmartProxyWinform
 
         private void RegisterHotKey()
         {
-            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift, Keys.O);
+            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift|HotKey.KeyModifiers.Ctrl, Keys.O);
         }
 
         protected override void WndProc(ref Message m)

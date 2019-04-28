@@ -49,7 +49,7 @@ namespace NSmartProxy
 
         public const string USER_DB_NAME = "./nsmart_user";
         public ClientConnectionManager ConnectionManager = null;
-        public NSmartDb NspDb;
+        public IDbOperator DbOp;
 
         internal static INSmartLogger Logger; //inject
 
@@ -68,7 +68,7 @@ namespace NSmartProxy
 
         public async Task Start()
         {
-            NspDb = new NSmartDb(USER_DB_NAME, USER_DB_NAME + "_index");
+            DbOp = new NSmartDbOperator(USER_DB_NAME, USER_DB_NAME + "_index");
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             CancellationTokenSource ctsConfig = new CancellationTokenSource();
             CancellationTokenSource ctsHttp = new CancellationTokenSource();
@@ -103,7 +103,7 @@ namespace NSmartProxy
             {
                 Logger.Debug("all closed");
                 ctsConfig.Cancel(); ctsHttp.Cancel(); ctsConsumer.Cancel();
-                NspDb.Close();
+                DbOp.Close();
             }
         }
 

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using System.Threading;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.ServerHost
 {
@@ -56,7 +57,7 @@ namespace NSmartProxy.ServerHost
             Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServer");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
 
-            Logger.Debug("*** NSmart Server v0.2 ***");
+            Logger.Debug($"*** {Global.NSmartProxyServerName} ***");
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
               .AddJsonFile("appsettings.json");

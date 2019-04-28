@@ -1,10 +1,15 @@
 ﻿namespace NSmartProxy.Shared
 {
     /// <summary>
-    /// 放一些全局公用的靜態變量
+    /// 放一些全局公用的静态变量
     /// </summary>
     public sealed class Global
     {
+        public const string NSmartProxyClientName = "NSmartProxy Client v0.3";
+        public const string NSmartProxyServerName = "NSmartProxy Server v0.3";
+
+        public const int ClientReconnectInterval = 3000;//客户端断线重连时间间隔（毫秒）
+
         public const string LogFormat = "";
         public const int HeartbeatInterval = 30000;  //心跳间隔（毫秒）
         public const int HeartbeatCheckInterval = 90000;  //心跳检测间隔（毫秒）

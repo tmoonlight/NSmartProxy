@@ -5,14 +5,24 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy.Authorize
 {
     public class AuthResult
     {
-        public bool Success { get; set; }
+        public bool IsSuccess { get => ResultState == AuthState.Success; }
         public string ErrorMessage { get; set; }
+        public AuthState ResultState { get; set; }
+    }
+
+    public enum AuthState
+    {
+        Success,
+        Fail,
+        Timeout,
+        Error
     }
 
     /// <summary>
@@ -21,13 +31,18 @@ namespace NSmartProxy.Authorize
     /// </summary>
     public class SecurityTcpClient : TcpClient
     {
+        public IDbOperator DbOp;
+
         public string Token = "";
         public readonly byte F9 = 0xF9;//固定标识位
         public String ErrorMessage = "";
+        //TODO 是否校验
+        public bool IsValid;
 
-        public SecurityTcpClient(string secureToken) : base()
+        public SecurityTcpClient(string secureToken, IDbOperator dbOp) : base()
         {
             Token = secureToken;
+            DbOp = dbOp;
         }
 
         /// <summary>
@@ -48,9 +63,9 @@ namespace NSmartProxy.Authorize
 
             var stream = this.GetStream();
             await base.ConnectAsync(host, port);
-            await stream.WriteAsync(new byte[] { F9 });
-            await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length));
-            await stream.WriteAndFlushAsync(ASCIIEncoding.ASCII.GetBytes(Token));
+            await stream.WriteAsync(new byte[] { F9 });//1标识
+            await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length));//2token长度
+            await stream.WriteAndFlushAsync(ASCIIEncoding.ASCII.GetBytes(Token));//3token
         }
 
         ////传输加密，待开发
@@ -87,7 +102,7 @@ namespace NSmartProxy.Authorize
             }
             int tokenLength = StringUtil.DoubleBytesToInt(lengthBytes);
 
-            //3.校验
+            //3.token校验
             var tokenBytes = ArrayPool<byte>.Shared.Rent(tokenLength);
             if (await stream.ReadAsync(tokenBytes, 0, tokenBytes.Length) == 0)
             {
@@ -100,8 +115,38 @@ namespace NSmartProxy.Authorize
 
             return new AuthResult()
             {
-                Success = false
+                // Success = false
             };
+        }
+
+        public AuthResult Authorize(string token)
+        {
+
+            try
+            {
+                var res = new AuthResult();
+                //keep your prikey safe!
+                string userid = EncodeHelper.AES_Decrypt(token);
+                //
+                if (DbOp.Exsit(userid))
+                {
+                    res.ResultState = AuthState.Success;
+                }
+                else
+                {
+                    res.ResultState = AuthState.Fail;
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                return new AuthResult
+                {
+                    ResultState = AuthState.Error,
+                    ErrorMessage = $"校验token出错：{ex.ToString()}"
+                };
+            }
+
         }
     }
 }
