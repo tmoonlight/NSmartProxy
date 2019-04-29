@@ -12,4 +12,8 @@
     <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extension\HttpServerStaticFiles\" />
+  </ItemGroup>
+
 </Project>

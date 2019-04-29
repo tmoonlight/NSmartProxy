@@ -180,6 +180,7 @@ namespace NSmartProxy.Client
                 Router.Logger.Debug($"连接关闭，开启重试");
             }
             //正常终止
+            Router.Logger.Debug($"停止重试，循环终止。");
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)

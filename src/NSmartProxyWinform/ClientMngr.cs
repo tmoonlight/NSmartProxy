@@ -409,6 +409,8 @@ namespace NSmartProxyWinform
 
                 try
                 {
+                    //解决热心网友提出的bug：空值时无法保存。
+                    if (strParts[3] == "") strParts[3] = "0";
                     config.Clients.Add(new ClientApp
                     {
                         ConsumerPort = Convert.ToInt32(strParts[1]),
