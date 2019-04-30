@@ -9,5 +9,6 @@ namespace NSmartProxy.Authorize
         //服务端会话池，登陆后的会话都在这里
 
         //public 
+
     }
 }

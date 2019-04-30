@@ -123,6 +123,40 @@ namespace NSmartProxy.Database
             return null;
         }
 
+        public bool Exist(byte[] k)
+        {
+            long i = Math.Abs(ComputeHash(k)) % tableSize * 8;
+            rf.Position = i;
+            byte[] key = new byte[k.Length];
+            for (long p = br.ReadInt64(); p != 0;)
+            {
+                rf.Position = p;
+                int keyLen = br.ReadInt32();
+                if (keyLen == k.Length)
+                {
+                    br.Read(key);
+                    int valueLen = br.ReadInt32();
+                    if (Enumerable.SequenceEqual(key, k))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        bw.Seek(valueLen, SeekOrigin.Current);
+                        p = br.ReadInt64();
+                    }
+                }
+                else
+                {
+                    bw.Seek(keyLen, SeekOrigin.Current);
+                    int valueLen = br.ReadInt32();
+                    bw.Seek(valueLen, SeekOrigin.Current);
+                    p = br.ReadInt64();
+                }
+            }
+            return false;
+        }
+
         public void Remove(byte[] k)
         {
             long i = Math.Abs(ComputeHash(k)) % tableSize * 8;

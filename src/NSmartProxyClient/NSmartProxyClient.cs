@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net.Config;
 using Exception = System.Exception;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy
 {
@@ -51,7 +52,7 @@ namespace NSmartProxy
             NSmartProxyClient.Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServerClient");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Logger.Info("*** NSmart ClientRouter v0.2 ***");
+            Logger.Info($"*** {Global.NSmartProxyClientName} ***");
 
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())

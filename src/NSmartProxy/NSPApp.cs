@@ -23,6 +23,7 @@ namespace NSmartProxy
 
         public NSPApp()
         {
+            CancelListenSource = new CancellationTokenSource();
             TcpClientBlocks = new BufferBlock<TcpClient>();
             Tunnels = new List<TcpTunnel>();
             ReverseClients = new List<TcpClient>();
@@ -55,22 +56,30 @@ namespace NSmartProxy
             if (!_closed)
             {
                 int ClosedCount = 0;
-                Tunnels.ForEach((t) =>
+                try
                 {
-                    t.ClientServerClient?.Close();
-                    t.ConsumerClient?.Close();
-                    ClosedCount++;
-                });
-                //关闭循环和当前的侦听
-                CancelListenSource.Cancel();
-                Listener.Stop();
-                //弹出TcpClientBlocks
-                while (TcpClientBlocks.Count > 0)
-                {
-                    TcpClientBlocks.Receive().Close();
+                    Tunnels.ForEach((t) =>
+                    {
+                        t.ClientServerClient?.Close();
+                        t.ConsumerClient?.Close();
+                        ClosedCount++;
+                    });
+                    //关闭循环和当前的侦听
+                    CancelListenSource?.Cancel();
+                    Listener?.Stop();
+                    //弹出TcpClientBlocks
+                    while (TcpClientBlocks.Count > 0)
+                    {
+                        TcpClientBlocks.Receive().Close();
+                    }
+                    _closed = true;
+                    return ClosedCount;
                 }
-                _closed = true;
-                return ClosedCount;
+                catch (Exception ex)
+                {
+                    Server.Logger.Debug($"关闭app({ClientId}-{AppId})失败:{ex}");
+                    return 0;
+                }
             }
             else
             {

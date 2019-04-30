@@ -174,12 +174,13 @@ namespace NSmartProxy.Client
                 if (ConnectionManager != null)
                     ConnectionManager.CloseAllConnections();//关闭所有连接
                 //出错重试
-                await Task.Delay(3000, ONE_LIVE_TOKEN_SRC.Token);
+                await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
                 //TODO 返回错误码
                 //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
                 Router.Logger.Debug($"连接关闭，开启重试");
             }
             //正常终止
+            Router.Logger.Debug($"停止重试，循环终止。");
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,15 +11,18 @@ using NSmartProxy.Interfaces;
 
 namespace NSmartProxy.Extension
 {
-    class HttpServer
+    partial class HttpServer
     {
         #region HTTPServer
-
+      
         public INSmartLogger Logger;
 
         public HttpServer(INSmartLogger logger)
         {
             Logger = logger;
+            //第一次加载所有mime类型
+            PopulateMappings();
+
         }
 
         public async Task StartHttpService(CancellationTokenSource ctsHttp, int WebManagementPort)
@@ -54,29 +59,81 @@ namespace NSmartProxy.Extension
 
         private async Task ProcessHttpRequestAsync(HttpListenerContext context)
         {
+            string baseFilePath = "./Extension/HttpServerStaticFiles/";
+            var request = context.Request;
+            var response = context.Response;
+
+
             try
             {
-                var request = context.Request;
-                var response = context.Response;
-
-                response.ContentEncoding = Encoding.UTF8;
-                response.ContentType = "text/html;charset=utf-8";
-
                 //TODO ***通过request来的值进行接口调用
+                string unit = request.RawUrl.Replace("//", "");
+                int idx1 = unit.LastIndexOf("#");
+                if (idx1 > 0) unit = unit.Substring(0, idx1);
+                int idx2 = unit.LastIndexOf("?");
+                if (idx2 > 0) unit = unit.Substring(0, idx2);
+                int idx3 = unit.LastIndexOf(".");
 
-                //getJson
-                var json = GetClientsInfoJson();
-                await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
-                //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
-                response.OutputStream.Close();
+                //通过后缀获取不同的文件，若无后缀，则调用接口
+                if (idx3 > 0)
+                {
+
+                    if (!File.Exists(baseFilePath + unit))
+                    {
+                        Server.Logger.Debug($"未找到文件{baseFilePath + unit}");
+                        return;
+
+                    }
+                    //mime类型
+                    ProcessMIME(response, unit.Substring(idx3));
+                    using (FileStream fs = new FileStream(baseFilePath + unit, FileMode.Open))
+                    {
+                        await fs.CopyToAsync(response.OutputStream);
+                    }
+                }
+                else
+                {
+
+                    //getJson
+                    var json = GetClientsInfoJson();
+                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
+                    //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
+                    // response.OutputStream.Close();
+
+                }
+                //suffix = unit.Substring(unit.LastIndexOf(".")+1,)
+
             }
             catch (Exception e)
             {
                 Logger.Error(e.Message, e);
                 throw;
             }
+            finally
+            {
+                response.OutputStream.Close();
+            }
         }
 
+        private void ProcessMIME(HttpListenerResponse response, string suffix)
+        {
+            if (suffix == ".html" || suffix == ".js")
+            {
+                response.ContentEncoding=Encoding.UTF8;
+            }
+
+            string val = "";
+            if (_mimeMappings.TryGetValue(suffix,out val))
+            {
+                // found!
+                response.ContentType = val;
+            }
+            else
+            {
+                response.ContentType = "application/octet-stream";
+            }
+
+        }
 
         private string GetClientsInfoJson()
         {
@@ -160,5 +217,15 @@ namespace NSmartProxy.Extension
         }
 
         #endregion
+        //TODO XXXX
+        //API login
+
+        //API Users
+        //REST
+        //AddUser
+        //RemoveUser
+        //
+
+        //NoApi Auth
     }
 }
