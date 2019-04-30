@@ -14,6 +14,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Extension\HttpServerStaticFiles\bootstrap.bundle.min.js" />
+    <None Remove="Extension\HttpServerStaticFiles\bootstrap.min.css" />
+    <None Remove="Extension\HttpServerStaticFiles\Chart.min.js" />
+    <None Remove="Extension\HttpServerStaticFiles\dashboard.css" />
+    <None Remove="Extension\HttpServerStaticFiles\dashboard.html" />
+    <None Remove="Extension\HttpServerStaticFiles\dashboard.js" />
+    <None Remove="Extension\HttpServerStaticFiles\feather.min.js" />
+    <None Remove="Extension\HttpServerStaticFiles\jquery-slim.min.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
     <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>

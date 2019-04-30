@@ -294,6 +294,7 @@ namespace NSmartProxyWinform
             if (listBox1.SelectedItem != null)
             {
                 int originIndex = listBox1.SelectedIndex;
+                if (tbxPort.Text.Trim() == "") tbxPort.Text = "0";
                 listBox1.Items.Remove(listBox1.SelectedItem);
 
                 listBox1.Items.Insert(originIndex,
@@ -392,6 +393,8 @@ namespace NSmartProxyWinform
             config.ProviderAddress = tbxProviderAddr.Text;
             config.ProviderConfigPort = int.Parse(tbxConfigPort.Text);
             config.ProviderPort = int.Parse(tbxReversePort.Text);
+            //解决热心网友提出的bug：空值时无法保存。
+
             //2.保存配置到文件
             foreach (var item in listBox1.Items)
             {
@@ -409,8 +412,7 @@ namespace NSmartProxyWinform
 
                 try
                 {
-                    //解决热心网友提出的bug：空值时无法保存。
-                    if (strParts[3] == "") strParts[3] = "0";
+
                     config.Clients.Add(new ClientApp
                     {
                         ConsumerPort = Convert.ToInt32(strParts[1]),
@@ -436,7 +438,7 @@ namespace NSmartProxyWinform
 
         private void RegisterHotKey()
         {
-            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift|HotKey.KeyModifiers.Ctrl, Keys.O);
+            HotKey.RegisterHotKey(Handle, 100, HotKey.KeyModifiers.Shift | HotKey.KeyModifiers.Ctrl, Keys.O);
         }
 
         protected override void WndProc(ref Message m)
