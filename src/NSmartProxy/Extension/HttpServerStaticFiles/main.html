@@ -8,7 +8,7 @@
     <meta name="generator" content="Jekyll v3.8.5">
     <title>NSmart 仪表盘</title>
 
-    <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/dashboard/">
+    
 
     <!-- Bootstrap core CSS -->
     <link href="bootstrap.min.css" rel="stylesheet">
@@ -35,10 +35,10 @@
 <body>
 <!--顶部navbar-->
 <nav class="navbar navbar-light fixed-top bg-light flex-md-nowrap p-1 shadow-sm">
-    <div class="navbar-light col-sm-3 col-md-2 mr-0">
+    <div class="navbar-light col-sm-3 col-md-2 col-xl-1.5 mr-0">
         <a href="main.html" class="d-none d-sm-block">
 
-            <img src="NSmartProxyNew.png" class="w-100" />
+            <img src="NSmartProxyNew.png" width="200px" />
         </a>
 
     </div>
@@ -49,7 +49,7 @@
             <a class="nav-link" href="#">Sign out</a>
         </li>
     </ul>
-    <button class="navbar-toggler d-block d-sm-none" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="开启导航">
+    <button class="navbar-toggler d-block d-md-none" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="开启导航">
         <span class="navbar-toggler-icon"></span>
     </button>
 </nav>
@@ -98,7 +98,21 @@
             </div>
         </nav>
 
-        <main role="main" class="col-md-10 ml-md-auto col-lg-10 px-4">
+        <main role="main" class="col-md-10 ml-md-auto col-lg-10 px-4" >
+          <div class="alert alert-success hide" id="green_alert" style="display:none" role="alert">
+                <span>NoTextGreen</span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="alert alert-danger hide" id="red_alert" style="display:none" role="alert">
+                <span>NoText</span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+               
+            
             <div id="content"></div>
         </main>
     </div>
@@ -109,7 +123,7 @@
 <script src="feather.min.js"></script>
 <script src="Chart.min.js"></script>
 <!--<script src="dashboard.js"></script>-->
-<script src="main.js?v=2" ></script>
+<script src="main.js?v=4" ></script>
 <script></script>
 
 </body>

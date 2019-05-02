@@ -83,7 +83,7 @@ namespace NSmartProxy
             //2.开启http服务
             if (WebManagementPort > 0)
             {
-                var httpServer = new HttpServer(Logger);
+                var httpServer = new HttpServer(Logger,DbOp);
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 

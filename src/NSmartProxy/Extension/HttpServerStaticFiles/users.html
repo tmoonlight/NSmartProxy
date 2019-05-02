@@ -2,8 +2,35 @@
     <h1 class="h3">用户</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-            用户
+            <button type="button" class="btn btn-outline-primary" onclick="delUser()">删除</button>
+            <button type="button" class="btn btn-outline-primary">下线</button>
         </div>
-       
+
     </div>
+</div>
+
+<div class="table-responsive-md">
+   
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th></th>
+            <th>ID</th>
+            <th>Username</th>
+            <th>RegisterTime</th>
+            <th>Status</th>
+
+        </tr>
+        </thead>
+        <tbody id="user_tb_body">
+        <tr>
+            <td> <input type="checkbox" value="test"></td>
+            <td>1001</td>
+            <td>月影流光</td>
+            <td>19-05-01</td>
+            <td>Online</td>
+
+        </tr>
+        </tbody>
+    </table>
 </div>

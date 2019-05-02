@@ -2,9 +2,6 @@
 
   (function () {
   'use strict'
-
-  feather.replace()
-
   // Graphs
   var ctx1 = document.getElementById('myChart')
   var ctx2 = document.getElementById('myChart2')

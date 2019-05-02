@@ -23,26 +23,40 @@
     }
 
     function loadContent(storedHash) {
-        if (this.location.href.indexOf('#') < 0) {this.location.href += "#dashboard";
+        if (this.location.href.indexOf('#') < 0) {
+            this.location.href += "#dashboard";
             return;
         }
         storedHash = "#" + storedHash;
         var compName = storedHash.substring(storedHash.lastIndexOf("#") + 1);
         //发布时注释掉
-        $.get(basepath + compName + ".html?"+new Date(), function (src) {
+        $.get(basepath + compName + ".html?" + new Date(), function (src) {
             $("#content").html(src);
-            $.getScript(compName + ".js");
+            $.getScript(compName + ".js");//加载模板
+            //加载图标
+            feather.replace();
         });
         return storedHash;
     }
 
     $(document).ready(function () {
-            loadContent(window.location.hash);
-        }
+        loadContent(window.location.hash);
+    }
     );
+
+
+
 }
 
 )();
 
+function redAlert(msg) {
+    $("#red_alert span:first").html(msg);
+    $("#red_alert").show();
+}
+function greenAlert(msg) {
+    $("#green_alert span:first").html(msg);
+    $("#green_alert").show();
+}
 
 

@@ -4,9 +4,11 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NSmartProxy.Database;
 using NSmartProxy.Interfaces;
 
 namespace NSmartProxy.Extension
@@ -14,12 +16,14 @@ namespace NSmartProxy.Extension
     partial class HttpServer
     {
         #region HTTPServer
-      
-        public INSmartLogger Logger;
 
-        public HttpServer(INSmartLogger logger)
+        public INSmartLogger Logger;
+        public IDbOperator Dbop;
+
+        public HttpServer(INSmartLogger logger, IDbOperator dbop)
         {
             Logger = logger;
+            Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
 
@@ -74,7 +78,7 @@ namespace NSmartProxy.Extension
                 if (idx2 > 0) unit = unit.Substring(0, idx2);
                 int idx3 = unit.LastIndexOf(".");
 
-                //通过后缀获取不同的文件，若无后缀，则调用接口
+                //TODO 通过后缀获取不同的文件，若无后缀，则调用接口
                 if (idx3 > 0)
                 {
 
@@ -93,9 +97,13 @@ namespace NSmartProxy.Extension
                 }
                 else
                 {
-
+                    unit = unit.Replace("/", "");
+                    response.ContentEncoding = Encoding.UTF8;
+                    response.ContentType = "application/json";
+                    //TODO XXXXXX 调用接口 接下来要用分布类隔离并且用API特性限定安全
+                    var json = this.GetType().GetMethod(unit).Invoke(this, null);
                     //getJson
-                    var json = GetClientsInfoJson();
+                    //var json = GetClientsInfoJson();
                     await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
                     //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
                     // response.OutputStream.Close();
@@ -119,11 +127,11 @@ namespace NSmartProxy.Extension
         {
             if (suffix == ".html" || suffix == ".js")
             {
-                response.ContentEncoding=Encoding.UTF8;
+                response.ContentEncoding = Encoding.UTF8;
             }
 
             string val = "";
-            if (_mimeMappings.TryGetValue(suffix,out val))
+            if (_mimeMappings.TryGetValue(suffix, out val))
             {
                 // found!
                 response.ContentType = val;
@@ -135,7 +143,7 @@ namespace NSmartProxy.Extension
 
         }
 
-        private string GetClientsInfoJson()
+        public string GetClientsInfoJson()
         {
             var ConnectionManager = ClientConnectionManager.GetInstance();
             StringBuilder json = new StringBuilder("[ ");
@@ -214,6 +222,14 @@ namespace NSmartProxy.Extension
         private string KV2Json(string key, object value)
         {
             return "\"" + key + "\":\"" + value.ToString() + "\"";
+        }
+
+        public List<string> GetUsers()
+        {
+            //using (var dbop = Dbop.Open())
+            //{
+                return Dbop.Select(0, 10);
+            //}
         }
 
         #endregion

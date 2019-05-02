@@ -16,7 +16,7 @@ namespace NSmartProxy.Database
         private string hashfFile;
         private string seqfFile;
 
-        private bool isClosed = false;
+        private bool isClosed = true;//默认未开启状态
 
         public bool IsClosed { get => isClosed; set => isClosed = value; }
 
@@ -28,7 +28,7 @@ namespace NSmartProxy.Database
             Open();
         }
 
-        public void Open()
+        public IDbOperator Open()
         {
             if (isClosed)
             {
@@ -36,6 +36,8 @@ namespace NSmartProxy.Database
                 hashf = new HashFile(seqfFile);
                 isClosed = false;
             }
+
+            return this;
         }
 
         public void Insert(long key, string value)
@@ -58,18 +60,21 @@ namespace NSmartProxy.Database
             hashf.Put(keyBytesbytes, valBytes);
         }
 
-        public string[] Select(int startIndex, int length)
+        public List<string> Select(int startIndex, int length)
         {
-            string[] strs = new string[length];
+            List<string> strs = new List<string>(length);
             //获取索引
             var list = seqf.GetRange(startIndex, length);
             for (var i = 0; i < list.Count; i++)
             {
-                strs[i] = ASCIIEncoding.ASCII.GetString
+                if (list[i] != 0)
+                {
+                    strs.Add(ASCIIEncoding.ASCII.GetString
                     (hashf.Get
-                         (BitConverter.GetBytes(list[i])
-                     ?? new byte[] { 0 })
-                     );
+                        (BitConverter.GetBytes(list[i])
+                         ?? new byte[] { 0 })
+                    ));
+                }
             }
 
             return strs;
@@ -116,6 +121,11 @@ namespace NSmartProxy.Database
         private byte[] String2Bytes(string str)
         {
             return ASCIIEncoding.ASCII.GetBytes(str);
+        }
+
+        public void Dispose()
+        {
+            this.Close();
         }
     }
 }
