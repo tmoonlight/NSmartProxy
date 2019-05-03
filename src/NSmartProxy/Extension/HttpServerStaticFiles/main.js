@@ -1,4 +1,4 @@
-﻿var basepath = "";
+﻿var basepath = "http://localhost:12309/";//api根地址
 
 //hashchange事件，路由是如此实现的
 (function () {
@@ -43,9 +43,6 @@
         loadContent(window.location.hash);
     }
     );
-
-
-
 }
 
 )();
@@ -57,6 +54,11 @@ function redAlert(msg) {
 function greenAlert(msg) {
     $("#green_alert span:first").html(msg);
     $("#green_alert").show();
+}
+
+///处理nsp发回的统一数据，如果有错则弹框，否则返回真
+function processNSPResult(res) {
+    return true;
 }
 
 

@@ -34,7 +34,8 @@ namespace NSmartProxy.Extension
             try
             {
                 HttpListener listener = new HttpListener();
-                listener.Prefixes.Add($"http://+:{WebManagementPort}/");
+                listener.Prefixes.Add($"http://*:{WebManagementPort}/");
+                listener.Prefixes.Add($"http://2017studio.imwork.net:{WebManagementPort}/");
                 //TcpListener listenerConfigService = new TcpListener(IPAddress.Any, WebManagementPort);
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
                 await AcceptHttpRequest(listener, ctsHttp);
@@ -66,7 +67,8 @@ namespace NSmartProxy.Extension
             string baseFilePath = "./Extension/HttpServerStaticFiles/";
             var request = context.Request;
             var response = context.Response;
-
+            //TODO XX 设置该同源策略为了方便调试，请确保web项目也位于locahost5671上
+            response.AddHeader("Access-Control-Allow-Origin", "http://localhost:5671");
 
             try
             {
@@ -100,11 +102,36 @@ namespace NSmartProxy.Extension
                     unit = unit.Replace("/", "");
                     response.ContentEncoding = Encoding.UTF8;
                     response.ContentType = "application/json";
+
                     //TODO XXXXXX 调用接口 接下来要用分布类隔离并且用API特性限定安全
-                    var json = this.GetType().GetMethod(unit).Invoke(this, null);
+                    object jsonObj;
+                    //List<string> qsStrList;
+                    int qsCount = request.QueryString.Count;
+                    object[] parameters = null;
+                    if (qsCount > 0)
+                    {
+                        parameters = new object[request.QueryString.Count];
+                        for (int i = 0; i < request.QueryString.Count; i++)
+                        {
+                            parameters[i] = request.QueryString[i];
+                        }
+                    }
+
+                    // request.QueryString[0]
+                    try
+                    {
+                        jsonObj = this.GetType().GetMethod(unit).Invoke(this, parameters);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e.Message, e);
+                        jsonObj = e.Message + "---" + e.StackTrace;
+                    }
+
                     //getJson
                     //var json = GetClientsInfoJson();
-                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent(json.ToString()));
+
+                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent("invoke错误:" + jsonObj.ToJsonString()));
                     //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
                     // response.OutputStream.Close();
 
@@ -143,105 +170,7 @@ namespace NSmartProxy.Extension
 
         }
 
-        public string GetClientsInfoJson()
-        {
-            var ConnectionManager = ClientConnectionManager.GetInstance();
-            StringBuilder json = new StringBuilder("[ ");
-            foreach (var app in ConnectionManager.PortAppMap)
-            {
-                json.Append("{ ");
-                json.Append(KV2Json("port", app.Key)).C();
-                json.Append(KV2Json("clientId", app.Value.ClientId)).C();
-                json.Append(KV2Json("appId", app.Value.AppId)).C();
-                json.Append(KV2Json("blocksCount", app.Value.TcpClientBlocks.Count)).C();
-                //反向连接
-                json.Append(KV2Json("revconns"));
-                json.Append("[ ");
-                foreach (var reverseClient in app.Value.ReverseClients)
-                {
-                    json.Append("{ ");
-                    if (reverseClient.Connected)
-                    {
-                        json.Append(KV2Json("lEndPoint", reverseClient.Client.LocalEndPoint.ToString())).C();
-                        json.Append(KV2Json("rEndPoint", reverseClient.Client.RemoteEndPoint.ToString()));
-                    }
-
-                    //json.Append(KV2Json("p", c)).C();
-                    //json.Append(KV2Json("port", ca.Key));
-                    json.Append("}");
-                    json.C();
-                }
-
-                json.D();
-                json.Append("]").C();
-                ;
-
-                //隧道状态
-                json.Append(KV2Json("tunnels"));
-                json.Append("[ ");
-                foreach (var tunnel in app.Value.Tunnels)
-                {
-                    json.Append("{ ");
-                    if (tunnel.ClientServerClient != null)
-                    {
-                        Socket sktClient = tunnel.ClientServerClient.Client;
-                        if (tunnel.ClientServerClient.Connected)
-
-                            json.Append(KV2Json("clientServerClient", $"{sktClient.LocalEndPoint}-{sktClient.RemoteEndPoint}"))
-                                .C();
-                    }
-                    if (tunnel.ConsumerClient != null)
-                    {
-                        Socket sktConsumer = tunnel.ConsumerClient.Client;
-                        if (tunnel.ConsumerClient.Connected)
-                            json.Append(KV2Json("consumerClient", $"{sktConsumer.LocalEndPoint}-{sktConsumer.RemoteEndPoint}"))
-                                .C();
-                    }
-
-                    json.D();
-                    //json.Append(KV2Json("p", c)).C();
-                    //json.Append(KV2Json("port", ca.Key));
-                    json.Append("}");
-                    json.C();
-                }
-
-                json.D();
-                json.Append("]");
-                json.Append("}").C();
-            }
-
-            json.D();
-            json.Append("]");
-            return json.ToString();
-        }
-
-        private string KV2Json(string key)
-        {
-            return "\"" + key + "\":";
-        }
-        private string KV2Json(string key, object value)
-        {
-            return "\"" + key + "\":\"" + value.ToString() + "\"";
-        }
-
-        public List<string> GetUsers()
-        {
-            //using (var dbop = Dbop.Open())
-            //{
-                return Dbop.Select(0, 10);
-            //}
-        }
-
         #endregion
-        //TODO XXXX
-        //API login
 
-        //API Users
-        //REST
-        //AddUser
-        //RemoveUser
-        //
-
-        //NoApi Auth
     }
 }

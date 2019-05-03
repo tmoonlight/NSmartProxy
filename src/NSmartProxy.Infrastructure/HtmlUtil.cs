@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace NSmartProxy
 {
@@ -12,6 +13,11 @@ namespace NSmartProxy
         public static byte[] GetContent(string html)
         {
             return Encoding.UTF8.GetBytes(html.ToString());
+        }
+
+        public static string ToJsonString(this object jsonObj)
+        {
+             return JsonConvert.SerializeObject(jsonObj);
         }
 
         //GET /welcome 

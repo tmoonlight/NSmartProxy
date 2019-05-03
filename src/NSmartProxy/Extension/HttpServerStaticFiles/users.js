@@ -7,11 +7,14 @@
 function addUser() { }
 function delUser() {
 
-    greenAlert("删除成功。");
+    $.get(basepath + "RemoveUser?id=1", function (res) {
+        redAlert(res.msg);
+    });
+   
 }
 function selectUsers() {
 
-    $.get("GetUsers", function(res) {
+    $.get(basepath+"GetUsers", function(res) {
    
     });
 }
