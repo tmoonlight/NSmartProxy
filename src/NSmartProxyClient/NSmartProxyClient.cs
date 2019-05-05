@@ -71,7 +71,7 @@ namespace NSmartProxy
             }
             Console.Read();
             Logger.Info("Client terminated,press any key to continue.");
-           
+
         }
 
         private static async Task StartClient()
@@ -80,7 +80,7 @@ namespace NSmartProxy
             Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
-            Task tsk = clientRouter.Start();
+            Task tsk = clientRouter.Start(true);
             try
             {
                 await tsk;

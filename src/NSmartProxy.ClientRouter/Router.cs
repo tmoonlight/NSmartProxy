@@ -77,10 +77,12 @@ namespace NSmartProxy.Client
         /// <summary>
         /// 重要：连接服务端，一般做为入口方法
         /// 该方法主要操作一些配置和心跳
+        /// AlwaysReconnect：始终重试，开启此选项，无论何时，一旦程序在连接不上时都会进行重试，否则只在连接成功后的断线时才重试。
         /// </summary>
         /// <returns></returns>
-        public async Task Start()
+        public async Task Start(bool AlwaysReconnect = false)
         {
+            if (AlwaysReconnect) IsStarted = true;
             var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
             while (!oneLiveToken.IsCancellationRequested)
             {

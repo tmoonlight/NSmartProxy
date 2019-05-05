@@ -50,6 +50,7 @@ namespace NSmartProxy.Extension
                 Logger.Debug(ex);
                 Server.Logger.Error(ex.ToString(), ex);
             }
+            Logger.Debug("Http服务结束。");
         }
 
         private async Task AcceptHttpRequest(HttpListener httpService, CancellationTokenSource ctsHttp)
