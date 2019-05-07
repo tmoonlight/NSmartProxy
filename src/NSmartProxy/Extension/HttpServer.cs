@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Database;
+using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 
 namespace NSmartProxy.Extension
@@ -26,6 +27,7 @@ namespace NSmartProxy.Extension
             Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
+            EncryptHelper.AES_Key = "SDF(&*G";//prikey
 
         }
 
@@ -131,8 +133,9 @@ namespace NSmartProxy.Extension
 
                     //getJson
                     //var json = GetClientsInfoJson();
-
-                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent("invoke错误:" + jsonObj.ToJsonString()));
+                    //无返回值则返回默认数据。
+                    //if (jsonObj == null) await response.OutputStream.WriteAsync(HtmlUtil.GetContent(""));
+                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                     //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
                     // response.OutputStream.Close();
 

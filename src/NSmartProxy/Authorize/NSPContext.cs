@@ -8,7 +8,17 @@ namespace NSmartProxy.Authorize
     {
         //服务端会话池，登陆后的会话都在这里
 
-        //public 
+        public HashSet<string> TokenCaches;
 
+        public NSPContext()
+        {
+            TokenCaches = new HashSet<string>();
+        }
+
+        //public 
+        public bool Authorize(string token)
+        {
+            return true;
+        }
     }
 }

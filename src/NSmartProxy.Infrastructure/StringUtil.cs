@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -71,6 +72,11 @@ namespace NSmartProxy
         public static StringBuilder D(this StringBuilder sb)
         {
             return sb.Remove(sb.Length - 1, 1);
+        }
+
+        public static dynamic ToDynamic(this string jsonString)
+        {
+            return JsonConvert.DeserializeObject(jsonString);
         }
     }
 }

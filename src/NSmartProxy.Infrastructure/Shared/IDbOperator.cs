@@ -9,6 +9,7 @@ namespace NSmartProxy.Database
         void Insert(long key, string value);
         void Update(long key, string value);
         List<string> Select(int startIndex, int length);
+        string Get(long key);
         void Delete(int index);
         long GetLength();
         void Close();

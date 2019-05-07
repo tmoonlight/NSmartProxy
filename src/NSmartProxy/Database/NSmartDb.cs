@@ -127,5 +127,10 @@ namespace NSmartProxy.Database
         {
             this.Close();
         }
+
+        public string Get(long key)
+        {
+            return Bytes2String(hashf.Get(BitConverter.GetBytes(key)));
+        }
     }
 }

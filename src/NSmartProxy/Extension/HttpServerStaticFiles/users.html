@@ -2,12 +2,35 @@
     <h1 class="h3">用户</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
+            <button type="button" class="btn btn-outline-primary" onclick="addUser()">新用户</button>
             <button type="button" class="btn btn-outline-primary" onclick="delUser()">删除</button>
             <button type="button" class="btn btn-outline-primary">下线</button>
         </div>
 
     </div>
 </div>
+
+<div class="mb-2 collapse" id="divAddUser">
+    <div class="form-group">
+        <label for="InputEmail1">用户名</label>
+        <input type="email" class="form-control" id="inputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+        <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+    </div>
+    <div class="form-group">
+        <label for="InputPassword1">密码</label>
+        <input type="password" class="form-control" id="inputPassword1" placeholder="Password">
+    </div>
+    <!--<div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+    </div>-->
+    <div class="custom-control custom-switch mb-4">
+        <input type="checkbox" class="custom-control-input" id="customSwitch2">
+        <label class="custom-control-label" for="customSwitch2">超级管理员</label>
+            </div>
+    <button type="button" onclick="addUser_submit()" class="btn btn-primary">Submit</button>
+</div>
+   
 
 <div class="table-responsive-md">
    

@@ -6,6 +6,12 @@ namespace NSmartProxy.Extension
 {
     public static class HttpResultExtension
     {
+        /// <summary>
+        /// 包装对象，即使是null也能包装
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public static HttpResult<T> Wrap<T>(this T obj)
         {
             if (obj is Exception)

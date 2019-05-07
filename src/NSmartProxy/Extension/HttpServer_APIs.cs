@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NSmartProxy.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
@@ -16,26 +17,49 @@ namespace NSmartProxy.Extension
         //API Users
         //REST
         [API]
-        public string Login(string username, string userpwd)
+        public string Login(string userid, string userpwd)
         {
+            
             //1.校验
+            dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
+            if (user == null)
+            {
+                return "error: user not exist.";
+            }
+            if (user.userPwd != userpwd)
+            {
+                return "error: wrong password.";
+            }
+
             //2.给token
-            throw new Exception("登陆出错！");
-            return "token";
+            string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
+            return EncryptHelper.AES_Encrypt(output);
         }
 
         [API]
-        public void AddUser(string username, string userpwd)
+        public void AddUser(string userid, string userpwd)
         {
+            if (Dbop.Exist(userid))
+            {
+                throw new Exception("error: user exist.");
+            }
+            var user = new { userId = userid, usePwd = userpwd, regTime = DateTime.Now.ToString() };
             //1.增加用户
+            Dbop.Insert(long.Parse(userid), user.ToJsonString());
         }
 
 
         [API]
         public void RemoveUser(string userIndex)
         {
-            //1.删除用户
-            throw new Exception("删除用户出错！");
+            try
+            {
+                Dbop.Delete(int.Parse(userIndex));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("删除用户出错：" + ex.Message);
+            }
         }
 
         //NoApi Auth
@@ -115,11 +139,11 @@ namespace NSmartProxy.Extension
 
 
         [API]
-        public HttpResult<List<string>> GetUsers()
+        public List<string> GetUsers()
         {
             //using (var dbop = Dbop.Open())
             //{
-            return Dbop.Select(0, 10).Wrap();
+            return Dbop.Select(0, 10);
             //}
         }
 

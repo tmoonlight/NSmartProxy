@@ -22,7 +22,7 @@ namespace NSmartProxy.Infrastructure
     /// <summary>
     /// DES对称加解密、AES RijndaelManaged加解密、Base64加密解密、MD5加密等操作辅助类
     /// </summary>
-    public sealed class EncodeHelper
+    public sealed class EncryptHelper
     {
         #region DES对称加密解密
         public const string DEFAULT_ENCRYPT_KEY = "12345678";
@@ -183,7 +183,7 @@ namespace NSmartProxy.Infrastructure
         #endregion
 
         #region 对称加密算法AES RijndaelManaged加密解密
-        private static readonly string Default_AES_Key = "12345678";
+        public static string AES_Key = "12345678";
         private static byte[] Keys = { 0x41, 0x72, 0x65, 0x79, 0x6F, 0x75, 0x6D, 0x79,
                                              0x53,0x6E, 0x6F, 0x77, 0x6D, 0x61, 0x6E, 0x3F };
 
@@ -194,7 +194,7 @@ namespace NSmartProxy.Infrastructure
         /// <returns>加密结果字符串</returns>
         public static string AES_Encrypt(string encryptString)
         {
-            return AES_Encrypt(encryptString, Default_AES_Key);
+            return AES_Encrypt(encryptString, AES_Key);
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace NSmartProxy.Infrastructure
         /// <returns>解密成功返回解密后的字符串,失败返源串</returns>
         public static string AES_Decrypt(string decryptString)
         {
-            return AES_Decrypt(decryptString, Default_AES_Key);
+            return AES_Decrypt(decryptString, AES_Key);
         }
 
         /// <summary>

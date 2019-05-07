@@ -1,4 +1,5 @@
-﻿var basepath = "http://localhost:12309/";//api根地址
+﻿//TODO 想个办法让他们同步
+var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文件一致
 
 //hashchange事件，路由是如此实现的
 (function () {
@@ -30,7 +31,7 @@
         storedHash = "#" + storedHash;
         var compName = storedHash.substring(storedHash.lastIndexOf("#") + 1);
         //发布时注释掉
-        $.get(basepath + compName + ".html?" + new Date(), function (src) {
+        $.get(compName + ".html?" + new Date(), function (src) {
             $("#content").html(src);
             $.getScript(compName + ".js");//加载模板
             //加载图标

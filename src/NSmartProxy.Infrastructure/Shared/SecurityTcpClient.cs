@@ -150,7 +150,7 @@ namespace NSmartProxy.Authorize
             {
                 var res = new AuthResult();
                 //keep your prikey safe!
-                string userid = EncodeHelper.AES_Decrypt(token);
+                string userid = EncryptHelper.AES_Decrypt(token);
                 //
                 if (DbOp.Exist(userid))
                 {
