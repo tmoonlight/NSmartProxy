@@ -21,6 +21,8 @@ namespace NSmartProxy.Extension
         public INSmartLogger Logger;
         public IDbOperator Dbop;
 
+        public const string INDEX_PAGE = "/main.html";
+
         public HttpServer(INSmartLogger logger, IDbOperator dbop)
         {
             Logger = logger;
@@ -104,7 +106,7 @@ namespace NSmartProxy.Extension
                 {
                     unit = unit.Replace("/", "");
                     response.ContentEncoding = Encoding.UTF8;
-                    response.ContentType = "application/json";
+                   
 
                     //TODO XXXXXX 调用接口 接下来要用分布类隔离并且用API特性限定安全
                     object jsonObj;
@@ -121,23 +123,32 @@ namespace NSmartProxy.Extension
                     }
 
                     // request.QueryString[0]
+                    MethodInfo method = null;
                     try
                     {
-                        jsonObj = this.GetType().GetMethod(unit).Invoke(this, parameters);
+
+                        method = this.GetType().GetMethod(unit);
+                        if (method.GetCustomAttribute<APIAttribute>() != null)
+                        {
+                            response.ContentType = "application/json";
+                            jsonObj = method.Invoke(this, parameters);
+                            await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
+                        }
+                        else if (method.GetCustomAttribute<FormAPIAttribute>() != null)
+                        {
+                            response.ContentType = "text/html";
+                            jsonObj = method.Invoke(this, parameters);
+                            await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.ToString()));
+                        }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        Logger.Error(e.Message, e);
-                        jsonObj = e.Message + "---" + e.StackTrace;
+                        Logger.Error(ex.Message, ex);
+                        jsonObj =new Exception(ex.Message + "---" + ex.StackTrace);
+                        response.ContentType = "application/json";
+                        await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                     }
 
-                    //getJson
-                    //var json = GetClientsInfoJson();
-                    //无返回值则返回默认数据。
-                    //if (jsonObj == null) await response.OutputStream.WriteAsync(HtmlUtil.GetContent(""));
-                    await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
-                    //await response.OutputStream.WriteAsync(HtmlUtil.GetContent(request.RawUrl));
-                    // response.OutputStream.Close();
 
                 }
                 //suffix = unit.Substring(unit.LastIndexOf(".")+1,)

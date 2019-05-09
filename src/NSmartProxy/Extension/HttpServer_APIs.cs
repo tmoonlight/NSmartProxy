@@ -16,24 +16,34 @@ namespace NSmartProxy.Extension
 
         //API Users
         //REST
-        [API]
+        [FormAPI]
         public string Login(string userid, string userpwd)
         {
-            
+
             //1.校验
             dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
             if (user == null)
             {
                 return "error: user not exist.";
             }
-            if (user.userPwd != userpwd)
+            if (user.userPwd != EncryptHelper.SHA256(userpwd))
             {
                 return "error: wrong password.";
             }
 
             //2.给token
             string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
-            return EncryptHelper.AES_Encrypt(output);
+            string token = EncryptHelper.AES_Encrypt(output);
+            return string.Format(@"
+<html>
+<head><script>
+document.cookie='NSPTK={0}';
+document.write('跳转中...');
+window.location.href='main.html';
+</script>
+</head>
+</html>
+            ", token);
         }
 
         [API]
@@ -43,7 +53,7 @@ namespace NSmartProxy.Extension
             {
                 throw new Exception("error: user exist.");
             }
-            var user = new { userId = userid, usePwd = userpwd, regTime = DateTime.Now.ToString() };
+            var user = new { userId = userid, userPwd = EncryptHelper.SHA256(userpwd), regTime = DateTime.Now.ToString() };
             //1.增加用户
             Dbop.Insert(long.Parse(userid), user.ToJsonString());
         }

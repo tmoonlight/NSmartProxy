@@ -64,6 +64,7 @@ namespace NSmartProxy.Database
             return br.ReadInt64();
         }
 
+        //TODO 删除似乎还有问题
         public void Delete(int index)
         {
             rf.Position = 0;

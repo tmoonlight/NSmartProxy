@@ -7,7 +7,7 @@ namespace NSmartProxy.Extension
     public static class HttpResultExtension
     {
         /// <summary>
-        /// 包装对象，即使是null也能包装
+        /// 包装对象为返回结果，即使是null也能包装
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -35,6 +35,8 @@ namespace NSmartProxy.Extension
 
     public class HttpResult<T>
     {
+
+        private static HttpResult<T> nullSuccessResult;
         public HttpResult()
         {
         }
@@ -51,5 +53,12 @@ namespace NSmartProxy.Extension
         /// </summary>
         public string Msg { get => msg; set => msg = value; }
         public T Data { get => data; set => data = value; }
+        public static HttpResult<T> NullSuccessResult
+        {
+            get
+            {
+                return nullSuccessResult ?? new HttpResult<T>() { state = 1 };
+            }
+        }
     }
 }
