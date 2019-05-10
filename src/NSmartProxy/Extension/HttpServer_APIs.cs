@@ -64,7 +64,12 @@ window.location.href='main.html';
         {
             try
             {
-                Dbop.Delete(int.Parse(userIndex));
+                var arr = userIndex.Split();
+                foreach (var u in arr)
+                {
+                    Dbop.Delete(int.Parse(u));
+                }
+              
             }
             catch (Exception ex)
             {
@@ -78,17 +83,17 @@ window.location.href='main.html';
         {
             var ConnectionManager = ClientConnectionManager.GetInstance();
             StringBuilder json = new StringBuilder("[ ");
-            foreach (var app in ConnectionManager.PortAppMap)
+            foreach (var (key, value) in ConnectionManager.PortAppMap)
             {
                 json.Append("{ ");
-                json.Append(KV2Json("port", app.Key)).C();
-                json.Append(KV2Json("clientId", app.Value.ClientId)).C();
-                json.Append(KV2Json("appId", app.Value.AppId)).C();
-                json.Append(KV2Json("blocksCount", app.Value.TcpClientBlocks.Count)).C();
+                json.Append(KV2Json("port", key)).C();
+                json.Append(KV2Json("clientId", value.ClientId)).C();
+                json.Append(KV2Json("appId", value.AppId)).C();
+                json.Append(KV2Json("blocksCount", value.TcpClientBlocks.Count)).C();
                 //反向连接
                 json.Append(KV2Json("revconns"));
                 json.Append("[ ");
-                foreach (var reverseClient in app.Value.ReverseClients)
+                foreach (var reverseClient in value.ReverseClients)
                 {
                     json.Append("{ ");
                     if (reverseClient.Connected)
@@ -110,7 +115,7 @@ window.location.href='main.html';
                 //隧道状态
                 json.Append(KV2Json("tunnels"));
                 json.Append("[ ");
-                foreach (var tunnel in app.Value.Tunnels)
+                foreach (var tunnel in value.Tunnels)
                 {
                     json.Append("{ ");
                     if (tunnel.ClientServerClient != null)

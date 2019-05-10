@@ -23,9 +23,14 @@ function addUser_submit() {
 
 }
 function delUser() {
+    var ids = [];
+    $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
+        ids.push($(this).val());//将选中的值添加到数组chk_value中    
+    });
 
-    $.get(basepath + "RemoveUser?id=1", function (res) {
-        redAlert(res.msg);
+    $.get(basepath + "RemoveUser?id=" + ids.join(','), function (res) {
+        alert('删除成功');
+        selectUsers();
     });
 
 }
@@ -38,15 +43,15 @@ function selectUsers() {
         for (i in data) {
             var user = jQuery.parseJSON(data[i]);
             htmlStr += "<tr>" +
-                "<td> <input type='checkbox' name='cbxUserIds' value='"+ i +"'></td>" +
+                "<td> <input type='checkbox' name='cbxUserIds' value='" + i + "'></td>" +
                 "<td>" + i + "</td>" +
                 "<td>" + user.userId + "</td>" +
                 "<td>" + user.regTime + "</td>" +
-                "<td>"+ 1 +"</td>" +
+                "<td>" + 1 + "</td>" +
                 "</tr>";
             i++;
         }
         $("#user_tb_body").html(htmlStr);
-       
+
     });
 }

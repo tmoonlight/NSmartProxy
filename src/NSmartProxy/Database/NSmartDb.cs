@@ -69,11 +69,13 @@ namespace NSmartProxy.Database
             {
                 if (list[i] != 0)
                 {
-                    strs.Add(ASCIIEncoding.ASCII.GetString
-                    (hashf.Get
-                        (BitConverter.GetBytes(list[i])
-                         ?? new byte[] { 0 })
-                    ));
+                    var hashValue = hashf.Get
+                    (BitConverter.GetBytes(list[i])
+                     ?? new byte[] { 0 });
+                    if (hashValue != null)
+                    {
+                        strs.Add(ASCIIEncoding.ASCII.GetString(hashValue));
+                    }
                 }
             }
 
