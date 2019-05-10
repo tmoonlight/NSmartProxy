@@ -17,12 +17,17 @@ function addUser_submit() {
             alert('保存成功');
             $("#divAddUser").collapse('hide');
             selectUsers();
+            $("#inputPassword1").val("");
+            $("#inputEmail1").val("");
         }
 
     );
 
 }
 function delUser() {
+    if (!confirm('是否删除')) {
+        return;
+    }
     var ids = [];
     $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
         ids.push($(this).val());//将选中的值添加到数组chk_value中    

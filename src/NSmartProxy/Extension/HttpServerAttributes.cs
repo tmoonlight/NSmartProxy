@@ -20,4 +20,12 @@ namespace NSmartProxy.Extension
     {
 
     }
+
+    /// <summary>
+    /// 返回的是个文件
+    /// </summary>
+    public class FileAPIAttribute : Attribute
+    {
+
+    }
 }

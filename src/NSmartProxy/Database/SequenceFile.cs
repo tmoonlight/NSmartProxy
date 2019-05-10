@@ -12,18 +12,38 @@ namespace NSmartProxy.Database
         private BinaryReader br;
         private long tableSize = 1024L; //1k
         private const int SEQUENCE_ITEM_LENGTH = 8;
+        private string filePath;
         public SequenceFile(String file)
         {
+            filePath = file;
+            Init(file);
+        }
 
-            rf = new FileStream(file, FileMode.OpenOrCreate);
-            bw = new BinaryWriter(rf);
-            br = new BinaryReader(rf);
-            if (rf.Length == 0)
+        private void Init(string file)
+        {
+            try
             {
-                rf.SetLength(tableSize * SEQUENCE_ITEM_LENGTH);
-                rf.Position = 0;
-                bw.Write(0L);
+                rf = new FileStream(file, FileMode.OpenOrCreate);
+                bw = new BinaryWriter(rf);
+                br = new BinaryReader(rf);
+                if (rf.Length == 0)
+                {
+                    rf.SetLength(tableSize * SEQUENCE_ITEM_LENGTH);
+                    rf.Position = 0;
+                    bw.Write(0L);
+                }
             }
+            catch (Exception ex)
+            {
+                bw.Close(); br.Close(); rf.Close();
+                throw;
+            }
+
+        }
+
+        public string FilePath
+        {
+            get { return filePath; }
         }
 
         public void Add(long data)
@@ -80,6 +100,13 @@ namespace NSmartProxy.Database
             bw.Write(0L);
             rf.Position = (index + 1) * SEQUENCE_ITEM_LENGTH;
             bw.Write(lastval);
+        }
+
+        public void Clear()
+        {
+            rf.SetLength(0);
+            rf.SetLength(tableSize);
+
         }
 
         public void Close()

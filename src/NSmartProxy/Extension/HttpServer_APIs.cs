@@ -12,10 +12,41 @@ namespace NSmartProxy.Extension
     partial class HttpServer
     {
         //TODO XXXX
-        //API login
+        #region  dashboard
 
-        //API Users
-        //REST
+
+        #endregion
+
+        #region log
+        [API]
+        public string[] GetLogInfo(int fromline, int lines)
+        {
+            //取第X到Y行的日志
+            return null;
+        }
+
+        [FileAPI]
+        public string[] GetLogInfo(string filekey)
+        {
+            string suffix = ".log";
+            //通过日志文件名获取文件
+            return null;
+        }
+        #endregion
+
+        #region config
+
+        private const string C_OPEN_DASH_BOARD = nameof(C_OPEN_DASH_BOARD);
+        private const string C_OPEN_LOG_TRACK = nameof(C_OPEN_LOG_TRACK);
+        private const string C_CLIENT_SERVICE_PORT = "ClientServicePort";
+        private const string C_CONFIG_SERVICE_PORT = "ConfigServicePort";
+        private const string C_WEB_API_PORT = "WebAPIPort";
+        //API SetConfig
+        //API GetConifgs
+
+        #endregion
+
+        #region login
         [FormAPI]
         public string Login(string userid, string userpwd)
         {
@@ -45,10 +76,13 @@ window.location.href='main.html';
 </html>
             ", token);
         }
+        #endregion
 
+        #region users
         [API]
         public void AddUser(string userid, string userpwd)
         {
+
             if (Dbop.Exist(userid))
             {
                 throw new Exception("error: user exist.");
@@ -59,17 +93,18 @@ window.location.href='main.html';
         }
 
 
+
         [API]
         public void RemoveUser(string userIndex)
         {
             try
             {
-                var arr = userIndex.Split();
-                foreach (var u in arr)
+                var arr = userIndex.Split(',');
+                for (var i = arr.Length - 1; i > -1; i--)
                 {
-                    Dbop.Delete(int.Parse(u));
+                    Dbop.Delete(int.Parse(arr[i]));
                 }
-              
+
             }
             catch (Exception ex)
             {
@@ -77,6 +112,17 @@ window.location.href='main.html';
             }
         }
 
+        [API]
+        public List<string> GetUsers()
+        {
+            //using (var dbop = Dbop.Open())
+            //{
+            return Dbop.Select(0, 10);
+            //}
+        }
+        #endregion
+
+        #region connections
         //NoApi Auth
         [API]
         public string GetClientsInfoJson()
@@ -150,18 +196,6 @@ window.location.href='main.html';
             json.Append("]");
             return json.ToString();
         }
-
-
-
-        [API]
-        public List<string> GetUsers()
-        {
-            //using (var dbop = Dbop.Open())
-            //{
-            return Dbop.Select(0, 10);
-            //}
-        }
-
         #region  私有方法
 
         private string KV2Json(string key)
@@ -174,6 +208,11 @@ window.location.href='main.html';
         }
 
         #endregion
+        #endregion
+
+
+
+
 
 
     }
