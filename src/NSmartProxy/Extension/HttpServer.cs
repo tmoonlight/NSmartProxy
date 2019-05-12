@@ -38,8 +38,8 @@ namespace NSmartProxy.Extension
             try
             {
                 HttpListener listener = new HttpListener();
-                listener.Prefixes.Add($"http://*:{WebManagementPort}/");
-                listener.Prefixes.Add($"http://2017studio.imwork.net:{WebManagementPort}/");
+                listener.Prefixes.Add($"http://+:{WebManagementPort}/");
+               // listener.Prefixes.Add($"http://2017studio.imwork.net:{WebManagementPort}/");
                 //TcpListener listenerConfigService = new TcpListener(IPAddress.Any, WebManagementPort);
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
                 await AcceptHttpRequest(listener, ctsHttp);
