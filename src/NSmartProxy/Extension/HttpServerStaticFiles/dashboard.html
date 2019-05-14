@@ -2,23 +2,27 @@
     <h1 class="h3">仪表盘</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"> <span data-feather="power"></span>
+                重启服务</button>
+            <!--<button type="button" class="btn btn-sm btn-outline-secondary">Export</button>-->
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+        <!--<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
             <span data-feather="calendar"></span>
             This week
-        </button>
+        </button>-->
     </div>
 </div>
 
 <div class="row">
-    <div class="col-sm-12 col-md-6">
+    <div class="col-md-12 col-xl-4">
         <canvas class="my-2" id="myChart" width="900" height="480"></canvas>
 
     </div>
-    <div class="col-sm-12 col-md-6">
+    <div class="col-md-12 col-xl-4">
         <canvas class="my-2" id="myChart2" width="900" height="480"></canvas>
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <canvas class="my-2" id="myChart3" width="900" height="480"></canvas>
     </div>
 </div>
 
