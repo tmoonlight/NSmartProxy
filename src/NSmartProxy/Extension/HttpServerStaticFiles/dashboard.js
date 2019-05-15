@@ -1,6 +1,49 @@
+//@ sourceURL= dashboard.js
 /* globals Chart:false, feather:false */
 
-(function() {
+//var clientsInfo;
+
+
+
+(function () {
+
+    function updatedClientsInfo(data) {
+        var disco = 0;
+        var semico = 0;
+        var co = 0;
+
+        for (var i = 0; i < data.length; i++) {
+            for (var j = 0; j < data[i].revconns.length; j++) {
+                var constate = 0;
+                if (data[i].revconns[j].hasOwnProperty("lEndPoint")) {
+                    constate += 0.5;
+                }
+                if (data[i].revconns[j].hasOwnProperty("rEndPoint")) {
+                    constate += 0.5;
+                }
+                if (constate == 0) disco++;
+                if (constate == 0.5) semico++;
+                if (constate == 1) co++;
+            }
+        }
+        myChart.data.datasets[0].data[0] = disco;
+        myChart.data.datasets[0].data[1] = semico;
+        myChart.data.datasets[0].data[2] = co;
+        myChart.update();
+
+    }
+
+    function getClientsInfo() {
+        $.get(basepath + "GetClientsInfoJson", function (res) {
+            var data = res.Data;
+            var clientsInfo = $.parseJSON(data);
+
+            updatedClientsInfo(clientsInfo);
+        });
+    }
+
+
+
     //'use strict'
     // Graphs
     var ctx1 = document.getElementById('myChart');
@@ -11,46 +54,27 @@
     //仪表盘
     var myChart = new Chart(ctx1,
         {
-            type: 'line',
+            type: 'doughnut',
             data: {
-                labels: [
-                    '','','','', '', ''],
-
-                animationSteps: 15,
+                labels: ['已关闭', '半连接','全连接'],
                 datasets: [
                     {
-                        data: [
-                           
-                        ],
-                        lineTension: 0,
-                        backgroundColor: 'transparent',
-                        borderColor: '#007bff',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#007bff',
-
+                        label: '内存占用',
+                        data: [10, 10,10],
+                        backgroundColor: [
+                            "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
+                        ]
                     }
                 ]
             },
             options: {
-                scales: {
-                    yAxes: [
-                        {
-                            ticks: {
-                                beginAtZero: false
-                            }
-                        }
-                    ]
-                },
-                legend: {
-                    display: false
-                },
                 title: {
                     display: true,
                     text: '连接'
                 }
             }
         });
-    
+    getClientsInfo();
 
     var myChart2 = new Chart(ctx2,
         {
@@ -63,10 +87,7 @@
                         data: [12, 19],
                         backgroundColor: [
                             "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
-                          
                         ]
-                        
-                        
                     }
                 ]
             },
@@ -88,9 +109,7 @@
                         data: [12, 19],
                         backgroundColor: [
                             "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
-
                         ]
-                        
                     }
                 ]
             },
@@ -102,10 +121,10 @@
             }
           
         });
-
+    //更新数据
     setInterval(function () {
 
-
+            getClientsInfo();
             //myChart2.data.datasets.pop();
             //更新数据
             myChart2.data.datasets[0].data[1] += 3;
@@ -116,6 +135,6 @@
             //  data: [12, 19]
             //});
             myChart2.update();
-        }, 1000
+        }, 5000
     );
 }());

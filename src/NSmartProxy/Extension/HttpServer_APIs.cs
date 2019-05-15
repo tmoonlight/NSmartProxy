@@ -69,7 +69,7 @@ namespace NSmartProxy.Extension
 <html>
 <head><script>
 document.cookie='NSPTK={0}';
-document.write('跳转中...');
+document.write('Redirecting...');
 window.location.href='main.html';
 </script>
 </head>

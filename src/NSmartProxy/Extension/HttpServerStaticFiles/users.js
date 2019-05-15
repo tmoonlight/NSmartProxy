@@ -46,7 +46,7 @@ function selectUsers() {
         var htmlStr = "";
         var i = 0;
         for (i in data) {
-            var user = jQuery.parseJSON(data[i]);
+            var user = $.parseJSON(data[i]);
             htmlStr += "<tr>" +
                 "<td> <input type='checkbox' name='cbxUserIds' value='" + i + "'></td>" +
                 "<td>" + i + "</td>" +
