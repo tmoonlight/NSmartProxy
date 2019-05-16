@@ -60,7 +60,7 @@
                 datasets: [
                     {
                         label: '内存占用',
-                        data: [10, 10,10],
+                        data: [0, 0,0],
                         backgroundColor: [
                             "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
                         ]
@@ -121,6 +121,27 @@
             }
           
         });
+
+    $("#myChart").click(
+        function (evt) {
+            var url = "连接管理" ;
+            alert(url);
+        }
+    ); 
+
+    $("#myChart2").click(
+        function (evt) {
+            var url = " ";
+            alert(url);
+        }
+    ); 
+
+    $("#myChart3").click(
+        function (evt) {
+            var url = "用户管理";
+            alert(url);
+        }
+    ); 
     //更新数据
     setInterval(function () {
 
