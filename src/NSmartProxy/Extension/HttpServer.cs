@@ -79,6 +79,13 @@ namespace NSmartProxy.Extension
             {
                 //TODO ***通过request来的值进行接口调用
                 string unit = request.RawUrl.Replace("//", "");
+                if (unit == "/")
+                {
+                    //response.RedirectLocation="/main.html";
+                    response.Redirect("/main.html");
+                    return;
+                }
+
                 int idx1 = unit.LastIndexOf("#");
                 if (idx1 > 0) unit = unit.Substring(0, idx1);
                 int idx2 = unit.LastIndexOf("?");

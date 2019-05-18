@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using NSmartProxy.Authorize;
+using NSmartProxy.Database;
 using static NSmartProxy.Server;
 
 namespace NSmartProxy
@@ -32,13 +34,13 @@ namespace NSmartProxy
         private ClientConnectionManager()
         {
             Server.Logger.Debug("ClientManager initialized");
-            Task.Run(ListenServiceClient);
+           // Task.Run(ListenServiceClient);
         }
 
         private readonly object _lockObject = new Object();
         private readonly object _lockObject2 = new Object();
         private readonly Random _rand = new Random();
-        private async Task ListenServiceClient()
+        public async Task ListenServiceClient(IDbOperator dbOp)
         {
             //侦听，并且构造连接池
             Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
@@ -46,11 +48,11 @@ namespace NSmartProxy
             listener.Start(1000);
             while (true)
             {
-                TcpClient incomeClient = await listener.AcceptTcpClientAsync();
+                SecurityTcpClient incomeClient = await listener.AcceptSecureTcpClientAsync(dbOp);
                 Server.Logger.Debug("已建立一个空连接" +
-                    incomeClient.Client.LocalEndPoint.ToString() + "-" +
-                    incomeClient.Client.RemoteEndPoint.ToString());
-                incomeClient.SetKeepAlive(out _);
+                    incomeClient.Client.Client.LocalEndPoint.ToString() + "-" +
+                    incomeClient.Client.Client.RemoteEndPoint.ToString());
+                incomeClient.Client.SetKeepAlive(out _);
                 ProcessReverseRequest(incomeClient);
             }
 
@@ -61,13 +63,21 @@ namespace NSmartProxy
         /// </summary>
         /// <param name="incomeClient"></param>
         /// <returns></returns>
-        private async Task ProcessReverseRequest(TcpClient incomeClient)
+        private async Task ProcessReverseRequest(SecurityTcpClient incomeClient)
         {
+            var iClient = incomeClient.Client;
             try
             {
+                var result = await incomeClient.AuthorizeAsync();
+                if (!result.IsSuccess)
+                {
+                    Server.Logger.Debug("校验失败：" + incomeClient.ErrorMessage);
+                    iClient.Close();//如果校验失败则直接关闭连接
+                }
+
                 //读取头四个字节
                 byte[] bytes = new byte[4];
-                await incomeClient.GetStream().ReadAsync(bytes);
+                await iClient.GetStream().ReadAsync(bytes);
 
                 var clientIdAppId = GetAppFromBytes(bytes);
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID
@@ -77,7 +87,7 @@ namespace NSmartProxy
                 lock (_lockObject)
                 {
                     Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
-                        .PushInComeClient(incomeClient);
+                        .PushInComeClient(iClient);
                 }
                 //var arg = new AppChangedEventArgs();
                 //arg.App = clientIdAppId;

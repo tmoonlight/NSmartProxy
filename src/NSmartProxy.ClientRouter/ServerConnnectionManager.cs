@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
+using NSmartProxy.Authorize;
 
 namespace NSmartProxy.Client
 {
@@ -23,6 +24,7 @@ namespace NSmartProxy.Client
     {
         private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int _clientID = 0;
+        private string _token = "notoken";
 
         public List<TcpClient> ConnectedConnections;
         public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
@@ -32,6 +34,11 @@ namespace NSmartProxy.Client
         public int ClientID
         {
             get => _clientID;
+        }
+
+        public string Token
+        {
+            get => _token;
         }
 
         private ServerConnnectionManager()
@@ -178,11 +185,12 @@ namespace NSmartProxy.Client
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
             var clientList = new List<TcpClient>();
             //补齐
-            TcpClient client = new TcpClient();
+            var secclient = (new TcpClient()).WrapClient(this.Token);//包装成客户端
+            var client = secclient.Client;
             try
             {
                 //1.连接服务端
-                await client.ConnectAsync(config.ProviderAddress, config.ProviderPort);
+                await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ProviderPort);
                 //2.发送clientid和appid信息，向服务端申请连接
                 //连接到位后增加相关的元素并且触发客户端连接事件
                 await client.GetStream().WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);

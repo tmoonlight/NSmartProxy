@@ -80,14 +80,21 @@ window.location.href='main.html';
 
         #region users
         [API]
-        public void AddUser(string userid, string userpwd)
+        public void AddUser(string userid, string userpwd, bool isAdmin)
         {
 
             if (Dbop.Exist(userid))
             {
                 throw new Exception("error: user exist.");
             }
-            var user = new { userId = userid, userPwd = EncryptHelper.SHA256(userpwd), regTime = DateTime.Now.ToString() };
+            var user = new
+            {
+                userId = userid,
+                userPwd = EncryptHelper.SHA256(userpwd),
+                regTime = DateTime.Now.ToString(),
+                isAdmin = isAdmin ? 1 : 0
+            };
+            //if (isAdmin == true) user.
             //1.增加用户
             Dbop.Insert(long.Parse(userid), user.ToJsonString());
         }
@@ -196,7 +203,7 @@ window.location.href='main.html';
             json.Append("]");
             return json.ToString();
         }
-        #region  私有方法
+        #region  json转换用的私有方法
 
         private string KV2Json(string key)
         {
@@ -208,6 +215,7 @@ window.location.href='main.html';
         }
 
         #endregion
+
         #endregion
 
 

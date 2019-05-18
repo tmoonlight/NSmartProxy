@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
@@ -15,6 +16,36 @@ namespace NSmartProxy.Authorize
         public bool IsSuccess { get => ResultState == AuthState.Success; }
         public string ErrorMessage { get; set; }
         public AuthState ResultState { get; set; }
+    }
+
+    public static class TcpExt
+    {
+        /// <summary>
+        /// return secureclient for valid
+        /// </summary>
+        /// <param name="listener"></param>
+        /// <param name="dbOpSource">用来做安全校验的source</param>
+        /// <returns></returns>
+        public static async Task<SecurityTcpClient> AcceptSecureTcpClientAsync(this TcpListener listener,
+            IDbOperator dbOpSource)
+        {
+            TcpClient obj = await listener.AcceptTcpClientAsync();
+            var stc = obj.WrapServer(dbOpSource);//包装成server端用的socket
+            //SecurityTcpClient stc = (SecurityTcpClient)tcpListener;
+            stc.ClientType = ClientTypeEnum.Server;
+            stc.DbOp = dbOpSource;
+            return stc;
+        }
+
+        public static SecurityTcpClient WrapClient(this TcpClient client,string secureToken)
+        {
+            return new SecurityTcpClient(secureToken, null, ClientTypeEnum.Client, client);
+        }
+
+        public static SecurityTcpClient WrapServer(this TcpClient client,IDbOperator dbOp)
+        {
+            return new SecurityTcpClient(null, dbOp, ClientTypeEnum.Server, client);
+        }
     }
 
     public enum AuthState
@@ -35,7 +66,7 @@ namespace NSmartProxy.Authorize
     /// 2位固定0xF9   2            n
     /// 服务端需要指定持久化逻辑，客户端只需token
     /// </summary>
-    public class SecurityTcpClient : TcpClient
+    public class SecurityTcpClient 
     {
         public IDbOperator DbOp;
 
@@ -45,28 +76,24 @@ namespace NSmartProxy.Authorize
         //TODO 是否校验
         public bool IsValid;
         public ClientTypeEnum ClientType;
+        public TcpClient Client;
 
         /// <summary>
         /// 客户端使用这个来初始化
         /// </summary>
         /// <param name="secureToken"></param>
         /// <param name="dbOp"></param>
-        private SecurityTcpClient(string secureToken, IDbOperator dbOp, ClientTypeEnum clientType) : base()
+        public SecurityTcpClient(string secureToken, IDbOperator dbOp, ClientTypeEnum clientType,TcpClient client) 
         {
             Token = secureToken;
             DbOp = dbOp;
             ClientType = clientType;
+            Client = client;
         }
 
-        public static SecurityTcpClient CreateClient(string secureToken)
-        {
-            return new SecurityTcpClient(secureToken, null, ClientTypeEnum.Client);
-        }
+       
 
-        public static SecurityTcpClient CreateServer(IDbOperator dbOp)
-        {
-            return new SecurityTcpClient(null, dbOp, ClientTypeEnum.Server);
-        }
+     
 
 
         /// <summary>
@@ -84,19 +111,15 @@ namespace NSmartProxy.Authorize
 
             //标识位 token长度 值
             int requestLength = 1 + 2 + Token.Length;
-
-            var stream = this.GetStream();
-            await base.ConnectAsync(host, port);
+            await Client.ConnectAsync(host, port);
+            var stream = Client.GetStream();
+            //await base.ConnectAsync(host, port);
             await stream.WriteAsync(new byte[] { F9 }, 0, 1);//1标识 长度1
             await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length), 0, 2);//2token长度 长度2
             await stream.WriteAndFlushAsync(ASCIIEncoding.ASCII.GetBytes(Token));//3token
         }
 
-        ////传输加密，待开发
-        //public SslStream GetSslStream()
-        //{
-        //    return new SslStream(this.GetStream());
-        //}
+
 
         /// <summary>
         /// 服务端校验
@@ -104,9 +127,9 @@ namespace NSmartProxy.Authorize
         /// <returns></returns>
         public async Task<AuthResult> AuthorizeAsync()
         {
-            var stream = this.GetStream();
+            var stream = Client.GetStream();
             //标识 1
-            var protocolBytes = ArrayPool<byte>.Shared.Rent(1);
+            var protocolBytes = new byte[1];//ArrayPool<byte>.Shared.Rent(1);
             if (await stream.ReadAsync(protocolBytes, 0, protocolBytes.Length) == 0)
             {
                 ErrorMessage += "读取到0字节，客户端已关闭？";
@@ -118,7 +141,7 @@ namespace NSmartProxy.Authorize
             }
 
             //2.token长度 2
-            var lengthBytes = ArrayPool<byte>.Shared.Rent(2);
+            var lengthBytes = new byte[2]; //ArrayPool<byte>.Shared.Rent(2);
             if (await stream.ReadAsync(lengthBytes, 0, lengthBytes.Length) == 0)
             {
                 ErrorMessage += "读取到0字节，客户端已关闭？";
@@ -127,7 +150,7 @@ namespace NSmartProxy.Authorize
             int tokenLength = StringUtil.DoubleBytesToInt(lengthBytes);
 
             //3.token校验
-            var tokenBytes = ArrayPool<byte>.Shared.Rent(tokenLength);
+            var tokenBytes = new byte[tokenLength];//ArrayPool<byte>.Shared.Rent(tokenLength);
             if (await stream.ReadAsync(tokenBytes, 0, tokenBytes.Length) == 0)
             {
                 ErrorMessage += "获取token失败？";
@@ -136,14 +159,25 @@ namespace NSmartProxy.Authorize
 
             var token = ASCIIEncoding.ASCII.GetString(tokenBytes);
             //TODO ***校验Token
-
-            return new AuthResult()
+            if (token == "notoken")
             {
-                // Success = false
-            };
+                return new AuthResult()
+                {
+                    ErrorMessage = "校验成功",
+                    ResultState = AuthState.Success
+                };
+            }
+            else
+            {
+                return new AuthResult()
+                {
+                    ErrorMessage = "校验失败",
+                    ResultState = AuthState.Fail
+                };
+            }
         }
 
-        public AuthResult Authorize(string token)
+        public AuthResult AuthorizeToken(string token)
         {
 
             try

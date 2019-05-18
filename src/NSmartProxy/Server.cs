@@ -12,6 +12,7 @@ using System.Timers;
 using NSmartProxy.Data;
 using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Authorize;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
@@ -78,12 +79,13 @@ namespace NSmartProxy
             ConnectionManager = ClientConnectionManager.GetInstance();
             //注册客户端发生连接时的事件
             ConnectionManager.AppTcpClientMapConfigConnected += ConnectionManager_AppAdded;
+            ConnectionManager.ListenServiceClient(DbOp);
             Logger.Debug("NSmart server started");
 
             //2.开启http服务
             if (WebManagementPort > 0)
             {
-                var httpServer = new HttpServer(Logger,DbOp);
+                var httpServer = new HttpServer(Logger, DbOp);
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 
@@ -235,7 +237,8 @@ namespace NSmartProxy
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
                     //Task.Factory.StartNew(consumerlistener.AcceptTcpClientAsync())
-                    TcpClient consumerClient = await consumerlistener.AcceptTcpClientAsync();
+
+                    var consumerClient = await consumerlistener.AcceptTcpClientAsync();
                     ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
                 }
             }
