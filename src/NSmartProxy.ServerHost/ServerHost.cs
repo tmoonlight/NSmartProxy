@@ -110,7 +110,7 @@ namespace NSmartProxy.ServerHost
                 {
                     retryCount++;
                 }
-                if (retryCount > 100) break;
+                if (retryCount > 10) break;
 
             }
 
@@ -118,6 +118,7 @@ namespace NSmartProxy.ServerHost
             Logger.Debug("NSmart server terminated. Press any key to continue.");
             try
             {
+                //只是为了服务器挂了不那么快退出进程而已
                 Console.Read();
             }
             catch

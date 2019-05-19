@@ -71,7 +71,7 @@ namespace NSmartProxy
                 var result = await incomeClient.AuthorizeAsync();
                 if (!result.IsSuccess)
                 {
-                    Server.Logger.Debug("校验失败：" + incomeClient.ErrorMessage);
+                    Server.Logger.Debug("SecurityTcpClient校验失败：" + incomeClient.ErrorMessage);
                     iClient.Close();//如果校验失败则直接关闭连接
                 }
 
