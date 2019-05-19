@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
+// ReSharper disable All
 
 namespace NSmartProxy.Extension
 {
@@ -22,6 +23,8 @@ namespace NSmartProxy.Extension
         public IDbOperator Dbop;
 
         public const string INDEX_PAGE = "/main.html";
+        public const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
+        public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
 
         public HttpServer(INSmartLogger logger, IDbOperator dbop)
         {
@@ -38,9 +41,21 @@ namespace NSmartProxy.Extension
             try
             {
                 HttpListener listener = new HttpListener();
+                //缓存所有文件
+                var dir = new DirectoryInfo(BASE_FILE_PATH);
+                var files = dir.GetFiles("*.*");
+                foreach (var file in files)
+                {
+                    using (var fs = file.OpenRead())
+                    {
+                        var mms = new MemoryStream();
+                        fs.CopyTo(mms);
+                        FilesCache.Add(file.Name, mms);
+                    }
+                }
+                Logger.Debug($"{files.Length} files cached.");
+
                 listener.Prefixes.Add($"http://+:{WebManagementPort}/");
-               // listener.Prefixes.Add($"http://2017studio.imwork.net:{WebManagementPort}/");
-                //TcpListener listenerConfigService = new TcpListener(IPAddress.Any, WebManagementPort);
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
                 await AcceptHttpRequest(listener, ctsHttp);
             }
@@ -69,11 +84,11 @@ namespace NSmartProxy.Extension
 
         private async Task ProcessHttpRequestAsync(HttpListenerContext context)
         {
-            string baseFilePath = "./Extension/HttpServerStaticFiles/";
+
             var request = context.Request;
             var response = context.Response;
             //TODO XX 设置该同源策略为了方便调试，请确保web项目也位于locahost5671上
-            response.AddHeader("Access-Control-Allow-Origin", "http://localhost:5671");
+            response.AddHeader("Access-Control-Allow-Origin", "*");
 
             try
             {
@@ -96,24 +111,36 @@ namespace NSmartProxy.Extension
                 if (idx3 > 0)
                 {
 
-                    if (!File.Exists(baseFilePath + unit))
+                    if (!File.Exists(BASE_FILE_PATH + unit))
                     {
-                        Server.Logger.Debug($"未找到文件{baseFilePath + unit}");
+                        Server.Logger.Debug($"未找到文件{BASE_FILE_PATH + unit}");
                         return;
 
                     }
                     //mime类型
                     ProcessMIME(response, unit.Substring(idx3));
-                    using (FileStream fs = new FileStream(baseFilePath + unit, FileMode.Open))
+
+                    //读文件优先去缓存读
+                    MemoryStream memoryStream;
+                    if (FilesCache.TryGetValue(unit.TrimStart('/'),out memoryStream))
                     {
-                        await fs.CopyToAsync(response.OutputStream);
+                        memoryStream.Position = 0;
+                        await memoryStream.CopyToAsync(response.OutputStream);
                     }
+                    else
+                    {
+                        using (FileStream fs = new FileStream(BASE_FILE_PATH + unit, FileMode.Open))
+                        {
+                            await fs.CopyToAsync(response.OutputStream);
+                        }
+                    }
+
                 }
                 else
                 {
                     unit = unit.Replace("/", "");
                     response.ContentEncoding = Encoding.UTF8;
-                   
+
 
                     //TODO XXXXXX 调用接口 接下来要用分布类隔离并且用API特性限定安全
                     object jsonObj;
@@ -151,7 +178,7 @@ namespace NSmartProxy.Extension
                     catch (Exception ex)
                     {
                         Logger.Error(ex.Message, ex);
-                        jsonObj =new Exception(ex.Message + "---" + ex.StackTrace);
+                        jsonObj = new Exception(ex.Message + "---" + ex.StackTrace);
                         response.ContentType = "application/json";
                         await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                     }

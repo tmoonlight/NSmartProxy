@@ -101,7 +101,7 @@ namespace NSmartProxy
         }
 
 
-        private static ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
+        private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
         public static ClientConnectionManager GetInstance()
         {

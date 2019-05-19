@@ -10,8 +10,10 @@ function addUser() {
 }
 
 function addUser_submit() {
-    $.get(basepath + "AddUser?userid=" + $("#inputEmail1").val()
-        + "&userpwd=" + $("#inputPassword1").val(),
+    $.get(basepath
+        + "AddUser?userid=" + $("#inputEmail1").val()
+        + "&userpwd="+ $("#inputPassword1").val()
+        + "&isadmin=" + ($("#cbxIsAdmin").prop("checked") ? 1 : 0),
         function (res) {
             if (res.State == 0) { alert("保存失败：" + res.Msg); return; }
             alert('保存成功');
@@ -20,7 +22,6 @@ function addUser_submit() {
             $("#inputPassword1").val("");
             $("#inputEmail1").val("");
         }
-
     );
 
 }

@@ -80,7 +80,7 @@ window.location.href='main.html';
 
         #region users
         [API]
-        public void AddUser(string userid, string userpwd, bool isAdmin)
+        public void AddUser(string userid, string userpwd, string isAdmin)
         {
 
             if (Dbop.Exist(userid))
@@ -92,7 +92,7 @@ window.location.href='main.html';
                 userId = userid,
                 userPwd = EncryptHelper.SHA256(userpwd),
                 regTime = DateTime.Now.ToString(),
-                isAdmin = isAdmin ? 1 : 0
+                isAdmin = isAdmin
             };
             //if (isAdmin == true) user.
             //1.增加用户
