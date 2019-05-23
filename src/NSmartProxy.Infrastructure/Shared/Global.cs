@@ -5,8 +5,8 @@
     /// </summary>
     public sealed class Global
     {
-        public const string NSmartProxyClientName = "NSmartProxy Client v0.3";
-        public const string NSmartProxyServerName = "NSmartProxy Server v0.3";
+        public const string NSmartProxyClientName = "NSmartProxy Client v0.6";
+        public const string NSmartProxyServerName = "NSmartProxy Server v0.6";
 
         public const int ClientReconnectInterval = 3000;//客户端断线重连时间间隔（毫秒）
 

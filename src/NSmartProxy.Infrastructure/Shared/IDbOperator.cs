@@ -7,6 +7,7 @@ namespace NSmartProxy.Database
     {
         IDbOperator Open();
         void Insert(long key, string value);
+        void Insert(string key, string value);
         void Update(long key, string value);
         List<string> Select(int startIndex, int length);
         string Get(long key);

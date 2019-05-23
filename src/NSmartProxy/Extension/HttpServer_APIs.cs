@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using NSmartProxy.Database;
 
 namespace NSmartProxy.Extension
 {
@@ -99,6 +100,27 @@ window.location.href='main.html';
             Dbop.Insert(long.Parse(userid), user.ToJsonString());
         }
 
+        [API]
+        public void AddUserV2(string userName, string userpwd, string isAdmin)
+        {
+
+            if (Dbop.Exist(userName))
+            {
+                throw new Exception("error: user exist.");
+            }
+            var user = new
+            {
+                userId = NSmartDbOperator.SUPER_VARIABLE_INDEX_ID,  //索引id
+                userName = userName,
+                userPwd = EncryptHelper.SHA256(userpwd),
+                regTime = DateTime.Now.ToString(),
+                isAdmin = isAdmin
+            };
+            //if (isAdmin == true) user.
+            //1.增加用户
+            Dbop.Insert(userName, user.ToJsonString());
+        }
+
 
 
         [API]
@@ -124,7 +146,7 @@ window.location.href='main.html';
         {
             //using (var dbop = Dbop.Open())
             //{
-            return Dbop.Select(0, 10);
+            return Dbop.Select(0, 999);
             //}
         }
         #endregion

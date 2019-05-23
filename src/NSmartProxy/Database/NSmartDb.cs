@@ -11,6 +11,8 @@ namespace NSmartProxy.Database
     /// </summary>
     public class NSmartDbOperator : IDbOperator
     {
+        public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
+
         private SequenceFile seqf;
         private HashFile hashf;
         private string hashfFile;
@@ -44,18 +46,55 @@ namespace NSmartProxy.Database
         {
             byte[] keyBytesbytes = BitConverter.GetBytes(key);
             if (hashf.Get(keyBytesbytes) != null) throw new Exception($"cant insert because hashfile has this item:{key}");
-            byte[] valBytes = ASCIIEncoding.ASCII.GetBytes(value);
+            byte[] valBytes = String2Bytes(value);
             //1.插入hash文件
             hashf.Put(keyBytesbytes, valBytes);
-            //2.插入索引
+            //2.插入序列
             seqf.Add(key);
+        }
+
+        /// <summary>
+        /// 插入以key为索引的数据，序列id随机
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void Insert(string key, string value)
+        {
+            byte[] keyBytesbytes = String2Bytes(key);
+            if (hashf.Get(keyBytesbytes) != null) throw new Exception($"cant insert because hashfile has this item:{key}");
+            //byte[] valBytes = String2Bytes(value);
+            long index = GetAvailableKey();
+            //1.插入索引
+            hashf.Put(keyBytesbytes, BitConverter.GetBytes(index));
+            //2.插入实际对象, 替换关键标识参数
+            Insert(index, value.Replace(SUPER_VARIABLE_INDEX_ID, index.ToString()));
+            //seqf.Add(key);
+        }
+
+        private Random rand = new Random();
+
+        /// <summary>
+        /// 获取可用的随机索引
+        /// </summary>
+        /// <returns></returns>
+        private long GetAvailableKey()
+        {
+            int key = 0;
+            while (true)
+            {
+                key = rand.Next(9999999);
+                if (!Exist(key))
+                {
+                    return key;
+                }
+            }
         }
 
         public void Update(long key, string value)
         {
             byte[] keyBytesbytes = BitConverter.GetBytes(key);
             if (hashf.Get(keyBytesbytes) == null) throw new Exception($"cant update because hashfile hasn't this item:{key}");
-            byte[] valBytes = ASCIIEncoding.ASCII.GetBytes(value);
+            byte[] valBytes = String2Bytes(value);
             //1.插入hash文件
             hashf.Put(keyBytesbytes, valBytes);
         }
@@ -74,7 +113,7 @@ namespace NSmartProxy.Database
                      ?? new byte[] { 0 });
                     if (hashValue != null)
                     {
-                        strs.Add(ASCIIEncoding.ASCII.GetString(hashValue));
+                        strs.Add(Bytes2String(hashValue));
                     }
                 }
             }
@@ -98,6 +137,11 @@ namespace NSmartProxy.Database
         public bool Exist(string key)
         {
             return hashf.Exist(String2Bytes(key));
+        }
+
+        public bool Exist(long key)
+        {
+            return hashf.Exist(BitConverter.GetBytes(key));
         }
 
         public long GetLength()
