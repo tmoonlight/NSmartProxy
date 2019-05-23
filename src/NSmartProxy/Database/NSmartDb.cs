@@ -63,7 +63,7 @@ namespace NSmartProxy.Database
             byte[] keyBytesbytes = String2Bytes(key);
             if (hashf.Get(keyBytesbytes) != null) throw new Exception($"cant insert because hashfile has this item:{key}");
             //byte[] valBytes = String2Bytes(value);
-            long index = GetAvailableKey();
+            long index = GetAvailableKey(65535);
             //1.插入索引
             hashf.Put(keyBytesbytes, BitConverter.GetBytes(index));
             //2.插入实际对象, 替换关键标识参数
@@ -77,12 +77,12 @@ namespace NSmartProxy.Database
         /// 获取可用的随机索引
         /// </summary>
         /// <returns></returns>
-        private long GetAvailableKey()
+        private long GetAvailableKey(int maxValue)
         {
             int key = 0;
             while (true)
             {
-                key = rand.Next(9999999);
+                key = rand.Next(65535);
                 if (!Exist(key))
                 {
                     return key;

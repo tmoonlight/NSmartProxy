@@ -88,18 +88,17 @@ namespace NSmartProxy.Extension
             var request = context.Request;
             var response = context.Response;
             //TODO XX 设置该同源策略为了方便调试，请确保web项目也位于locahost5671上
+
+#if DEBUG
             response.AddHeader("Access-Control-Allow-Origin", "*");
+#endif
 
             try
             {
                 //TODO ***通过request来的值进行接口调用
                 string unit = request.RawUrl.Replace("//", "");
-                if (unit == "/")
-                {
-                    //response.RedirectLocation="/main.html";
-                    response.Redirect("/main.html");
-                    return;
-                }
+
+                if (unit == "/") unit = INDEX_PAGE;
 
                 int idx1 = unit.LastIndexOf("#");
                 if (idx1 > 0) unit = unit.Substring(0, idx1);
@@ -219,7 +218,7 @@ namespace NSmartProxy.Extension
 
         }
 
-        #endregion
+#endregion
 
     }
 }
