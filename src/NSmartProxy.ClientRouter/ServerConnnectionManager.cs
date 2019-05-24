@@ -24,7 +24,7 @@ namespace NSmartProxy.Client
     {
         private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int _clientID = 0;
-        private string _token = "notoken";
+        private string _token = Global.NO_TOKEN_STRING;
 
         public List<TcpClient> ConnectedConnections;
         public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
@@ -190,7 +190,22 @@ namespace NSmartProxy.Client
             try
             {
                 //1.连接服务端
-                await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ProviderPort);
+                var state = await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ProviderPort);
+                switch (state)
+                {
+                    case AuthState.Success:
+                        Router.Logger.Debug("验证成功。");
+                        break;
+                    case AuthState.Fail:
+                        Router.Logger.Debug("验证失败。");
+                        //终止程序
+                        return;
+                    case AuthState.Error:
+                        Router.Logger.Debug("校验出错。");
+                        //终止程序
+                        return;
+                }
+
                 //2.发送clientid和appid信息，向服务端申请连接
                 //连接到位后增加相关的元素并且触发客户端连接事件
                 await client.GetStream().WriteAndFlushAsync(requestBytes, 0, requestBytes.Length);

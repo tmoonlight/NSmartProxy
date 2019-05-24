@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using NSmartProxy.Database;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.Extension
 {
@@ -49,11 +50,11 @@ namespace NSmartProxy.Extension
 
         #region login
         [FormAPI]
-        public string Login(string userid, string userpwd)
+        public string Login(string username, string userpwd)
         {
 
             //1.校验
-            dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
+            dynamic user = Dbop.Get(username)?.ToDynamic();
             if (user == null)
             {
                 return "error: user not exist.";
@@ -64,7 +65,7 @@ namespace NSmartProxy.Extension
             }
 
             //2.给token
-            string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
+            string output = $"{username}|{DateTime.Now.ToString("yyyy-MM-dd")}";
             string token = EncryptHelper.AES_Encrypt(output);
             return string.Format(@"
 <html>
@@ -76,6 +77,32 @@ window.location.href='main.html';
 </head>
 </html>
             ", token);
+        }
+
+        /// <summary>
+        /// 提供非web的登陆方法
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="userpwd"></param>
+        /// <returns></returns>
+        [API]
+        public string LoginFromClient(string username, string userpwd)
+        {
+            //1.校验
+            dynamic user = Dbop.Get(username)?.ToDynamic();
+            if (user == null)
+            {
+                return "error: user not exist.";
+            }
+            if (user.userPwd != EncryptHelper.SHA256(userpwd))
+            {
+                return "error: wrong password.";
+            }
+
+            //2.给token
+            string output = $"{username}|{DateTime.Now.ToString("yyyy-MM-dd")}";
+            string token = EncryptHelper.AES_Encrypt(output);
+            return new { token = token, version = Global.NSmartProxyServerName }.ToJsonString();
         }
         #endregion
 

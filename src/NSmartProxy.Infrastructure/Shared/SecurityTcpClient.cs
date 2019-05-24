@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.Authorize
 {
@@ -37,23 +38,23 @@ namespace NSmartProxy.Authorize
             return stc;
         }
 
-        public static SecurityTcpClient WrapClient(this TcpClient client,string secureToken)
+        public static SecurityTcpClient WrapClient(this TcpClient client, string secureToken)
         {
             return new SecurityTcpClient(secureToken, null, ClientTypeEnum.Client, client);
         }
 
-        public static SecurityTcpClient WrapServer(this TcpClient client,IDbOperator dbOp)
+        public static SecurityTcpClient WrapServer(this TcpClient client, IDbOperator dbOp)
         {
             return new SecurityTcpClient(null, dbOp, ClientTypeEnum.Server, client);
         }
     }
 
-    public enum AuthState
+    public enum AuthState : byte
     {
-        Success,
-        Fail,
-        Timeout,
-        Error
+        Success = 0x01,
+        Fail = 0x00,
+        Timeout = 0xFF,
+        Error = 0x99,
     }
 
     public enum ClientTypeEnum
@@ -66,13 +67,14 @@ namespace NSmartProxy.Authorize
     /// 2位固定0xF9   2            n
     /// 服务端需要指定持久化逻辑，客户端只需token
     /// </summary>
-    public class SecurityTcpClient 
+    public class SecurityTcpClient
     {
         public IDbOperator DbOp;
 
         public string Token = "";
         public readonly byte F9 = 0xF9;//固定标识位
         public String ErrorMessage = "";
+        public bool AllowAnonymousUser = false;
         //TODO 是否校验
         public bool IsValid;
         public ClientTypeEnum ClientType;
@@ -83,17 +85,13 @@ namespace NSmartProxy.Authorize
         /// </summary>
         /// <param name="secureToken"></param>
         /// <param name="dbOp"></param>
-        public SecurityTcpClient(string secureToken, IDbOperator dbOp, ClientTypeEnum clientType,TcpClient client) 
+        public SecurityTcpClient(string secureToken, IDbOperator dbOp, ClientTypeEnum clientType, TcpClient client)
         {
             Token = secureToken;
             DbOp = dbOp;
             ClientType = clientType;
             Client = client;
         }
-
-       
-
-     
 
 
         /// <summary>
@@ -102,11 +100,11 @@ namespace NSmartProxy.Authorize
         /// <param name="host"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        public async Task ConnectWithAuthAsync(string host, int port)
+        public async Task<AuthState> ConnectWithAuthAsync(string host, int port)
         {
             if (String.IsNullOrEmpty(Token))
             {
-                return;
+                return AuthState.Error;
             }
 
             //标识位 token长度 值
@@ -117,8 +115,10 @@ namespace NSmartProxy.Authorize
             await stream.WriteAsync(new byte[] { F9 }, 0, 1);//1标识 长度1
             await stream.WriteAsync(StringUtil.IntTo2Bytes(Token.Length), 0, 2);//2token长度 长度2
             await stream.WriteAndFlushAsync(ASCIIEncoding.ASCII.GetBytes(Token));//3token
+            byte[] bytes = new byte[1];
+            await stream.ReadAsync(bytes, 0, 1);
+            return (AuthState)bytes[0];
         }
-
 
 
         /// <summary>
@@ -159,13 +159,20 @@ namespace NSmartProxy.Authorize
 
             var token = ASCIIEncoding.ASCII.GetString(tokenBytes);
             //TODO ***校验Token
-            if (token == "notoken")
+            if (token == Global.NO_TOKEN_STRING)
             {
-                return new AuthResult()
-                {
-                    ErrorMessage = "校验成功",
-                    ResultState = AuthState.Success
-                };
+                if (AllowAnonymousUser)
+                    return new AuthResult()
+                    {
+                        ErrorMessage = "校验成功",
+                        ResultState = AuthState.Success
+                    };
+                else
+                    return new AuthResult()
+                    {
+                        ErrorMessage = "校验失败，服务端不支持匿名登陆",
+                        ResultState = AuthState.Fail
+                    };
             }
             else
             {

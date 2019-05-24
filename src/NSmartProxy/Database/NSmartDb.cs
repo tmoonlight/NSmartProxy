@@ -178,5 +178,11 @@ namespace NSmartProxy.Database
         {
             return Bytes2String(hashf.Get(BitConverter.GetBytes(key)));
         }
+
+        public string Get(string key)
+        {
+            var point2Value = hashf.Get(String2Bytes(key));
+            return Bytes2String(hashf.Get(point2Value));
+        }
     }
 }

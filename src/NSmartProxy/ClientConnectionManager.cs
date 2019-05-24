@@ -34,7 +34,7 @@ namespace NSmartProxy
         private ClientConnectionManager()
         {
             Server.Logger.Debug("ClientManager initialized");
-           // Task.Run(ListenServiceClient);
+            // Task.Run(ListenServiceClient);
         }
 
         private readonly object _lockObject = new Object();
@@ -59,7 +59,7 @@ namespace NSmartProxy
         }
 
         /// <summary>
-        /// 处理反向连接请求
+        /// 处理反向连接请求（服务端）
         /// </summary>
         /// <param name="incomeClient"></param>
         /// <returns></returns>
@@ -72,7 +72,13 @@ namespace NSmartProxy
                 if (!result.IsSuccess)
                 {
                     Server.Logger.Debug("SecurityTcpClient校验失败：" + incomeClient.ErrorMessage);
-                    iClient.Close();//如果校验失败则直接关闭连接
+                    await iClient.GetStream().WriteAsync(new byte[] { (byte)result.ResultState });
+                    iClient.Close();//如果校验失败则发送一个字节的直接关闭连接
+                }
+                else
+                {
+                    Server.Logger.Debug("SecurityTcpClient校验成功！");
+                    await iClient.GetStream().WriteAsync(new byte[] { (byte)result.ResultState });
                 }
 
                 //读取头四个字节
@@ -150,7 +156,7 @@ namespace NSmartProxy
 
                             clientModel.ClientId = tempClientId;
                             clientId = tempClientId;
-                            
+
                             break;
                         }
                     }

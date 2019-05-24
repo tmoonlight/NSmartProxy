@@ -49,6 +49,7 @@ namespace NSmartProxy.Client
 
         public ServerConnnectionManager ConnectionManager;
         public bool IsStarted = false;
+        public string Token = Global.NO_TOKEN_STRING;
 
         internal Config ClientConfig;
         internal static INSmartLogger Logger = new NullLogger();   //inject

@@ -5,6 +5,7 @@
     /// </summary>
     public sealed class Global
     {
+        public const string NO_TOKEN_STRING = "notoken";
         public const string NSmartProxyClientName = "NSmartProxy Client v0.6";
         public const string NSmartProxyServerName = "NSmartProxy Server v0.6";
 
