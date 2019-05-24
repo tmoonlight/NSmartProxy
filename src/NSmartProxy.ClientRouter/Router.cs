@@ -85,6 +85,9 @@ namespace NSmartProxy.Client
         {
             if (AlwaysReconnect) IsStarted = true;
             var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
+            //登陆功能
+            
+
             while (!oneLiveToken.IsCancellationRequested)
             {
                 CANCEL_TOKEN_SRC = new CancellationTokenSource();
