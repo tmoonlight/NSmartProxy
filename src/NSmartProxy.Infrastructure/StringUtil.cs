@@ -78,5 +78,10 @@ namespace NSmartProxy
         {
             return JsonConvert.DeserializeObject(jsonString);
         }
+
+        public static T ToObject<T>(this string jsonString)
+        {
+            return JsonConvert.DeserializeObject<T>(jsonString);
+        }
     }
 }

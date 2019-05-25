@@ -402,6 +402,8 @@ namespace NSmartProxy
             //1.读取配置请求1
             //如果是重连请求，则读取接下来5个字符，清
             //空服务端所有与该client相关的所有连接配置
+
+            //TODO !!!!兼容原有的重连逻辑
             if (IsReconnect)
             {
                 int clientIdRequestLength = 2;
@@ -416,7 +418,7 @@ namespace NSmartProxy
                 //CloseClient(
                 CloseAllSourceByClient(StringUtil.DoubleBytesToInt(clientRequestBytes));
             }
-
+            //TODO !!!!获取Token，截取clientID，校验
             int configRequestLength = 3;
             byte[] appRequestBytes = new byte[configRequestLength];
             int resultByte = await nstream.ReadAsync(appRequestBytes);

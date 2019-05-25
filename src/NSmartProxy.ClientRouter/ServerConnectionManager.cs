@@ -20,11 +20,10 @@ namespace NSmartProxy.Client
         public ClientIdAppId App;
     }
 
-    public class ServerConnnectionManager
+    public class ServerConnectionManager
     {
         private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int _clientID = 0;
-        private string _token = Global.NO_TOKEN_STRING;
 
         public List<TcpClient> ConnectedConnections;
         public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
@@ -36,15 +35,12 @@ namespace NSmartProxy.Client
             get => _clientID;
         }
 
-        public string Token
-        {
-            get => _token;
-        }
+        public string CurrentToken { get; set; } = Global.NO_TOKEN_STRING;
 
-        private ServerConnnectionManager()
+        private ServerConnectionManager()
         {
             ConnectedConnections = new List<TcpClient>();
-            Router.Logger.Debug("ServerConnnectionManager initialized.");
+            Router.Logger.Debug("ServerConnectionManager initialized.");
         }
         /// <summary>
         /// 初始化配置，返回服务端返回的配置
@@ -125,10 +121,15 @@ namespace NSmartProxy.Client
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
+                TokenLength = CurrentToken.Length,
+                Token = CurrentToken,
                 ClientId = this.ClientID,
                 ClientCount = config.Clients.Count//(obj => obj.AppId == 0) //appid为0的则是未分配的 <- 取消这条规则，总是重新分配
             }.ToBytes();
             await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
+
+            //TODO !!!!!获取id
+
 
             //请求2 分配端口
             byte[] requestBytes2 = new byte[config.Clients.Count * 2];
@@ -185,7 +186,7 @@ namespace NSmartProxy.Client
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
             var clientList = new List<TcpClient>();
             //补齐
-            var secclient = (new TcpClient()).WrapClient(this.Token);//包装成客户端
+            var secclient = (new TcpClient()).WrapClient(this.CurrentToken);//包装成客户端
             var client = secclient.Client;
             try
             {
@@ -242,9 +243,9 @@ namespace NSmartProxy.Client
         /// </summary>
         /// <param name="clientId"></param>
         /// <returns></returns>
-        public static ServerConnnectionManager Create(int clientId)
+        public static ServerConnectionManager Create(int clientId)
         {
-            var scm = new ServerConnnectionManager();
+            var scm = new ServerConnectionManager();
             scm._clientID = clientId;
             return scm;
         }

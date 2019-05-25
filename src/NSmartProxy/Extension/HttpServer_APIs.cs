@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using NSmartProxy.Data.DTO;
+using NSmartProxy.Data.Entity;
 using NSmartProxy.Database;
 using NSmartProxy.Shared;
 
@@ -80,29 +82,55 @@ window.location.href='main.html';
         }
 
         /// <summary>
+        /// 提供非web登陆的方法byid
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <param name="userpwd"></param>
+        /// <returns></returns>
+        [API]
+        public string LoginFromClientById(string userid, string userpwd)
+        {
+
+            //1.校验
+            dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
+            if (user == null)
+            {
+                return "error: user not exist.";
+            }
+            if (user.userPwd != userpwd)
+            {
+                return "error: wrong password.";
+            }
+
+            //2.给token
+            string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
+            return EncryptHelper.AES_Encrypt(output);
+        }
+
+        /// <summary>
         /// 提供非web的登陆方法
         /// </summary>
         /// <param name="username"></param>
         /// <param name="userpwd"></param>
         /// <returns></returns>
         [API]
-        public string LoginFromClient(string username, string userpwd)
+        public LoginFormClientResult LoginFromClient(string username, string userpwd)
         {
             //1.校验
-            dynamic user = Dbop.Get(username)?.ToDynamic();
+            var user = Dbop.Get(username)?.ToObject<User>();
             if (user == null)
             {
-                return "error: user not exist.";
+                throw new Exception("error: user not exist.");
             }
             if (user.userPwd != EncryptHelper.SHA256(userpwd))
             {
-                return "error: wrong password.";
+                throw new Exception("error: wrong password.");
             }
 
             //2.给token
             string output = $"{username}|{DateTime.Now.ToString("yyyy-MM-dd")}";
             string token = EncryptHelper.AES_Encrypt(output);
-            return new { token = token, version = Global.NSmartProxyServerName }.ToJsonString();
+            return new LoginFormClientResult { Token = token, Version = Global.NSmartProxyServerName, Userid = user.userId };
         }
         #endregion
 
@@ -115,7 +143,7 @@ window.location.href='main.html';
             {
                 throw new Exception("error: user exist.");
             }
-            var user = new
+            var user = new User
             {
                 userId = userid,
                 userPwd = EncryptHelper.SHA256(userpwd),
@@ -135,7 +163,7 @@ window.location.href='main.html';
             {
                 throw new Exception("error: user exist.");
             }
-            var user = new
+            var user = new User
             {
                 userId = NSmartDbOperator.SUPER_VARIABLE_INDEX_ID,  //索引id
                 userName = userName,

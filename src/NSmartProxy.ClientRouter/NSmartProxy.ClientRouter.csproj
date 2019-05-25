@@ -15,4 +15,10 @@
     <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Microsoft.CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

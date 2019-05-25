@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NSmartProxy.Data;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
@@ -121,7 +122,7 @@ namespace NSmartProxy.Extension
 
                     //读文件优先去缓存读
                     MemoryStream memoryStream;
-                    if (FilesCache.TryGetValue(unit.TrimStart('/'),out memoryStream))
+                    if (FilesCache.TryGetValue(unit.TrimStart('/'), out memoryStream))
                     {
                         memoryStream.Position = 0;
                         await memoryStream.CopyToAsync(response.OutputStream);
@@ -161,6 +162,11 @@ namespace NSmartProxy.Extension
                     {
 
                         method = this.GetType().GetMethod(unit);
+                        if (method == null)
+                        {
+                            Server.Logger.Debug($"无效的方法名{unit}");
+                        }
+
                         if (method.GetCustomAttribute<APIAttribute>() != null)
                         {
                             response.ContentType = "application/json";
@@ -218,7 +224,7 @@ namespace NSmartProxy.Extension
 
         }
 
-#endregion
+        #endregion
 
     }
 }

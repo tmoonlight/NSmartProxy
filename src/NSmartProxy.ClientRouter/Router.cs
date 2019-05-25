@@ -10,6 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Shared;
 using System.IO;
+using NSmartProxy.ClientRouter.Dispatchers;
+using NSmartProxy.Data.Models;
 
 namespace NSmartProxy.Client
 {
@@ -47,13 +49,13 @@ namespace NSmartProxy.Client
         TaskCompletionSource<object> _waiter;
         //bool HasConnected = false;
 
-        public ServerConnnectionManager ConnectionManager;
+        public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
-        public string Token = Global.NO_TOKEN_STRING;
+        // public string CurrentToken = Global.NO_TOKEN_STRING;
 
         internal Config ClientConfig;
         internal static INSmartLogger Logger = new NullLogger();   //inject
-
+        internal LoginInfo CurrentLoginInfo;
 
         public Action DoServerNoResponse = delegate { };
         public Action<ClientStatus, List<string>> StatusChanged = delegate { };
@@ -70,9 +72,16 @@ namespace NSmartProxy.Client
             Logger = logger;
         }
 
-        public void SetConifiguration(Config config)
+        public Router SetConifiguration(Config config)
         {
             ClientConfig = config;
+            return this;
+        }
+
+        public Router SetLoginInfo(LoginInfo loginInfo)
+        {
+            this.CurrentLoginInfo = loginInfo;
+            return this;
         }
 
         /// <summary>
@@ -86,7 +95,7 @@ namespace NSmartProxy.Client
             if (AlwaysReconnect) IsStarted = true;
             var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
             //登陆功能
-            
+            string arrangedToken = Global.NO_TOKEN_STRING;
 
             while (!oneLiveToken.IsCancellationRequested)
             {
@@ -100,6 +109,7 @@ namespace NSmartProxy.Client
                 //0.5 如果有文件，取出缓存中的clientid
                 try
                 {
+                    //登陆缓存
                     if (File.Exists(NSMART_CLIENT_CACHE_PATH))
                     {
                         using (var stream = File.OpenRead(NSMART_CLIENT_CACHE_PATH))
@@ -109,13 +119,39 @@ namespace NSmartProxy.Client
                             clientId = StringUtil.DoubleBytesToInt(bytes);
                         }
                     }
+                    //登陆
+                    if (CurrentLoginInfo != null)
+                    {
+                        NSPDispatcher disp = new NSPDispatcher();
+                        var result = await disp.LoginFromClient(CurrentLoginInfo.UserName, CurrentLoginInfo.UserPwd);
+                        if (result.State == 1)
+                        {
+                            Router.Logger.Debug("登陆成功");
+                            var data = result.Data;
+                            arrangedToken = data.Token;
+                            Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
+                            clientId = int.Parse(data.Userid);
+                        }
+                        else
+                        {
+                            throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
+                        }
+                    }
+                    else
+                    {
+                        Router.Logger.Debug("为提供登陆信息，尝试匿名登陆");
+                    }
+
+
+
                 }
                 catch (Exception ex)
                 {
                     Logger.Error(ex.Message, ex);
                 }
                 //1.获取配置
-                ConnectionManager = ServerConnnectionManager.Create(clientId);
+                ConnectionManager = ServerConnectionManager.Create(clientId);
+                ConnectionManager.CurrentToken = arrangedToken;
                 ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;
                 ConnectionManager.ServerNoResponse = DoServerNoResponse;//下钻事件
                 ClientModel clientModel = null;//
@@ -182,7 +218,7 @@ namespace NSmartProxy.Client
                 //出错重试
                 await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
                 //TODO 返回错误码
-                //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.Token).ConfigureAwait(false);
+                //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.CurrentToken).ConfigureAwait(false);
                 Router.Logger.Debug($"连接关闭，开启重试");
             }
             //正常终止

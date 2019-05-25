@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net.Config;
+using NSmartProxy.Data.Models;
 using Exception = System.Exception;
 using NSmartProxy.Shared;
 
@@ -44,6 +45,7 @@ namespace NSmartProxy
 
         public static ILog Logger;
         public static IConfigurationRoot Configuration { get; set; }
+        private static LoginInfo _currentLoginInfo;
         static void Main(string[] args)
         {
             //log
@@ -52,6 +54,15 @@ namespace NSmartProxy
             NSmartProxyClient.Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServerClient");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
             Console.ForegroundColor = ConsoleColor.Yellow;
+
+            //用户登陆
+            if (args.Length == 4)
+            {
+                _currentLoginInfo = new LoginInfo();
+                _currentLoginInfo.UserName = args[1];
+                _currentLoginInfo.UserPwd = args[3];
+            }
+
             Logger.Info($"*** {Global.NSmartProxyClientName} ***");
 
             var builder = new ConfigurationBuilder()
@@ -80,6 +91,11 @@ namespace NSmartProxy
             Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
             SetConfig(clientRouter);// clientRouter.SetConifiguration();
+            if (_currentLoginInfo != null)
+            {
+                clientRouter.SetLoginInfo(_currentLoginInfo);
+            }
+
             Task tsk = clientRouter.Start(true);
             try
             {

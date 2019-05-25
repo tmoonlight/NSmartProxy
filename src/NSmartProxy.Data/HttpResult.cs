@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NSmartProxy.Extension
+namespace NSmartProxy.Data
 {
     public static class HttpResultExtension
     {
