@@ -20,10 +20,14 @@ var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文
 
     function hashChanged(storedHash) {
         storedHash = loadContent(storedHash);
-       
+        if (location.pathname.toUpperCase() !="/LOGIN.HTML") {
+            if (getCookie("NSPTK").length < 1) {
+                location.href = "/login.html";
+            }
+        }
         $(".active").removeClass("active");
         var hrefTag = "#" + storedHash.substring(storedHash.lastIndexOf("#") + 1);
-        $("a[href='" + hrefTag +"']").addClass("active");
+        $("a[href='" + hrefTag + "']").addClass("active");
     }
 
     function loadContent(storedHash) {
@@ -38,14 +42,15 @@ var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文
             $("#content").html(src);
             $.getScript(compName + ".js");//加载模板
             //加载图标
-            feather.replace();
+            if (feather)
+                feather.replace();
         });
         return storedHash;
     }
 
     $(document).ready(function () {
         loadContent(window.location.hash);
-            //选中项
+        //选中项
     }
     );
 }
@@ -64,6 +69,30 @@ function greenAlert(msg) {
 ///处理nsp发回的统一数据，如果有错则弹框，否则返回真
 function processNSPResult(res) {
     return true;
+}
+
+function getCookie(cookieName) {
+    var strCookie = document.cookie;
+    var arrCookie = strCookie.split("; ");
+    for (var i = 0; i < arrCookie.length; i++) {
+        var arr = arrCookie[i].split("=");
+        if (cookieName == arr[0]) {
+            return arr[1];
+        }
+    }
+    return "";
+}
+
+function delCookie(name) {
+    var exp = new Date();
+    exp.setTime(exp.getTime() - 1);
+    var cval = getCookie(name);
+    if (cval != null) document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
+}
+
+function signOut() {
+    delCookie("NSPTK");
+    location.href = "/login.html";
 }
 
 

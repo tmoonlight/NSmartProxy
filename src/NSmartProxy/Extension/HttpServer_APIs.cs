@@ -59,11 +59,11 @@ namespace NSmartProxy.Extension
             dynamic user = Dbop.Get(username)?.ToDynamic();
             if (user == null)
             {
-                return "error: user not exist.";
+                return "Error: User not exist.Please <a href='javascript:history.go(-1)'>go backward</a>.";
             }
             if (user.userPwd != EncryptHelper.SHA256(userpwd))
             {
-                return "error: wrong password.";
+                return "Error: Wrong password.Please <a href='javascript:history.go(-1)'>go backward</a>.";
             }
 
             //2.给token
@@ -72,7 +72,7 @@ namespace NSmartProxy.Extension
             return string.Format(@"
 <html>
 <head><script>
-document.cookie='NSPTK={0}';
+document.cookie='NSPTK={0}; path=/;';
 document.write('Redirecting...');
 window.location.href='main.html';
 </script>

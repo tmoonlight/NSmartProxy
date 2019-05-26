@@ -28,4 +28,11 @@ namespace NSmartProxy.Extension
     {
 
     }
+
+    /// <summary>
+    /// 代表接口需要校验权限
+    /// </summary>
+    public class SecureAttribute : Attribute
+    {
+    }
 }

@@ -24,7 +24,10 @@ namespace NSmartProxy.Extension
         public IDbOperator Dbop;
 
         public const string INDEX_PAGE = "/main.html";
+        //public const string LOGIN_PAGE = "/login.html";
+        //public const string LOGIN_API = "/Login";
         public const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
+        //public const string NSP_TOKEN_COOKIE_NAME = "'NSPTK";
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
 
         public HttpServer(INSmartLogger logger, IDbOperator dbop)
@@ -96,8 +99,12 @@ namespace NSmartProxy.Extension
 
             try
             {
+
+                //TODO cookie，根据不同的用户角色分配权限。
+
                 //TODO ***通过request来的值进行接口调用
                 string unit = request.RawUrl.Replace("//", "");
+
 
                 if (unit == "/") unit = INDEX_PAGE;
 
@@ -119,6 +126,17 @@ namespace NSmartProxy.Extension
                     }
                     //mime类型
                     ProcessMIME(response, unit.Substring(idx3));
+                    //权限控制（只是控制html权限而已）
+                    //if (response.ContentType == "text/html")
+                    //{
+
+                    //    var tokenCookie = request.Cookies[NSP_TOKEN_COOKIE_NAME];
+                    //    if (tokenCookie == null && unit != LOGIN_PAGE)
+                    //    {
+                    //        context.Response.StatusCode = 301;
+                    //        context.Response.Headers.Set("Location", LOGIN_PAGE);
+                    //    }
+                    //}
 
                     //读文件优先去缓存读
                     MemoryStream memoryStream;
@@ -136,13 +154,13 @@ namespace NSmartProxy.Extension
                     }
 
                 }
-                else
+                else  //url中没有小数点则是接口
                 {
                     unit = unit.Replace("/", "");
                     response.ContentEncoding = Encoding.UTF8;
 
 
-                    //TODO XXXXXX 调用接口 接下来要用分布类隔离并且用API特性限定安全
+                    //调用接口 用分布类隔离并且用API特性限定安全
                     object jsonObj;
                     //List<string> qsStrList;
                     int qsCount = request.QueryString.Count;
@@ -156,7 +174,7 @@ namespace NSmartProxy.Extension
                         }
                     }
 
-                    // request.QueryString[0]
+                    //反射调用API方法
                     MethodInfo method = null;
                     try
                     {
