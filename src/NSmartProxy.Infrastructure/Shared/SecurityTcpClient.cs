@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using NSmartProxy.Data;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
@@ -164,7 +165,7 @@ namespace NSmartProxy.Authorize
                 if (AllowAnonymousUser)
                     return new AuthResult()
                     {
-                        ErrorMessage = "校验成功",
+                        ErrorMessage = "校验成功！",
                         ResultState = AuthState.Success
                     };
                 else
@@ -176,42 +177,63 @@ namespace NSmartProxy.Authorize
             }
             else
             {
-                return new AuthResult()
+                try
                 {
-                    ErrorMessage = "校验失败",
-                    ResultState = AuthState.Fail
-                };
+
+
+                    var clamClaims = StringUtil.ConvertStringToTokenClaims(token);
+                    //TODO !!!!!!尚未增加时间戳规则，日后再加。
+                    if (DbOp.Exist(clamClaims.UserKey))
+                        return new AuthResult()
+                        {
+                            ErrorMessage = "校验成功！",
+                            ResultState = AuthState.Success
+                        };
+                    return new AuthResult()
+                    {
+                        ErrorMessage = "校验失败，无此用户！",
+                        ResultState = AuthState.Fail
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new AuthResult()
+                    {
+                        ErrorMessage = "校验错误！" + ex.ToString(),
+                        ResultState = AuthState.Error
+                    };
+                }
             }
         }
 
-        public AuthResult AuthorizeToken(string token)
-        {
+        //public AuthResult AuthorizeToken(TokenClaims token)
+        //{
 
-            try
-            {
-                var res = new AuthResult();
-                //keep your prikey safe!
-                string userid = EncryptHelper.AES_Decrypt(token);
-                //
-                if (DbOp.Exist(userid))
-                {
-                    res.ResultState = AuthState.Success;
-                }
-                else
-                {
-                    res.ResultState = AuthState.Fail;
-                }
-                return res;
-            }
-            catch (Exception ex)
-            {
-                return new AuthResult
-                {
-                    ResultState = AuthState.Error,
-                    ErrorMessage = $"校验token出错：{ex.ToString()}"
-                };
-            }
+        //    try
+        //    {
+        //        var res = new AuthResult();
+        //        //keep your prikey safe!
+        //        string userkey = EncryptHelper.AES_Decrypt(token.UserKey);
+        //        //
+        //        if (DbOp.Exist(userkey))
+        //        {
+        //            res.ResultState = AuthState.Success;
+        //        }
+        //        else
+        //        {
+        //            res.ResultState = AuthState.Fail;
+        //        }
+        //        return res;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new AuthResult
+        //        {
+        //            ResultState = AuthState.Error,
+        //            ErrorMessage = $"校验token出错：{ex.ToString()}"
+        //        };
+        //    }
 
-        }
+        //}
     }
 }

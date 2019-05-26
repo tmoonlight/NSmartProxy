@@ -105,7 +105,6 @@ namespace NSmartProxyWinform
         private void StartOrStop()
         {
             btnStart.Enabled = false;
-            Task tsk;
             if (btnStart.Tag.ToString() == START_TAG_TEXT)
             {
                 StartClientRouter(config, (status, tunelStr) =>
@@ -142,7 +141,7 @@ namespace NSmartProxyWinform
             }
             else
             {
-                tsk = clientRouter.Close();
+                var tsk = clientRouter.Close();
                 tsk.ContinueWith(t => btnStart.Invoke(new Action(
                     () =>
                     {

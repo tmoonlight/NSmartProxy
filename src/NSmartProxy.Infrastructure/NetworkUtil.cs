@@ -15,7 +15,7 @@ namespace NSmartProxy
 {
     public static class NetworkUtil
     {
-        private const string PortReleaseGuid = "C086DE94-2C45-4247-81E2-2E5248F5A769";
+        private const string PortReleaseGuid = "23495C95-AEB6-41C6-B8AF-D03025EF0AE6";
 
         private static HashSet<int> _usedPorts = new HashSet<int>();
 

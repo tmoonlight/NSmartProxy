@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using NSmartProxy.Authorize;
 using NSmartProxy.Database;
+using NSmartProxy.Infrastructure;
 using static NSmartProxy.Server;
 
 namespace NSmartProxy
@@ -134,11 +135,36 @@ namespace NSmartProxy
         //   2          2
         //  clientid    count
         //  methodType  value = 0
-        public byte[] ArrageConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes)
+        public byte[] ArrageConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes, int highPriorityClientId)
         {
             // byte[] arrangedBytes = new byte[256];
             ClientModel clientModel = new ClientModel();
-            int clientId = (appRequestBytes[0] << 8) + appRequestBytes[1];
+            int clientId;
+            //apprequestbytes里本身有clientId，但是如果传了highPriorityClientId，那就用这个clientId
+            if (highPriorityClientId != 0)
+            {
+                clientId = highPriorityClientId;
+            }
+            else
+            {
+                clientId = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
+            }
+           
+            //var tokenClaims = StringUtil.ConverStringToTokenClaims(tokenBytes.ToASCIIString());
+            ////1.校验token
+            //string userkey = EncryptHelper.AES_Decrypt(tokenClaims.UserKey);
+            ////
+            //if (DbOp.Exist(userkey))
+            //{
+            //    //res.ResultState = AuthState.Success;
+            //    //校验成功
+            //}
+            //else
+            //{
+            //    //res.ResultState = AuthState.Fail;
+            //    //校验失败返回错误
+            //}
+            //2.校验时间戳
             int appCount = (int)appRequestBytes[2];
 
             if (clientId == 0)

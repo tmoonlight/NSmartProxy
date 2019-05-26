@@ -108,16 +108,20 @@ namespace NSmartProxy.Client
 
             //请求0 协议名
             byte requestByte0;
-            if (isReconn) requestByte0 = (byte)Protocol.Reconnect;
+            if (isReconn) requestByte0 = (byte)Protocol.Reconnect;//重连则发送重连协议
             else requestByte0 = (byte)Protocol.ClientNewAppRequest;
 
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
-            if (isReconn)
-            {
-                //请求0.5 重连客户端id
-                await configStream.WriteAsync(StringUtil.IntTo2Bytes(this.ClientID), 0, 2);
-            }
+            //TODO !!!!!!重连请求的处理
+            //if (isReconn)
+            //{
+            //    //请求0.5 重连客户端id
+            //    var tokenBytes = CurrentToken.ToASCIIBytes();
+            //    await configStream.WriteAsync(StringUtil.IntTo2Bytes(tokenBytes.Length), 0, 2);
+            //    await configStream.WriteAsync(tokenBytes, 0, tokenBytes.Length);
+            //    //重连直接传递token
+            //}
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {

@@ -13,6 +13,7 @@ using NSmartProxy.Data;
 using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Authorize;
+using NSmartProxy.Data.Entity;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
@@ -397,28 +398,23 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("Now processing request protocol....");
             NetworkStream nstream = client.GetStream();
-
+            int clientIdFromToken = 0;
 
             //1.读取配置请求1
             //如果是重连请求，则读取接下来5个字符，清
             //空服务端所有与该client相关的所有连接配置
 
             //TODO !!!!兼容原有的重连逻辑
+            
+            //TODO !!!!获取Token，截取clientID，校验
+            clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
+
             if (IsReconnect)
             {
-                int clientIdRequestLength = 2;
-                byte[] clientRequestBytes = new byte[clientIdRequestLength];
-                int resultByte0 = await nstream.ReadAsync(clientRequestBytes);
-                if (resultByte0 == 0)
-                {
-                    CloseClient(client);
-                    return true;
-                }
-                //
-                //CloseClient(
-                CloseAllSourceByClient(StringUtil.DoubleBytesToInt(clientRequestBytes));
+                CloseAllSourceByClient(clientIdFromToken);
             }
-            //TODO !!!!获取Token，截取clientID，校验
+
+            //1.3 获取客户端请求数
             int configRequestLength = 3;
             byte[] appRequestBytes = new byte[configRequestLength];
             int resultByte = await nstream.ReadAsync(appRequestBytes);
@@ -428,7 +424,6 @@ namespace NSmartProxy
                 CloseClient(client);
                 return true;
             }
-
 
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];
@@ -445,7 +440,7 @@ namespace NSmartProxy
             //3.分配配置ID，并且写回给客户端
             try
             {
-                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes);
+                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes, clientIdFromToken);
                 Server.Logger.Debug("apprequest arranged");
                 await nstream.WriteAsync(arrangedIds);
             }
@@ -463,6 +458,47 @@ namespace NSmartProxy
             Logger.Debug("arrangedIds written.");
 
             return false;
+        }
+
+        /// <summary>
+        /// 通过token获取clientid
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        private async Task<int> GetClientIdFromNextTokenBytes(TcpClient client)
+        {
+            NetworkStream nstream = client.GetStream();
+            int clientIdFromToken = 0;
+            //1.1 获取token长度
+            int tokenLengthLength = 2;
+            byte[] tokenLengthBytes = new byte[tokenLengthLength];
+            int resultByte01 = await nstream.ReadAsync(tokenLengthBytes);
+            Server.Logger.Debug("tokenLengthBytes received.");
+            if (resultByte01 == 0)
+            {
+                CloseClient(client);
+                return 0;
+            }
+
+            //1.2 获取token
+            int tokenLength = StringUtil.DoubleBytesToInt(tokenLengthBytes);
+            byte[] tokenBytes = new byte[tokenLength];
+            int resultByte02 = await nstream.ReadAsync(tokenBytes);
+            Server.Logger.Debug("tokenBytes received.");
+            if (resultByte02 == 0)
+            {
+                CloseClient(client);
+                return 0;
+            }
+
+            string token = tokenBytes.ToASCIIString();
+            if (token != Global.NO_TOKEN_STRING)
+            {
+                var tokenClaims = StringUtil.ConvertStringToTokenClaims(token);
+                clientIdFromToken = int.Parse(DbOp.Get(tokenClaims.UserKey).ToObject<User>().userId);
+            }
+
+            return clientIdFromToken;
         }
 
         #endregion

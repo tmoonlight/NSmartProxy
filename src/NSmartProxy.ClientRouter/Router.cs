@@ -41,7 +41,7 @@ namespace NSmartProxy.Client
 
     public class Router
     {
-        private const string NSMART_CLIENT_CACHE_PATH = "./cli_cache.cache";
+        private const string NSMART_CLIENT_CACHE_PATH = "./cli_cache_v2.cache";
         CancellationTokenSource ONE_LIVE_TOKEN_SRC;
         CancellationTokenSource CANCEL_TOKEN_SRC;
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
@@ -109,16 +109,7 @@ namespace NSmartProxy.Client
                 //0.5 如果有文件，取出缓存中的clientid
                 try
                 {
-                    //登陆缓存
-                    if (File.Exists(NSMART_CLIENT_CACHE_PATH))
-                    {
-                        using (var stream = File.OpenRead(NSMART_CLIENT_CACHE_PATH))
-                        {
-                            byte[] bytes = new byte[2];
-                            stream.Read(bytes, 0, bytes.Length);
-                            clientId = StringUtil.DoubleBytesToInt(bytes);
-                        }
-                    }
+
                     //登陆
                     if (CurrentLoginInfo != null)
                     {
@@ -131,11 +122,22 @@ namespace NSmartProxy.Client
                             arrangedToken = data.Token;
                             Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
                             clientId = int.Parse(data.Userid);
+                            File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
                         }
                         else
                         {
                             throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
                         }
+                    }
+                    else if (File.Exists(NSMART_CLIENT_CACHE_PATH))
+                    { //登陆缓存
+                        //using (var stream = File.OpenRead(NSMART_CLIENT_CACHE_PATH))
+                        //{
+                        //    byte[] bytes = new byte[2];
+                        //    stream.Read(bytes, 0, bytes.Length);
+                        //    clientId = StringUtil.DoubleBytesToInt(bytes);
+                        //}
+                        arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
                     }
                     else
                     {
@@ -173,7 +175,7 @@ namespace NSmartProxy.Client
                     int counter = 0;
 
                     //1.5 写入缓存
-                    File.WriteAllBytes(NSMART_CLIENT_CACHE_PATH, StringUtil.IntTo2Bytes(clientModel.ClientId));
+                    //File.WriteAllBytes(NSMART_CLIENT_CACHE_PATH, StringUtil.IntTo2Bytes(clientModel.ClientId));
                     //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
                     foreach (var app in appIdIpPortConfig)
                     {

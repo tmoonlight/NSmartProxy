@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NSmartProxy.Data;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy
 {
@@ -54,6 +56,16 @@ namespace NSmartProxy
             return (bytes[0] << 8) + bytes[1];
         }
 
+        public static string ToASCIIString(this byte[] bytes)
+        {
+            return System.Text.ASCIIEncoding.ASCII.GetString(bytes);
+        }
+
+        public static byte[] ToASCIIBytes(this string str)
+        {
+            return System.Text.ASCIIEncoding.ASCII.GetBytes(str);
+        }
+
         /// <summary>
         /// comma
         /// </summary>
@@ -82,6 +94,32 @@ namespace NSmartProxy
         public static T ToObject<T>(this string jsonString)
         {
             return JsonConvert.DeserializeObject<T>(jsonString);
+        }
+
+        public static TokenClaims ConvertStringToTokenClaims(string token)
+        {
+            try
+            {
+                token = EncryptHelper.AES_Decrypt(token);
+                string[] tokenarr = token.Split('|');
+                TokenClaims tkClaims = new TokenClaims();
+                tkClaims.UserKey = tokenarr[0];
+                try
+                {
+                    tkClaims.LastTime = DateTime.Parse(tokenarr[1]);
+                }
+                catch
+                {
+                    tkClaims.LastTime = new DateTime(2500, 1, 1);
+                }
+
+                return tkClaims;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("token格式不正确" + ex.ToString());
+            }
+
         }
     }
 }
