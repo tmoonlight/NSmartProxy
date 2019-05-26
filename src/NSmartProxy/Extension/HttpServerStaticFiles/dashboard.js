@@ -142,8 +142,11 @@
             alert(url);
         }
     ); 
-    //更新数据
-    setInterval(function () {
+    //定时更新数据
+    if (window.intevalId) {
+        window.clearInterval(window.intevalId);
+    }
+    window.intevalId = setInterval(function () {
 
             getClientsInfo();
             //myChart2.data.datasets.pop();
