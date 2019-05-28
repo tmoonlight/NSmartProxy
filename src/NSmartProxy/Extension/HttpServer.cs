@@ -40,6 +40,12 @@ namespace NSmartProxy.Extension
 
         }
 
+        /// <summary>
+        /// http服务启动，初始化代码写在这里
+        /// </summary>
+        /// <param name="ctsHttp"></param>
+        /// <param name="WebManagementPort"></param>
+        /// <returns></returns>
         public async Task StartHttpService(CancellationTokenSource ctsHttp, int WebManagementPort)
         {
             try
@@ -58,6 +64,12 @@ namespace NSmartProxy.Extension
                     }
                 }
                 Logger.Debug($"{files.Length} files cached.");
+
+                //如果库中没有任何记录，则增加默认用户
+                if (Dbop.GetLength() < 1)
+                {
+                    AddUserV2("admin","admin","1");
+                }
 
                 listener.Prefixes.Add($"http://+:{WebManagementPort}/");
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");

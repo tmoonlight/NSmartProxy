@@ -54,7 +54,6 @@ namespace NSmartProxy.Extension
         [FormAPI]
         public string Login(string username, string userpwd)
         {
-
             //1.校验
             dynamic user = Dbop.Get(username)?.ToDynamic();
             if (user == null)
@@ -155,6 +154,12 @@ window.location.href='main.html';
             Dbop.Insert(long.Parse(userid), user.ToJsonString());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="userpwd"></param>
+        /// <param name="isAdmin">1代表是 0代表否</param>
         [API]
         public void AddUserV2(string userName, string userpwd, string isAdmin)
         {
@@ -179,14 +184,16 @@ window.location.href='main.html';
 
 
         [API]
-        public void RemoveUser(string userIndex)
+        public void RemoveUser(string userIndex, string userNames)
         {
             try
             {
                 var arr = userIndex.Split(',');
+                var userNameArr = userNames.Split(',');
                 for (var i = arr.Length - 1; i > -1; i--)
                 {
                     Dbop.Delete(int.Parse(arr[i]));
+                    Dbop.DeleteHash(userNameArr[i]);
                 }
 
             }

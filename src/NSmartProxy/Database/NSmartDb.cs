@@ -122,11 +122,22 @@ namespace NSmartProxy.Database
             //输出
         }
 
+        /// <summary>
+        /// 通过序列删除数据，并且返回id
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public void Delete(int index)
         {
             var key = seqf.Get(index);
             seqf.Delete(index);
+
             hashf.Remove(BitConverter.GetBytes(key));
+        }
+
+        public void DeleteHash(string key)
+        {
+            hashf.Remove(String2Bytes(key));
         }
 
         public string GetOne(string key)

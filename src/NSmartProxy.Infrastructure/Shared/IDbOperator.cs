@@ -13,6 +13,7 @@ namespace NSmartProxy.Database
         string Get(long key);
         string Get(string key);
         void Delete(int index);
+        void DeleteHash(string key);
         long GetLength();
         void Close();
         bool Exist(string key);
