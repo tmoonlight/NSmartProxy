@@ -7,9 +7,6 @@ namespace NSmartProxy
 {
     public static class HtmlUtil
     {
-        private static byte[] PartternWord = System.Text.Encoding.ASCII.GetBytes("GET /welcome/");
-        private static byte[] PartternPostWord = System.Text.Encoding.ASCII.GetBytes("POST /welcome/");
-
         public static byte[] GetContent(string html)
         {
             return Encoding.UTF8.GetBytes(html.ToString());

@@ -36,7 +36,7 @@ namespace NSmartProxy.Extension
             Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
-            EncryptHelper.AES_Key = "SDF(&*G";//prikey
+          
 
         }
 

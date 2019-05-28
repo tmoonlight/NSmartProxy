@@ -50,6 +50,7 @@ namespace NSmartProxy
         public static int WebManagementPort = 0;    //远端管理端口
 
         public const string USER_DB_NAME = "./nsmart_user";
+        public const string SECURE_KEY_FILE = "./nsmart_sec_key";
         public ClientConnectionManager ConnectionManager = null;
         public IDbOperator DbOp;
 
@@ -71,6 +72,7 @@ namespace NSmartProxy
         public async Task Start()
         {
             DbOp = new NSmartDbOperator(USER_DB_NAME, USER_DB_NAME + "_index");
+            InitSecureKey();
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             CancellationTokenSource ctsConfig = new CancellationTokenSource();
             CancellationTokenSource ctsHttp = new CancellationTokenSource();
@@ -107,6 +109,20 @@ namespace NSmartProxy
                 Logger.Debug("all closed");
                 ctsConfig.Cancel(); ctsHttp.Cancel(); ctsConsumer.Cancel();
                 DbOp.Close();
+            }
+        }
+
+        private void InitSecureKey()
+        {
+            //生成密钥
+            if (File.Exists(SECURE_KEY_FILE))
+            {
+                EncryptHelper.AES_Key = File.ReadAllText(SECURE_KEY_FILE);//prikey
+            }
+            else
+            {
+                EncryptHelper.AES_Key = RandomHelper.NextString(8);
+                File.WriteAllText(SECURE_KEY_FILE, EncryptHelper.AES_Key);
             }
         }
 
@@ -405,7 +421,7 @@ namespace NSmartProxy
             //空服务端所有与该client相关的所有连接配置
 
             //TODO !!!!兼容原有的重连逻辑
-            
+
             //TODO !!!!获取Token，截取clientID，校验
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
 

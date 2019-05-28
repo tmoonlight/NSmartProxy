@@ -76,8 +76,6 @@ namespace NSmartProxy.Authorize
         public readonly byte F9 = 0xF9;//固定标识位
         public String ErrorMessage = "";
         public bool AllowAnonymousUser = false;
-        //TODO 是否校验
-        public bool IsValid;
         public ClientTypeEnum ClientType;
         public TcpClient Client;
 
@@ -159,7 +157,7 @@ namespace NSmartProxy.Authorize
             }
 
             var token = ASCIIEncoding.ASCII.GetString(tokenBytes);
-            //TODO ***校验Token
+            //校验Token
             if (token == Global.NO_TOKEN_STRING)
             {
                 if (AllowAnonymousUser)
@@ -179,8 +177,6 @@ namespace NSmartProxy.Authorize
             {
                 try
                 {
-
-
                     var clamClaims = StringUtil.ConvertStringToTokenClaims(token);
                     //TODO !!!!!!尚未增加时间戳规则，日后再加。
                     if (DbOp.Exist(clamClaims.UserKey))

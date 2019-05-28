@@ -1,8 +1,9 @@
+rem windows only
 rem NSP v0.4_bugfix
 @ECHO off
 
 set Ver=v0.6
-set BuildPath=%~dp0/../build
+set BuildPath=%~dp0../build
 
 set nsp_server_path=%BuildPath%/nspclient_%Ver%
 set nsp_client_path=%BuildPath%/nspserver_%Ver%
@@ -28,5 +29,5 @@ powershell Compress-Archive -Path '%nsp_server_path%/*.*' -DestinationPath '%Bui
 powershell Compress-Archive -Path '%nsp_client_path%/*.*' -DestinationPath '%BuildPath%/nspserver_%Ver%.zip' -Force 
 powershell Compress-Archive -Path '%nsp_client_winfform_path%/*.*' -DestinationPath '%BuildPath%/nspclient_winform_%Ver%.zip' -Force 
 
-explorer %BuildPath%
+powershell explorer %~dp0..\build
 pause
