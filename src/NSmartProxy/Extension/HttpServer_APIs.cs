@@ -1,9 +1,12 @@
 ﻿using NSmartProxy.Infrastructure;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using NSmartProxy.Data.DTO;
+using NSmartProxy.Data.DTOs;
 using NSmartProxy.Data.Entity;
 using NSmartProxy.Database;
 using NSmartProxy.Shared;
@@ -15,6 +18,7 @@ namespace NSmartProxy.Extension
     /// </summary>
     partial class HttpServer
     {
+
         //TODO XXXX
         #region  dashboard
 
@@ -22,19 +26,50 @@ namespace NSmartProxy.Extension
         #endregion
 
         #region log
+        [Secure]
         [API]
-        public string[] GetLogInfo(int fromline, int lines)
+        public string[] GetLogFileInfo(int fromline, int lines)
         {
             //取第X到Y行的日志
             return null;
         }
 
+        /// <summary>
+        /// 返回一个未关闭的stream
+        /// </summary>
+        /// <param name="filekey"></param>
+        /// <returns></returns>
+        [Secure]
         [FileAPI]
-        public string[] GetLogInfo(string filekey)
+        public FileDTO GetLogFile(string filekey)
         {
-            string suffix = ".log";
+            string allowedSuffix = ".log";
+            string suffix = Path.GetExtension(filekey);
+            string fileName = Path.GetFileName(filekey);
+            string fileFullPath = BASE_LOG_FILE_PATH + "/" + filekey;
+            if (allowedSuffix == suffix)
+            {
+                FileStream fs = File.OpenRead(fileFullPath);
+                return new FileDTO()
+                {
+                    FileName = filekey,
+                    FileStream = fs
+                };
+            }
+            string msg = $"文件{filekey}无效";
             //通过日志文件名获取文件
+            Server.Logger.Error(msg, new Exception(msg));
             return null;
+        }
+
+        [Secure]
+        [API]
+        public string[] GetLogFiles()
+        {
+            string baseLogPath = "./log";
+            DirectoryInfo dir = new DirectoryInfo(baseLogPath);
+            FileInfo[] fi = dir.GetFiles("*.log*");
+            return fi.Select(obj => obj.Name).ToArray();
         }
         #endregion
 
@@ -47,6 +82,7 @@ namespace NSmartProxy.Extension
         private const string C_WEB_API_PORT = "WebAPIPort";
         //API SetConfig
         //API GetConifgs
+        //public string 
 
         #endregion
 
@@ -135,6 +171,7 @@ window.location.href='main.html';
 
         #region users
         [API]
+        [Secure]
         public void AddUser(string userid, string userpwd, string isAdmin)
         {
 
@@ -161,6 +198,7 @@ window.location.href='main.html';
         /// <param name="userpwd"></param>
         /// <param name="isAdmin">1代表是 0代表否</param>
         [API]
+        [Secure]
         public void AddUserV2(string userName, string userpwd, string isAdmin)
         {
 
@@ -184,6 +222,7 @@ window.location.href='main.html';
 
 
         [API]
+        [Secure]
         public void RemoveUser(string userIndex, string userNames)
         {
             try
@@ -204,6 +243,7 @@ window.location.href='main.html';
         }
 
         [API]
+        [Secure]
         public List<string> GetUsers()
         {
             //using (var dbop = Dbop.Open())
@@ -216,6 +256,7 @@ window.location.href='main.html';
         #region connections
         //NoApi Auth
         [API]
+        [Secure]
         public string GetClientsInfoJson()
         {
             var ConnectionManager = ClientConnectionManager.GetInstance();

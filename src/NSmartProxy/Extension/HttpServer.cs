@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Data;
+using NSmartProxy.Data.DTOs;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
@@ -27,6 +28,7 @@ namespace NSmartProxy.Extension
         //public const string LOGIN_PAGE = "/login.html";
         //public const string LOGIN_API = "/Login";
         public const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
+        public const string BASE_LOG_FILE_PATH = "./log";
         //public const string NSP_TOKEN_COOKIE_NAME = "'NSPTK";
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
 
@@ -36,7 +38,7 @@ namespace NSmartProxy.Extension
             Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
-          
+
 
         }
 
@@ -68,7 +70,7 @@ namespace NSmartProxy.Extension
                 //如果库中没有任何记录，则增加默认用户
                 if (Dbop.GetLength() < 1)
                 {
-                    AddUserV2("admin","admin","1");
+                    AddUserV2("admin", "admin", "1");
                 }
 
                 listener.Prefixes.Add($"http://+:{WebManagementPort}/");
@@ -112,11 +114,9 @@ namespace NSmartProxy.Extension
             try
             {
 
-                //TODO cookie，根据不同的用户角色分配权限。
 
-                //TODO ***通过request来的值进行接口调用
+                //通过request来的值进行接口调用
                 string unit = request.RawUrl.Replace("//", "");
-
 
                 if (unit == "/") unit = INDEX_PAGE;
 
@@ -171,7 +171,6 @@ namespace NSmartProxy.Extension
                     unit = unit.Replace("/", "");
                     response.ContentEncoding = Encoding.UTF8;
 
-
                     //调用接口 用分布类隔离并且用API特性限定安全
                     object jsonObj;
                     //List<string> qsStrList;
@@ -190,11 +189,23 @@ namespace NSmartProxy.Extension
                     MethodInfo method = null;
                     try
                     {
-
                         method = this.GetType().GetMethod(unit);
                         if (method == null)
                         {
-                            Server.Logger.Debug($"无效的方法名{unit}");
+                            //Server.Logger.Debug($"无效的方法名{unit}");
+                            throw new Exception($"无效的方法名{unit}");
+                        }
+
+                        if (method.GetCustomAttribute<SecureAttribute>() != null)
+                        {
+                            if (request.Cookies["NSPTK"] == null)
+                                throw new Exception("用户未登陆。");
+                            //TODO cookie，根据不同的用户角色分配权限。
+                            var UserClaims = StringUtil.ConvertStringToTokenClaims(request.Cookies["NSPTK"].Value);
+                            if (string.IsNullOrEmpty(UserClaims.UserKey))
+                            {
+                                throw new Exception("登陆信息异常。");
+                            }
                         }
 
                         if (method.GetCustomAttribute<APIAttribute>() != null)
@@ -209,6 +220,22 @@ namespace NSmartProxy.Extension
                             jsonObj = method.Invoke(this, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.ToString()));
                         }
+                        else if (method.GetCustomAttribute<FileAPIAttribute>() != null)
+                        {
+                            response.ContentType = "application/octet-stream";
+                            FileDTO fileDto = method.Invoke(this, parameters) as FileDTO;
+                            if (fileDto == null)
+                            {
+                                throw new Exception("文件返回失败，请查看错误日志。");
+                            }
+
+                            response.Headers.Add("Content-Disposition", "attachment;filename=" + fileDto.FileName);
+                            //response.OutputStream.(stream);
+                            using (fileDto.FileStream)
+                            {
+                                await fileDto.FileStream.CopyToAsync(response.OutputStream);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -217,8 +244,10 @@ namespace NSmartProxy.Extension
                         response.ContentType = "application/json";
                         await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                     }
+                    finally
+                    {
 
-
+                    }
                 }
                 //suffix = unit.Substring(unit.LastIndexOf(".")+1,)
 
