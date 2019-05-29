@@ -65,6 +65,7 @@
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+            this.btnLogin = new System.Windows.Forms.Button();
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -160,6 +161,7 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "日志";
             this.tabPage2.UseVisualStyleBackColor = true;
+            this.tabPage2.Enter += new System.EventHandler(this.tabPage2_Enter);
             // 
             // tbxLog
             // 
@@ -170,6 +172,7 @@
             this.tbxLog.Multiline = true;
             this.tbxLog.Name = "tbxLog";
             this.tbxLog.ReadOnly = true;
+            this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.tbxLog.Size = new System.Drawing.Size(519, 348);
             this.tbxLog.TabIndex = 1;
             // 
@@ -190,6 +193,7 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "应用";
             this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabPage1.Enter += new System.EventHandler(this.tabPage1_Enter);
             // 
             // btnSaveConfig
             // 
@@ -426,11 +430,24 @@
             // 
             this.errorProvider1.ContainerControl = this;
             // 
+            // btnLogin
+            // 
+            this.btnLogin.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnLogin.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLogin.Location = new System.Drawing.Point(150, 398);
+            this.btnLogin.Name = "btnLogin";
+            this.btnLogin.Size = new System.Drawing.Size(75, 23);
+            this.btnLogin.TabIndex = 6;
+            this.btnLogin.Text = "  未登录";
+            this.btnLogin.UseVisualStyleBackColor = true;
+            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
+            // 
             // ClientMngr
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(557, 433);
+            this.Controls.Add(this.btnLogin);
             this.Controls.Add(this.tabServerConfig);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnOpenInExplorer);
@@ -494,6 +511,7 @@
         private System.Windows.Forms.Button btnSaveConfig;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ErrorProvider errorProvider1;
+        private System.Windows.Forms.Button btnLogin;
     }
 }
 

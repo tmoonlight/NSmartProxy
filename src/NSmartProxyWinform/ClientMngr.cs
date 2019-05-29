@@ -45,6 +45,25 @@ namespace NSmartProxyWinform
             logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
             //右下角小图标
             notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
+            RefreshLoginState();
+
+
+            //界面的一些细节初始化
+            btnLogin.Location = new Point(12, btnLogin.Location.Y);
+            btnOpenInExplorer.Hide();
+
+        }
+
+        private void RefreshLoginState()
+        {
+            if (File.Exists(Router.NSMART_CLIENT_CACHE_PATH))
+            {
+                btnLogin.Image = Properties.Resources.logined;
+            }
+            else
+            {
+                btnLogin.Image = Properties.Resources.unlogin;
+            }
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -128,9 +147,14 @@ namespace NSmartProxyWinform
                                 notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
                                 btnStart.Enabled = true;
                             }
-                            else
+                            else if (status == ClientStatus.Stopped)
                             {
                                 MessageBox.Show("客户端连接失败，详情请查看日志。");
+                                btnStart.Enabled = true;
+                            }
+                            else if (status == ClientStatus.LoginError)
+                            {
+                                MessageBox.Show("客户端登陆失败，详情请查看日志。");
                                 btnStart.Enabled = true;
                             }
                         }
@@ -467,6 +491,29 @@ namespace NSmartProxyWinform
                     break;
             }
             base.WndProc(ref m);
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        //日志
+        private void tabPage2_Enter(object sender, EventArgs e)
+        {
+            //滚动到最下行 TODO 不起作用？！
+            tbxLog.SelectionStart = this.tbxLog.Text.Length;
+            tbxLog.SelectionLength = 0;
+            tbxLog.ScrollToCaret();
+            btnOpenInExplorer.Show();
+            btnLogin.Hide();
+        }
+
+        //应用
+        private void tabPage1_Enter(object sender, EventArgs e)
+        {
+            btnOpenInExplorer.Hide();
+            btnLogin.Show();
         }
     }
 }

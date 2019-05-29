@@ -36,12 +36,13 @@ namespace NSmartProxy.Client
     public enum ClientStatus
     {
         Stopped = 0,
-        Started = 1
+        Started = 1,
+        LoginError = 2
     }
 
     public class Router
     {
-        private const string NSMART_CLIENT_CACHE_PATH = "./cli_cache_v2.cache";
+        public const string NSMART_CLIENT_CACHE_PATH = "./cli_cache_v2.cache";
         CancellationTokenSource ONE_LIVE_TOKEN_SRC;
         CancellationTokenSource CANCEL_TOKEN_SRC;
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
@@ -126,6 +127,7 @@ namespace NSmartProxy.Client
                         }
                         else
                         {
+                            StatusChanged(ClientStatus.LoginError, null);
                             throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
                         }
                     }
@@ -149,7 +151,8 @@ namespace NSmartProxy.Client
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex.Message, ex);
+                    Logger.Error("启动失败：" + ex.Message, ex);
+                    return;
                 }
                 //1.获取配置
                 ConnectionManager = ServerConnectionManager.Create(clientId);

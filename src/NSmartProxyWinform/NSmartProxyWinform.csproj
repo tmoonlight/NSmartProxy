@@ -157,10 +157,11 @@
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
     <Content Include="nsp.ico" />
+    <None Include="Resources\Permission_12796.png" />
     <Content Include="Resources\servicepaused.ico" />
     <Content Include="Resources\servicerunning.ico" />
     <Content Include="Resources\servicestopped.ico" />
+    <None Include="Resources\UserProfilenode_8706.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
- 
 </Project>
