@@ -28,10 +28,30 @@ namespace NSmartProxy.Extension
         #region log
         [Secure]
         [API]
-        public string[] GetLogFileInfo(int fromline, int lines)
+        public string[] GetLogFileInfo(string lastLines)
         {
-            //取第X到Y行的日志
-            return null;
+            int lastLinesInt = int.Parse(lastLines);
+            string baseLogPath = "./log";
+            DirectoryInfo dir = new DirectoryInfo(baseLogPath);
+            FileInfo[] files = dir.GetFiles("*.log*");
+            DateTime recentWrite = DateTime.MinValue;
+            FileInfo recentFile = null;
+
+            foreach (FileInfo file in files)
+            {
+                if (file.LastWriteTime > recentWrite)
+                {
+                    recentWrite = file.LastWriteTime;
+                    recentFile = file;
+                }
+            }
+
+            //文件会被独占
+            using (var fs = new FileStream(recentFile.FullName, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.ReadWrite))
+            {
+                var sr = new StreamReader(fs);
+                return sr.Tail(lastLinesInt);
+            }
         }
 
         /// <summary>
@@ -68,8 +88,8 @@ namespace NSmartProxy.Extension
         {
             string baseLogPath = "./log";
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
-            FileInfo[] fi = dir.GetFiles("*.log*");
-            return fi.Select(obj => obj.Name).ToArray();
+            var files = dir.GetFiles("*.log*").OrderByDescending(s => s.CreationTime);
+            return files.Select(obj => obj.Name).ToArray();
         }
         #endregion
 

@@ -114,7 +114,7 @@ namespace NSmartProxy.Client
                     //登陆
                     if (CurrentLoginInfo != null)
                     {
-                        NSPDispatcher disp = new NSPDispatcher();
+                        NSPDispatcher disp = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
                         var result = await disp.LoginFromClient(CurrentLoginInfo.UserName, CurrentLoginInfo.UserPwd);
                         if (result.State == 1)
                         {

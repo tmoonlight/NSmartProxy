@@ -11,10 +11,15 @@ namespace NSmartProxy.ClientRouter.Dispatchers
 {
     public class NSPDispatcher
     {
+        private string BaseUrl = "localhost";
+        public NSPDispatcher(string baseUrl)
+        {
+            BaseUrl = baseUrl;
+        }
 
         public async Task<HttpResult<LoginFormClientResult>> LoginFromClient(string username, string userpwd)
         {
-            string url = "http://localhost:12309/LoginFromClient";
+            string url = $"http://{BaseUrl}/LoginFromClient";
             HttpClient client = new HttpClient();
             var httpmsg = await client.GetAsync($"{url}?username={username}&userpwd={userpwd}");
             var httpstr = await httpmsg.Content.ReadAsStringAsync();
@@ -23,12 +28,12 @@ namespace NSmartProxy.ClientRouter.Dispatchers
 
         public async Task<HttpResult<LoginFormClientResult>> Login(string userid, string userpwd)
         {
-            string url = "http://localhost:12309/LoginFromClientById";
+            string url = $"http://{BaseUrl}/LoginFromClientById";
             HttpClient client = new HttpClient();
             var httpmsg = await client.GetAsync($"{url}?username={userid}&userpwd={userpwd}");
             var httpstr = await httpmsg.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<HttpResult<LoginFormClientResult>>(httpstr);
         }
-       
+
     }
 }

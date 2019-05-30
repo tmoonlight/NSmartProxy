@@ -1,7 +1,8 @@
-﻿//@ sourceURL= dashboard.js
+﻿//@ sourceURL= log.js
+
 (function () {
-    alert('test');
     getLogFiles();
+    getLogFileInfo(20);
 }());
 
 function getLogFiles() {
@@ -25,4 +26,23 @@ function getLogFiles() {
 function getLogFile(filekey) {
     var apiUrl = basepath + "GetLogFile?filekey=" + filekey;
     window.open(apiUrl);
+}
+
+function getLogFileInfo(lines) {
+    var apiUrl = basepath + "GetLogFileInfo?lastLines=" + lines;
+    $.get(apiUrl,
+        function (res) {
+            var data = res.Data;
+            var logText = "";
+            for (i in data) {
+                logText += data[i] + "\r\n";
+            }
+            $("#tbxLog").val(logText);
+        }
+    );
+}
+
+function refreshLog() {
+    getLogFiles();
+    getLogFileInfo(20);
 }

@@ -10,6 +10,7 @@ namespace NSmartProxy.Data
         public int ProviderPort;                    //代理转发服务端口
         public int ProviderConfigPort;              //配置服务端口
         public string ProviderAddress;              //代理服务器地址
+        public int ProviderWebPort = 12309;                    //web管理端的端口，默认12309
         public List<ClientApp> Clients = new List<ClientApp>();//客户端app
     }
 }
