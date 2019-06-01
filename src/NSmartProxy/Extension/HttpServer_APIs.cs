@@ -171,12 +171,35 @@ window.location.href='main.html';
         [API]
         public LoginFormClientResult LoginFromClient(string username, string userpwd)
         {
+            User user = null;
+            string isAnonymous = "0";
+            //匿名登陆时創建一個用戶
+            if (ServerContext.SupportAnonymousLogin && string.IsNullOrEmpty(username))
+            {
+
+                username = "temp_" + RandomHelper.NextString(12);
+                userpwd = RandomHelper.NextString(20);
+                user = new User
+                {
+                    userId = NSmartDbOperator.SUPER_VARIABLE_INDEX_ID,  //索引id
+                    userName = username,
+                    userPwd = EncryptHelper.SHA256(userpwd),
+                    regTime = DateTime.Now.ToString(),
+                    isAdmin = "0",
+                    isAnonymous = "1"
+                };
+                //if (isAdmin == true) user.
+                //1.增加用户
+                Dbop.Insert(username, user.ToJsonString());
+
+            }
             //1.校验
-            var user = Dbop.Get(username)?.ToObject<User>();
+            user = Dbop.Get(username)?.ToObject<User>();
             if (user == null)
             {
                 throw new Exception("error: user not exist.");
             }
+
             if (user.userPwd != EncryptHelper.SHA256(userpwd))
             {
                 throw new Exception("error: wrong password.");

@@ -51,8 +51,10 @@ namespace NSmartProxy
 
         public const string USER_DB_NAME = "./nsmart_user";
         public const string SECURE_KEY_FILE = "./nsmart_sec_key";
-        public ClientConnectionManager ConnectionManager = null;
-        public IDbOperator DbOp;
+
+        protected ClientConnectionManager ConnectionManager = null;
+        protected IDbOperator DbOp;
+        protected NSPServerContext Context;
 
         internal static INSmartLogger Logger; //inject
 
@@ -60,6 +62,13 @@ namespace NSmartProxy
         {
             //initialize
             Logger = logger;
+            Context = new NSPServerContext();
+        }
+
+        public Server SetAnonymousLogin(bool isSupportAnonymous)
+        {
+            Context.SupportAnonymousLogin = isSupportAnonymous;
+            return this;
         }
 
         //必须设置远程端口才可以通信
@@ -88,7 +97,7 @@ namespace NSmartProxy
             //2.开启http服务
             if (WebManagementPort > 0)
             {
-                var httpServer = new HttpServer(Logger, DbOp);
+                var httpServer = new HttpServer(Logger, DbOp, Context);
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 
@@ -132,7 +141,7 @@ namespace NSmartProxy
             {
                 while (!cts.Token.IsCancellationRequested)
                 {
-                    Server.Logger.Debug("开始心跳检测");
+                    //Server.Logger.Debug("开始心跳检测");
                     var outTimeClients = ConnectionManager.Clients.Where(
                         (cli) => DateTimeHelper.TimeRange(cli.LastUpdateTime, DateTime.Now) > interval).ToList();
 
@@ -140,7 +149,7 @@ namespace NSmartProxy
                     {
                         CloseAllSourceByClient(client.ClientID);
                     }
-                    Server.Logger.Debug("结束心跳检测");
+                    //Server.Logger.Debug("结束心跳检测");
                     await Task.Delay(interval);
                 }
             }

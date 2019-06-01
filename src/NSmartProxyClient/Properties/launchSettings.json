@@ -1,8 +1,7 @@
 {
   "profiles": {
     "NSmartProxyClient": {
-      "commandName": "Project",
-      "commandLineArgs": "-u admin -p admin"
+      "commandName": "Project"
     }
   }
 }

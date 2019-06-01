@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NSmartProxy.Authorize;
 using NSmartProxy.Data;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Database;
@@ -31,16 +32,18 @@ namespace NSmartProxy.Extension
         public const string BASE_LOG_FILE_PATH = "./log";
         //public const string NSP_TOKEN_COOKIE_NAME = "'NSPTK";
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
+        public NSPServerContext ServerContext { get; }
 
-        public HttpServer(INSmartLogger logger, IDbOperator dbop)
+        public HttpServer(INSmartLogger logger, IDbOperator dbop, NSPServerContext serverContext)
         {
             Logger = logger;
             Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
-
-
+            ServerContext = serverContext;
         }
+
+
 
         /// <summary>
         /// http服务启动，初始化代码写在这里
@@ -196,7 +199,7 @@ namespace NSmartProxy.Extension
                             throw new Exception($"无效的方法名{unit}");
                         }
 
-                        //先不校验，方便调试
+                        //TODO 先不校验，方便调试
                         //if (method.GetCustomAttribute<SecureAttribute>() != null)
                         //{
                         //    if (request.Cookies["NSPTK"] == null)
@@ -250,7 +253,6 @@ namespace NSmartProxy.Extension
 
                     }
                 }
-                //suffix = unit.Substring(unit.LastIndexOf(".")+1,)
 
             }
             catch (Exception e)

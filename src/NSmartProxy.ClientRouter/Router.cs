@@ -64,8 +64,6 @@ namespace NSmartProxy.Client
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
-
-
         }
 
         public Router(INSmartLogger logger) : this()
@@ -88,7 +86,7 @@ namespace NSmartProxy.Client
         /// <summary>
         /// 重要：连接服务端，一般做为入口方法
         /// 该方法主要操作一些配置和心跳
-        /// AlwaysReconnect：始终重试，开启此选项，无论何时，一旦程序在连接不上时都会进行重试，否则只在连接成功后的断线时才重试。
+        /// AlwaysReconnect：始终重试，开启此选项，无论何时，一旦程序在连接不上时都会进行重试，否则只在连接成功后的异常中断时才重试。
         /// </summary>
         /// <returns></returns>
         public async Task Start(bool AlwaysReconnect = false)
@@ -107,47 +105,30 @@ namespace NSmartProxy.Client
                 var appIdIpPortConfig = ClientConfig.Clients;
                 int clientId = 0;
 
-                //0.5 如果有文件，取出缓存中的clientid
+                //0.5 处理登陆/重登录/匿名登陆逻辑
                 try
                 {
-
                     //登陆
                     if (CurrentLoginInfo != null)
                     {
-                        NSPDispatcher disp = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
-                        var result = await disp.LoginFromClient(CurrentLoginInfo.UserName, CurrentLoginInfo.UserPwd);
-                        if (result.State == 1)
-                        {
-                            Router.Logger.Debug("登陆成功");
-                            var data = result.Data;
-                            arrangedToken = data.Token;
-                            Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
-                            clientId = int.Parse(data.Userid);
-                            File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
-                        }
-                        else
-                        {
-                            StatusChanged(ClientStatus.LoginError, null);
-                            throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
-                        }
+                        var loginResult = await Login();
+                        arrangedToken = loginResult.Item1;
+                        clientId = loginResult.Item2;
                     }
                     else if (File.Exists(NSMART_CLIENT_CACHE_PATH))
                     { //登陆缓存
-                        //using (var stream = File.OpenRead(NSMART_CLIENT_CACHE_PATH))
-                        //{
-                        //    byte[] bytes = new byte[2];
-                        //    stream.Read(bytes, 0, bytes.Length);
-                        //    clientId = StringUtil.DoubleBytesToInt(bytes);
-                        //}
+
                         arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
                     }
                     else
                     {
-                        Router.Logger.Debug("为提供登陆信息，尝试匿名登陆");
+                        //匿名登陆，未提供登陆信息时，使用空用户名密码尝试匿名登陆
+                        Router.Logger.Debug("未提供登陆信息，尝试匿名登陆");
+                        CurrentLoginInfo = new LoginInfo() { UserName = "", UserPwd = "" };
+                        var loginResult = await Login();
+                        arrangedToken = loginResult.Item1;
+                        clientId = loginResult.Item2;
                     }
-
-
-
                 }
                 catch (Exception ex)
                 {
@@ -228,6 +209,30 @@ namespace NSmartProxy.Client
             }
             //正常终止
             Router.Logger.Debug($"停止重试，循环终止。");
+        }
+
+        private async Task<ValueTuple<string, int>> Login()
+        {
+            string arrangedToken;
+            int clientId;
+            NSPDispatcher disp = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
+            var result = await disp.LoginFromClient(CurrentLoginInfo.UserName ?? "", CurrentLoginInfo.UserPwd ?? "");
+            if (result.State == 1)
+            {
+                Router.Logger.Debug("登陆成功");
+                var data = result.Data;
+                arrangedToken = data.Token;
+                Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
+                clientId = int.Parse(data.Userid);
+                File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
+            }
+            else
+            {
+                StatusChanged(ClientStatus.LoginError, null);
+                throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
+            }
+
+            return (arrangedToken, clientId);
         }
 
         private void ServerConnnectionManager_ClientGroupConnected(object sender, EventArgs e)
