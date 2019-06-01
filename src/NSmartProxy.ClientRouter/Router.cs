@@ -119,6 +119,8 @@ namespace NSmartProxy.Client
                     { //登陆缓存
 
                         arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
+                        //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登陆
+
                     }
                     else
                     {

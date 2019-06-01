@@ -224,6 +224,19 @@ namespace NSmartProxy.Extension
                             jsonObj = method.Invoke(this, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.ToString()));
                         }
+                        else if (method.GetCustomAttribute<ValidateAPIAttribute>() != null)
+                        {
+                            response.ContentType = "text/json";
+                            bool validateResult = (bool)method.Invoke(this, parameters);
+                            if (validateResult == true)
+                            {
+                                await response.OutputStream.WriteAsync(HtmlUtil.GetContent("{\"valid\":true}"));
+                            }
+                            else
+                            {
+                                await response.OutputStream.WriteAsync(HtmlUtil.GetContent("{\"valid\":false}"));
+                            }
+                        }
                         else if (method.GetCustomAttribute<FileAPIAttribute>() != null)
                         {
                             response.ContentType = "application/octet-stream";

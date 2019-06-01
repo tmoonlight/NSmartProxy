@@ -433,6 +433,14 @@ namespace NSmartProxy
 
             //TODO !!!!获取Token，截取clientID，校验
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
+            //if (clientIdFromToken == 0)
+            //{
+            //    await nstream.WriteAndFlushAsync(new byte[] {(byte) CmnSendResult.Fail});
+            //}
+            //else
+            //{
+            //    await nstream.WriteAndFlushAsync(new byte[] { (byte)CmnSendResult.Success });
+            //}
 
             if (IsReconnect)
             {
@@ -487,6 +495,7 @@ namespace NSmartProxy
 
         /// <summary>
         /// 通过token获取clientid
+        /// 返回0说明失败
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
@@ -520,7 +529,15 @@ namespace NSmartProxy
             if (token != Global.NO_TOKEN_STRING)
             {
                 var tokenClaims = StringUtil.ConvertStringToTokenClaims(token);
-                clientIdFromToken = int.Parse(DbOp.Get(tokenClaims.UserKey).ToObject<User>().userId);
+                var userJson = DbOp.Get(tokenClaims.UserKey);
+                if (userJson == null)
+                {
+                    Server.Logger.Debug("token验证失败");
+                }
+                else
+                {
+                    clientIdFromToken = int.Parse(userJson.ToObject<User>().userId);
+                }
             }
 
             return clientIdFromToken;

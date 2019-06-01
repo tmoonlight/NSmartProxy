@@ -1,8 +1,7 @@
 ﻿//@ sourceURL= log.js
 
 (function () {
-    getLogFiles();
-    getLogFileInfo(20);
+    refreshLog();
 }());
 
 function getLogFiles() {
@@ -45,4 +44,10 @@ function getLogFileInfo(lines) {
 function refreshLog() {
     getLogFiles();
     getLogFileInfo(20);
+    setTimeout(scrollToBottom, 200);
 }
+
+function scrollToBottom() {
+    $('#tbxLog').scrollTop($('#tbxLog')[0].scrollHeight);
+}
+

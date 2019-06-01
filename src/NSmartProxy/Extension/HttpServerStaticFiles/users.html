@@ -11,24 +11,26 @@
 </div>
 
 <div class="mb-2 collapse" id="divAddUser">
-    <div class="form-group">
-        <label for="inputUserName">用户名</label>
-        <input type="text" class="form-control" id="inputUserName" placeholder="UserName">
-        <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
-    </div>
-    <div class="form-group">
-        <label for="inputPassword">密码</label>
-        <input type="password" class="form-control" id="inputPassword" placeholder="Password">
-    </div>
-    <!--<div class="form-group form-check">
+    <form class="bv-form" id="frmAddUser">
+        <div class="form-group">
+            <label for="inputUserName">用户名</label>
+            <input type="text" class="form-control" data-bv-field="inputUserName" name="inputUserName" id="inputUserName" placeholder="UserName">
+            <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
+        </div>
+        <div class="form-group">
+            <label for="inputPassword" >密码</label>
+            <input type="password" name="inputPassword" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+        <!--<div class="form-group form-check">
         <input type="checkbox" class="form-check-input" id="exampleCheck1">
         <label class="form-check-label" for="exampleCheck1">Check me out</label>
     </div>-->
-    <div class="custom-control custom-switch mb-4">
-        <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
-        <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
-            </div>
-    <button type="button" onclick="addUser_submit()" class="btn btn-primary">Submit</button>
+        <div class="custom-control custom-switch mb-4">
+            <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
+            <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
+        </div>
+        <button type="button" onclick="addUser_submit()" id="btnAddUser" class="btn btn-primary">Submit</button>
+    </form>
 </div>
    
 

@@ -170,7 +170,8 @@ namespace NSmartProxy
             var configStream = configClient.GetStream();
             await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
             await configStream.WriteAndFlushAsync(data, 0, data.Length);
-            Console.Write(protocol.ToString() + " proceed.");
+            //Console.Write(protocol.ToString() + " proceed.");
+            Console.Write("->");
             if (isClose)
                 configClient.Close();
             return configClient;

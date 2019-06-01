@@ -177,7 +177,7 @@ window.location.href='main.html';
             if (ServerContext.SupportAnonymousLogin && string.IsNullOrEmpty(username))
             {
 
-                username = "temp_" + RandomHelper.NextString(12);
+                username = "temp_" + RandomHelper.NextString(12, false);
                 userpwd = RandomHelper.NextString(20);
                 user = new User
                 {
@@ -213,26 +213,26 @@ window.location.href='main.html';
         #endregion
 
         #region users
-        [API]
-        [Secure]
-        public void AddUser(string userid, string userpwd, string isAdmin)
-        {
+        //[API]
+        //[Secure]
+        //public void AddUser(string userid, string userpwd, string isAdmin)
+        //{
 
-            if (Dbop.Exist(userid))
-            {
-                throw new Exception("error: user exist.");
-            }
-            var user = new User
-            {
-                userId = userid,
-                userPwd = EncryptHelper.SHA256(userpwd),
-                regTime = DateTime.Now.ToString(),
-                isAdmin = isAdmin
-            };
-            //if (isAdmin == true) user.
-            //1.增加用户
-            Dbop.Insert(long.Parse(userid), user.ToJsonString());
-        }
+        //    if (Dbop.Exist(userid))
+        //    {
+        //        throw new Exception("error: user exist.");
+        //    }
+        //    var user = new User
+        //    {
+        //        userId = userid,
+        //        userPwd = EncryptHelper.SHA256(userpwd),
+        //        regTime = DateTime.Now.ToString(),
+        //        isAdmin = isAdmin
+        //    };
+        //    //if (isAdmin == true) user.
+        //    //1.增加用户
+        //    Dbop.Insert(long.Parse(userid), user.ToJsonString());
+        //}
 
         /// <summary>
         /// 
@@ -294,6 +294,14 @@ window.location.href='main.html';
             return Dbop.Select(0, 999);
             //}
         }
+
+        [ValidateAPI]
+        [Secure]
+        public bool ValidateUserName(string username)
+        {
+            return !Dbop.Exist(username);
+        }
+
         #endregion
 
         #region connections

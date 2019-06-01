@@ -35,4 +35,11 @@ namespace NSmartProxy.Extension
     public class SecureAttribute : Attribute
     {
     }
+
+    /// <summary>
+    /// 表示一个远程校验类
+    /// </summary>
+    public class ValidateAPIAttribute : Attribute
+    {
+    }
 }
