@@ -204,8 +204,6 @@ namespace NSmartProxy
         }
 
 
-
-
         private async Task StartConfigService(CancellationTokenSource accepting)
         {
             TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
@@ -433,14 +431,6 @@ namespace NSmartProxy
 
             //TODO !!!!获取Token，截取clientID，校验
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
-            //if (clientIdFromToken == 0)
-            //{
-            //    await nstream.WriteAndFlushAsync(new byte[] {(byte) CmnSendResult.Fail});
-            //}
-            //else
-            //{
-            //    await nstream.WriteAndFlushAsync(new byte[] { (byte)CmnSendResult.Success });
-            //}
 
             if (IsReconnect)
             {
@@ -589,26 +579,11 @@ namespace NSmartProxy
 
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
         {
-            //单独
             using (fromStream)
             {
                 await fromStream.CopyToAsync(toStream, ct);
             }
             Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
-            //byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
-            //try
-            //{
-            //    while (true)
-            //    {
-            //        int bytesRead = await fromStream.ReadAsync(new Memory<byte>(buffer), ct).ConfigureAwait(false);
-            //        if (bytesRead == 0) break;
-            //        await toStream.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, bytesRead), ct).ConfigureAwait(false);
-            //    }
-            //}
-            //finally
-            //{
-            //    ArrayPool<byte>.Shared.Return(buffer);
-            //}
         }
 
         private void CloseClient(TcpClient client)

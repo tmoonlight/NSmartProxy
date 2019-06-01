@@ -150,21 +150,8 @@ namespace NSmartProxy
                 clientId = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             }
            
-            //var tokenClaims = StringUtil.ConverStringToTokenClaims(tokenBytes.ToASCIIString());
-            ////1.校验token
-            //string userkey = EncryptHelper.AES_Decrypt(tokenClaims.UserKey);
-            ////
-            //if (DbOp.Exist(userkey))
-            //{
-            //    //res.ResultState = AuthState.Success;
-            //    //校验成功
-            //}
-            //else
-            //{
-            //    //res.ResultState = AuthState.Fail;
-            //    //校验失败返回错误
-            //}
-            //2.校验时间戳
+           
+            //2.分配clientid
             int appCount = (int)appRequestBytes[2];
 
             if (clientId == 0)

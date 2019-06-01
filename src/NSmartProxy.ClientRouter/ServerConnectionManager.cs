@@ -113,15 +113,6 @@ namespace NSmartProxy.Client
 
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
-            //TODO !!!!!!重连请求的处理
-            //if (isReconn)
-            //{
-            //    //请求0.5 重连客户端id
-            //    var tokenBytes = CurrentToken.ToASCIIBytes();
-            //    await configStream.WriteAsync(StringUtil.IntTo2Bytes(tokenBytes.Length), 0, 2);
-            //    await configStream.WriteAsync(tokenBytes, 0, tokenBytes.Length);
-            //    //重连直接传递token
-            //}
             //请求1 端口数
             var requestBytes = new ClientNewAppRequest
             {
@@ -131,9 +122,6 @@ namespace NSmartProxy.Client
                 ClientCount = config.Clients.Count//(obj => obj.AppId == 0) //appid为0的则是未分配的 <- 取消这条规则，总是重新分配
             }.ToBytes();
             await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
-
-            //TODO !!!!!获取id
-
 
             //请求2 分配端口
             byte[] requestBytes2 = new byte[config.Clients.Count * 2];
@@ -342,7 +330,6 @@ namespace NSmartProxy.Client
                     {
                         //2.接收ack 超时则重发
                         byte[] onebyte = new byte[1];
-                        //Router.Logger.Debug("读ack");
                         var delayDispose =
                             Task.Delay(Global.DefaultWriteAckTimeout); //.ContinueWith(_ => client.Dispose());
 

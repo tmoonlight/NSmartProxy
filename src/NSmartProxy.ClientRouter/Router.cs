@@ -48,11 +48,9 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
         CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         TaskCompletionSource<object> _waiter;
-        //bool HasConnected = false;
 
         public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
-        // public string CurrentToken = Global.NO_TOKEN_STRING;
 
         internal Config ClientConfig;
         internal static INSmartLogger Logger = new NullLogger();   //inject
@@ -287,10 +285,7 @@ namespace NSmartProxy.Client
                 byte[] buffer = new byte[1];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
-                //TODO 消费端长连接，需要在server端保活
-                // providerClient.keep
-                // providerClient.Client.
-
+                //消费端长连接，需要在server端保活
                 try
                 {
                     int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);

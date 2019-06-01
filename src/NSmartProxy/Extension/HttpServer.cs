@@ -141,17 +141,8 @@ namespace NSmartProxy.Extension
                     }
                     //mime类型
                     ProcessMIME(response, unit.Substring(idx3));
-                    //权限控制（只是控制html权限而已）
-                    //if (response.ContentType == "text/html")
-                    //{
-
-                    //    var tokenCookie = request.Cookies[NSP_TOKEN_COOKIE_NAME];
-                    //    if (tokenCookie == null && unit != LOGIN_PAGE)
-                    //    {
-                    //        context.Response.StatusCode = 301;
-                    //        context.Response.Headers.Set("Location", LOGIN_PAGE);
-                    //    }
-                    //}
+                    //TODO 权限控制（只是控制html权限而已）
+                  
 
                     //读文件优先去缓存读
                     MemoryStream memoryStream;

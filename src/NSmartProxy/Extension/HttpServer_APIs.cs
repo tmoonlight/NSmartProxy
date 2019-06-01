@@ -213,26 +213,6 @@ window.location.href='main.html';
         #endregion
 
         #region users
-        //[API]
-        //[Secure]
-        //public void AddUser(string userid, string userpwd, string isAdmin)
-        //{
-
-        //    if (Dbop.Exist(userid))
-        //    {
-        //        throw new Exception("error: user exist.");
-        //    }
-        //    var user = new User
-        //    {
-        //        userId = userid,
-        //        userPwd = EncryptHelper.SHA256(userpwd),
-        //        regTime = DateTime.Now.ToString(),
-        //        isAdmin = isAdmin
-        //    };
-        //    //if (isAdmin == true) user.
-        //    //1.增加用户
-        //    Dbop.Insert(long.Parse(userid), user.ToJsonString());
-        //}
 
         /// <summary>
         /// 

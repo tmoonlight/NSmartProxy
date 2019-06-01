@@ -13,10 +13,6 @@ namespace NSmartProxy.Data
         public int ClientCount; //1
         public override byte[] ToBytes()
         {
-            //byte[] bytes = new byte[3];
-            //byte[] clientIdBytres = IntTo2Bytes(ClientId);
-            //bytes[0] = clientIdBytres[0];
-            //bytes[2] = (byte)ClientCount;
             List<byte> Allbytes = new List<byte>(30);
             byte[] bytes1 = System.Text.ASCIIEncoding.ASCII.GetBytes(Token);
             byte[] bytes0 = IntTo2Bytes(bytes1.Length);
@@ -28,14 +24,5 @@ namespace NSmartProxy.Data
             Allbytes.Add(bytes3);
             return Allbytes.ToArray();
         }
-
-        //public static ClientNewAppRequest GetFromBytes(byte[] bytes)
-        //{
-        //    return new ClientNewAppRequest
-        //    {
-        //        ClientId = DoubleBytesToInt(bytes[0], bytes[1]),
-        //        ClientCount = bytes[2]
-        //    };
-        //}
     }
 }

@@ -35,5 +35,8 @@ namespace NSmartProxy.ClientRouter.Dispatchers
             return JsonConvert.DeserializeObject<HttpResult<LoginFormClientResult>>(httpstr);
         }
 
+        //TODO 增加一个校验用户token是否合法的方法
+        //public 
+
     }
 }
