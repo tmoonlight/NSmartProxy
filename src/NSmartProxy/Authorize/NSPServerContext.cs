@@ -7,14 +7,20 @@ namespace NSmartProxy.Authorize
 {
     public class NSPServerContext
     {
-        public NSPClientCollection Clients = new NSPClientCollection();
-        public Dictionary<int, NSPApp> PortAppMap = new Dictionary<int, NSPApp>(); //端口和app的映射关系
+        public NSPClientCollection Clients;
+        public Dictionary<int, NSPApp> PortAppMap;//端口和app的映射关系
+        public ServerBoundConfig BoundConfig; 
+
         public HashSet<string> TokenCaches; //服务端会话池，登陆后的会话都在这里，每天需要做定时清理
+
         private bool supportAnonymousLogin = true;
 
         public NSPServerContext()
         {
             TokenCaches = new HashSet<string>();
+            Clients = new NSPClientCollection();
+            PortAppMap = new Dictionary<int, NSPApp>();
+            BoundConfig = new ServerBoundConfig();
         }
 
         /// <summary>
@@ -22,7 +28,11 @@ namespace NSmartProxy.Authorize
         /// </summary>
         public bool SupportAnonymousLogin { get => supportAnonymousLogin; set => supportAnonymousLogin = value; }
 
-        public void CloseAllSourceByClient(int clientId)
+        /// <summary>
+        /// 上下文中删除特定客户端
+        /// </summary>
+        /// <param name="clientId"></param>
+        public void CloseAllSourceByClient(int clientId, bool addToBanlist = false)
         {
             if (Clients.ContainsKey(clientId))
             {

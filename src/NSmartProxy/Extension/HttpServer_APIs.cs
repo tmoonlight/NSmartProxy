@@ -398,6 +398,7 @@ window.location.href='main.html';
             }
             //TODO QQQ 加入禁用列表
 
+            //写入数据
             return true;
         }
 
