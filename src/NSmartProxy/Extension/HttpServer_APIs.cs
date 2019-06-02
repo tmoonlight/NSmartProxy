@@ -69,7 +69,8 @@ namespace NSmartProxy.Extension
             string fileFullPath = BASE_LOG_FILE_PATH + "/" + filekey;
             if (allowedSuffix == suffix)
             {
-                FileStream fs = File.OpenRead(fileFullPath);
+                var fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read,
+                    FileShare.Delete | FileShare.ReadWrite);
                 return new FileDTO()
                 {
                     FileName = filekey,
