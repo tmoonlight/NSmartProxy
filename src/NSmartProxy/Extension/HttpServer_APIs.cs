@@ -97,9 +97,6 @@ namespace NSmartProxy.Extension
 
         private const string C_OPEN_DASH_BOARD = nameof(C_OPEN_DASH_BOARD);
         private const string C_OPEN_LOG_TRACK = nameof(C_OPEN_LOG_TRACK);
-        private const string C_CLIENT_SERVICE_PORT = "ClientServicePort";
-        private const string C_CONFIG_SERVICE_PORT = "ConfigServicePort";
-        private const string C_WEB_API_PORT = "WebAPIPort";
         //API SetConfig
         //API GetConifgs
         //public string 
@@ -290,9 +287,9 @@ window.location.href='main.html';
         [Secure]
         public string GetClientsInfoJson()
         {
-            var ConnectionManager = ClientConnectionManager.GetInstance();
+            var connectionManager = ClientConnectionManager.GetInstance();
             StringBuilder json = new StringBuilder("[ ");
-            foreach (var (key, value) in ConnectionManager.PortAppMap)
+            foreach (var (key, value) in ServerContext.PortAppMap)
             {
                 json.Append("{ ");
                 json.Append(KV2Json("port", key)).C();
@@ -359,6 +356,73 @@ window.location.href='main.html';
             json.Append("]");
             return json.ToString();
         }
+
+        /// <summary>
+        /// 强制断开客户端
+        /// </summary>
+        /// <param name="clientIdStr"></param>
+        /// <returns></returns>
+        [API]
+        [Secure]
+        public bool CloseClient(string clientIdStr)
+        {
+            if (ServerContext == null) return false;
+            var idStrs = clientIdStr.Split(",");
+
+            foreach (var idStr in idStrs)
+            {
+                var id = int.Parse(idStr);
+                ServerContext.CloseAllSourceByClient(id);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 禁止客户端访问
+        /// </summary>
+        /// <param name="clientIdStr"></param>
+        /// <returns></returns>
+        [API]
+        [Secure]
+        public bool ForbidClient(string clientIdStr)
+        {
+            if (ServerContext == null) return false;
+            var idStrs = clientIdStr.Split(",");
+
+            foreach (var idStr in idStrs)
+            {
+                var id = int.Parse(idStr);
+                ServerContext.CloseAllSourceByClient(id);
+            }
+            //TODO QQQ 加入禁用列表
+
+            return true;
+        }
+
+        /// <summary>
+        /// 将用户和端口绑定，以防被其他用户占用
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="ports"></param>
+        /// <returns></returns>
+        [API]
+        [Secure]
+        public bool BindUserToPort(string username, string ports)
+        {
+            var portsList = ports.Split(",").Select(str => int.Parse(str)).ToList();
+            var unAvailabelPorts = NetworkUtil.FindUnAvailableTCPPorts(portsList);
+            if (unAvailabelPorts.Count > 0)
+            {
+                Server.Logger.Debug($"端口{string.Join(',', unAvailabelPorts)}被占用");
+                return false;
+            }
+            //TODO 绑定端口到用户
+            //Dbop.Update();
+
+            return true; 
+        }
+
         #region  json转换用的私有方法
 
         private string KV2Json(string key)

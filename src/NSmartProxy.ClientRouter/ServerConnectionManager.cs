@@ -303,8 +303,9 @@ namespace NSmartProxy.Client
             }
         }
 
-        public async Task StartHeartBeats(int interval, CancellationToken ct)
+        public async Task StartHeartBeats(int interval, CancellationToken ct, TaskCompletionSource<object> waiter)
         {
+            var timeStamp = Router.TimeStamp;
             try
             {
                 var config = ClientConfig;
@@ -368,7 +369,13 @@ namespace NSmartProxy.Client
             {
                 Router.Logger.Debug("心跳循环已终止。");
                 await Task.Delay(1000);
-                //TODO 重启
+                //TODO 重启 有时服务端因为其他原因重启，导致这里终止了心跳循环
+                //TODO 会导致已重启的程序再次重启，进而无限重启
+                if (Router.TimeStamp == timeStamp)
+                {
+                    Router.Logger.Debug("心跳异常导致客户端重启");
+                    waiter.TrySetResult("心跳异常导致客户端重启");
+                }
             }
 
         }

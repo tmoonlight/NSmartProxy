@@ -94,6 +94,51 @@ namespace NSmartProxy
         }
 
         /// <summary> 
+        /// 找出正在被使用的端口
+        /// </summary> 
+        /// <param name="startPort">The first port to check</param> 
+        /// <returns>The first available port</returns> 
+        public static List<int> FindUnAvailableTCPPorts(List<int> ports)
+        {
+            //int[] arrangedPorts = new int[PortCount];
+            // int port = startPort;
+            bool isAvailable = true;
+            List<int> usedPortList = new List<int>(ports.Count);
+            var mutex = new Mutex(false,
+                PortReleaseGuid
+                /*string.Concat("./Global/", PortReleaseGuid)*/);
+            mutex.WaitOne();
+            try
+            {
+                IPGlobalProperties ipGlobalProperties =
+                    IPGlobalProperties.GetIPGlobalProperties();
+                IPEndPoint[] endPoints =
+                    ipGlobalProperties.GetActiveTcpListeners();
+                for (int i = ports.Count - 1; i > -1; i--)
+                {
+                    _usedPorts.Contains(ports[i]);
+                    ports.Remove(ports[i]);
+                    usedPortList.Add(ports[i]);
+                }
+                foreach (IPEndPoint endPoint in endPoints)
+                {
+                    var thisPort = endPoint.Port;
+                    if (ports.Any(p => p == thisPort))
+                    {
+                        usedPortList.Add(thisPort);
+                    }
+                }
+
+                return usedPortList;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+
+
+        /// <summary> 
         /// Check if startPort is available, incrementing and 
         /// checking again if it's in use until a free port is found 
         /// </summary> 
@@ -189,7 +234,7 @@ namespace NSmartProxy
         /// <param name="ErrorMsg"></param>
         public static void SetKeepAlive(this TcpClient tcpClient, out string ErrorMsg)
         {
-            
+
             ErrorMsg = "";
             // not all platforms support IOControl
             //try

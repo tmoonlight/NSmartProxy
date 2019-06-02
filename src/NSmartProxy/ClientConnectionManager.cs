@@ -26,11 +26,9 @@ namespace NSmartProxy
         /// </summary>
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
-        //public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
-        public NSPClientCollection Clients = new NSPClientCollection();
 
-        //端口和app的映射关系
-        public Dictionary<int, NSPApp> PortAppMap = new Dictionary<int, NSPApp>();
+        private NSPServerContext ServerContext;
+     
 
         private ClientConnectionManager()
         {
@@ -57,6 +55,17 @@ namespace NSmartProxy
                 ProcessReverseRequest(incomeClient);
             }
 
+        }
+
+        public static ClientConnectionManager GetInstance()
+        {
+            return Instance;
+        }
+
+        public ClientConnectionManager SetServerContext(NSPServerContext serverContext)
+        {
+            ServerContext = serverContext;
+            return this;
         }
 
         /// <summary>
@@ -93,7 +102,7 @@ namespace NSmartProxy
                 //分配
                 lock (_lockObject)
                 {
-                    Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
+                    ServerContext.Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
                         .PushInComeClient(iClient);
                 }
                 //var arg = new AppChangedEventArgs();
@@ -110,19 +119,15 @@ namespace NSmartProxy
 
         private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
-        public static ClientConnectionManager GetInstance()
-        {
-            return Instance;
-        }
 
         public async Task<TcpClient> GetClient(int consumerPort)
         {
-            var clientID = PortAppMap[consumerPort].ClientId;
-            var appID = PortAppMap[consumerPort].AppId;
+            var clientID = ServerContext.PortAppMap[consumerPort].ClientId;
+            var appID = ServerContext.PortAppMap[consumerPort].AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
-            TcpClient client = await Clients[clientID].AppMap[appID].PopClientAsync();
-            PortAppMap[consumerPort].ReverseClients.Add(client);
+            TcpClient client = await ServerContext.Clients[clientID].AppMap[appID].PopClientAsync();
+            ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
             return client;
         }
 
@@ -149,8 +154,8 @@ namespace NSmartProxy
             {
                 clientId = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             }
-           
-           
+
+
             //2.分配clientid
             int appCount = (int)appRequestBytes[2];
 
@@ -164,7 +169,7 @@ namespace NSmartProxy
                     {
                         _rand.NextBytes(tempClientIdBytes);
                         int tempClientId = (tempClientIdBytes[0] << 8) + tempClientIdBytes[1];
-                        if (!Clients.ContainsKey(tempClientId))
+                        if (!ServerContext.Clients.ContainsKey(tempClientId))
                         {
 
                             clientModel.ClientId = tempClientId;
@@ -181,7 +186,7 @@ namespace NSmartProxy
             }
 
             //注册客户端
-            Clients.RegisterNewClient(clientModel.ClientId);
+            ServerContext.Clients.RegisterNewClient(clientModel.ClientId);
             lock (_lockObject2)
             {
                 //注册app
@@ -190,17 +195,17 @@ namespace NSmartProxy
                 {
                     int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
 
-                    int arrangedAppid = Clients[clientId].RegisterNewApp();
+                    int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = 20000;
                     int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
-                    NSPApp app = Clients[clientId].AppMap[arrangedAppid];
+                    NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];
                     app.ClientId = clientId;
                     app.AppId = arrangedAppid;
                     app.ConsumePort = port;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
-                    PortAppMap[port] = app;
+                    ServerContext.PortAppMap[port] = app;
 
                     clientModel.AppList.Add(new App
                     {

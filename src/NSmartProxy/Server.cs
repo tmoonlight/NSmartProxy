@@ -54,7 +54,7 @@ namespace NSmartProxy
 
         protected ClientConnectionManager ConnectionManager = null;
         protected IDbOperator DbOp;
-        protected NSPServerContext Context;
+        protected NSPServerContext ServerContext;
 
         internal static INSmartLogger Logger; //inject
 
@@ -62,12 +62,12 @@ namespace NSmartProxy
         {
             //initialize
             Logger = logger;
-            Context = new NSPServerContext();
+            ServerContext = new NSPServerContext();
         }
 
         public Server SetAnonymousLogin(bool isSupportAnonymous)
         {
-            Context.SupportAnonymousLogin = isSupportAnonymous;
+            ServerContext.SupportAnonymousLogin = isSupportAnonymous;
             return this;
         }
 
@@ -88,7 +88,7 @@ namespace NSmartProxy
             CancellationTokenSource ctsConsumer = new CancellationTokenSource();
 
             //1.反向连接池配置
-            ConnectionManager = ClientConnectionManager.GetInstance();
+            ConnectionManager = ClientConnectionManager.GetInstance().SetServerContext(ServerContext);
             //注册客户端发生连接时的事件
             ConnectionManager.AppTcpClientMapConfigConnected += ConnectionManager_AppAdded;
             ConnectionManager.ListenServiceClient(DbOp);
@@ -97,7 +97,7 @@ namespace NSmartProxy
             //2.开启http服务
             if (WebManagementPort > 0)
             {
-                var httpServer = new HttpServer(Logger, DbOp, Context);
+                var httpServer = new HttpServer(Logger, DbOp, ServerContext);
                 httpServer.StartHttpService(ctsHttp, WebManagementPort);
             }
 
@@ -142,12 +142,12 @@ namespace NSmartProxy
                 while (!cts.Token.IsCancellationRequested)
                 {
                     //Server.Logger.Debug("开始心跳检测");
-                    var outTimeClients = ConnectionManager.Clients.Where(
+                    var outTimeClients = ServerContext.Clients.Where(
                         (cli) => DateTimeHelper.TimeRange(cli.LastUpdateTime, DateTime.Now) > interval).ToList();
 
                     foreach (var client in outTimeClients)
                     {
-                        CloseAllSourceByClient(client.ClientID);
+                        ServerContext.CloseAllSourceByClient(client.ClientID);
                     }
                     //Server.Logger.Debug("结束心跳检测");
                     await Task.Delay(interval);
@@ -164,39 +164,6 @@ namespace NSmartProxy
             }
         }
 
-        private void CloseAllSourceByClient(int clientId)
-        {
-            if (ConnectionManager.Clients.ContainsKey(clientId))
-            {
-                NSPClient client = ConnectionManager.Clients[clientId];
-                string msg = "";
-                foreach (var appKV in client.AppMap)
-                {
-                    int port = appKV.Value.ConsumePort;
-                    //1.关闭，并移除AppMap中的App
-                    ConnectionManager.PortAppMap[port].Close();
-                    ConnectionManager.PortAppMap.Remove(port);
-                    msg += appKV.Value.ConsumePort + " ";
-                    //2.移除端口占用
-                    NetworkUtil.ReleasePort(port);
-                }
-
-                //3.移除client
-                try
-                {
-                    int closedClients = ConnectionManager.Clients.UnRegisterClient(client.ClientID);
-                    Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 {closedClients}个传输已终止。");
-                }
-                catch (Exception ex)
-                {
-                    Server.Logger.Error($"CloseAllSourceByClient error:{ex.Message}", ex);
-                }
-            }
-            else
-            {
-                Server.Logger.Debug($"无此id: {clientId},可能已关闭过");
-            }
-        }
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
@@ -224,7 +191,7 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapReverseConnected事件已触发");
             int port = 0;
-            foreach (var kv in ConnectionManager.PortAppMap)
+            foreach (var kv in ServerContext.PortAppMap)
             {
                 if (kv.Value.AppId == e.App.AppId &&
                     kv.Value.ClientId == e.App.ClientId) port = kv.Key;
@@ -248,7 +215,7 @@ namespace NSmartProxy
             try
             {
                 var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
-                var nspApp = ConnectionManager.PortAppMap[consumerPort];
+                var nspApp = ServerContext.PortAppMap[consumerPort];
 
                 consumerlistener.Start(1000);
                 nspApp.Listener = consumerlistener;
@@ -280,7 +247,7 @@ namespace NSmartProxy
         {
             TcpTunnel tunnel = new TcpTunnel();
             tunnel.ConsumerClient = consumerClient;
-            ClientConnectionManager.GetInstance().PortAppMap[consumerPort].Tunnels.Add(tunnel);
+            ServerContext.PortAppMap[consumerPort].Tunnels.Add(tunnel);
             Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
 
             //II.弹出先前已经准备好的socket
@@ -380,7 +347,7 @@ namespace NSmartProxy
 
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             //2.更新最后更新时间
-            CloseAllSourceByClient(clientID);
+            ServerContext.CloseAllSourceByClient(clientID);
             //3.接收完立即关闭
             client.Close();
         }
@@ -404,9 +371,9 @@ namespace NSmartProxy
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
             //2.更新最后更新时间
-            if (ConnectionManager.Clients.ContainsKey(clientID))
+            if (ServerContext.Clients.ContainsKey(clientID))
             {
-                ConnectionManager.Clients[clientID].LastUpdateTime = DateTime.Now;
+                ServerContext.Clients[clientID].LastUpdateTime = DateTime.Now;
             }
             else
             {
@@ -432,10 +399,10 @@ namespace NSmartProxy
             //TODO !!!!获取Token，截取clientID，校验
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
 
-            if (IsReconnect)
-            {
-                CloseAllSourceByClient(clientIdFromToken);
-            }
+            //if (IsReconnect) 因为加入了始终校验的机制，取消重连规则
+            //{
+                ServerContext.CloseAllSourceByClient(clientIdFromToken);
+           // }
 
             //1.3 获取客户端请求数
             int configRequestLength = 3;

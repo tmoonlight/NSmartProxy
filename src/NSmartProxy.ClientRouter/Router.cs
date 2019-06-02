@@ -52,12 +52,14 @@ namespace NSmartProxy.Client
         public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
 
-        internal Config ClientConfig;
-        internal static INSmartLogger Logger = new NullLogger();   //inject
-        internal LoginInfo CurrentLoginInfo;
-
         public Action DoServerNoResponse = delegate { };
         public Action<ClientStatus, List<string>> StatusChanged = delegate { };
+
+        internal Config ClientConfig;
+        internal LoginInfo CurrentLoginInfo;
+
+        internal static INSmartLogger Logger = new NullLogger();   //inject
+        internal static Guid TimeStamp; //时间戳，用来标识对象是否已经发生变化
 
         public Router()
         {
@@ -100,6 +102,8 @@ namespace NSmartProxy.Client
                 TRANSFERING_TOKEN_SRC = new CancellationTokenSource();
                 HEARTBEAT_TOKEN_SRC = new CancellationTokenSource();
                 _waiter = new TaskCompletionSource<object>();
+                Router.TimeStamp = Guid.NewGuid();
+
                 var appIdIpPortConfig = ClientConfig.Clients;
                 int clientId = 0;
 
@@ -183,7 +187,7 @@ namespace NSmartProxy.Client
                     Logger.Debug("**************************************");
                     ConnectionManager.PollingToProvider(StatusChanged, tunnelstrs);
                     //3.创建心跳连接
-                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token);
+                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token,_waiter);
 
                     IsStarted = true;
                     Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;

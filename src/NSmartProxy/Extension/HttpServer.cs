@@ -25,12 +25,10 @@ namespace NSmartProxy.Extension
         public INSmartLogger Logger;
         public IDbOperator Dbop;
 
-        public const string INDEX_PAGE = "/main.html";
-        //public const string LOGIN_PAGE = "/login.html";
-        //public const string LOGIN_API = "/Login";
-        public const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
-        public const string BASE_LOG_FILE_PATH = "./log";
-        //public const string NSP_TOKEN_COOKIE_NAME = "'NSPTK";
+        private const string INDEX_PAGE = "/main.html";
+        private const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
+        private const string BASE_LOG_FILE_PATH = "./log";
+
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
         public NSPServerContext ServerContext { get; }
 
@@ -217,7 +215,7 @@ namespace NSmartProxy.Extension
                         }
                         else if (method.GetCustomAttribute<ValidateAPIAttribute>() != null)
                         {
-                            response.ContentType = "text/json";
+                            response.ContentType = "application/json";
                             bool validateResult = (bool)method.Invoke(this, parameters);
                             if (validateResult == true)
                             {
