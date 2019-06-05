@@ -114,8 +114,6 @@ namespace NSmartProxy.Extension
 
             try
             {
-
-
                 //通过request来的值进行接口调用
                 string unit = request.RawUrl.Replace("//", "");
 

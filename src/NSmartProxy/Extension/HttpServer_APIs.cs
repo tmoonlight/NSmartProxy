@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using NSmartProxy.Authorize;
 using NSmartProxy.Data.DTO;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Data.Entity;
@@ -379,6 +380,7 @@ window.location.href='main.html';
             return true;
         }
 
+        private object userLocker = new object();
         /// <summary>
         /// 禁止客户端访问
         /// </summary>
@@ -386,7 +388,7 @@ window.location.href='main.html';
         /// <returns></returns>
         [API]
         [Secure]
-        public bool ForbidClient(string clientIdStr)
+        public bool ForbidClient(string clientIdStr, string addToBanlist = "")
         {
             if (ServerContext == null) return false;
             var idStrs = clientIdStr.Split(",");
@@ -396,7 +398,22 @@ window.location.href='main.html';
                 var id = int.Parse(idStr);
                 ServerContext.CloseAllSourceByClient(id);
             }
-            //TODO QQQ 加入禁用列表
+
+            lock (userLocker)
+            {
+                if (addToBanlist.Trim() == "1")
+                {
+                    //TODO QQQ 加入禁用列表 需要考虑线程安全
+                    foreach (var idStr in idStrs)
+                    {
+                        ServerContext.ServerConfig.BoundConfig.UsersBanlist.Add(idStr);
+                    }
+                }
+            }
+
+            //TODO QQQ这个地址怎么传进来
+            ServerContext.ServerConfig.BoundConfig.SaveChanges(ServerContext.ServerConfigPath);
+
 
             //写入数据
             return true;
@@ -413,16 +430,21 @@ window.location.href='main.html';
         public bool BindUserToPort(string username, string ports)
         {
             var portsList = ports.Split(",").Select(str => int.Parse(str)).ToList();
-            var unAvailabelPorts = NetworkUtil.FindUnAvailableTCPPorts(portsList);
-            if (unAvailabelPorts.Count > 0)
+            lock (userLocker)
             {
-                Server.Logger.Debug($"端口{string.Join(',', unAvailabelPorts)}被占用");
-                return false;
+                var unAvailabelPorts = NetworkUtil.FindUnAvailableTCPPorts(portsList);
+                if (unAvailabelPorts.Count > 0)
+                {
+                    Server.Logger.Debug($"端口{string.Join(',', unAvailabelPorts)}被占用");
+                    return false;
+                }
+                //TODO 绑定端口到用户
+                var userBounds = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
+                userBounds[username].Bound = portsList;
+                userBounds.SaveChanges(ServerContext.ServerConfigPath);
             }
-            //TODO 绑定端口到用户
-            //Dbop.Update();
 
-            return true; 
+            return true;
         }
 
         #region  json转换用的私有方法

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NSmartProxy.Data
 { 
-    public class Config
+    public class NSPClientConfig
     {
         public int ProviderPort;                    //代理转发服务端口
         public int ProviderConfigPort;              //配置服务端口

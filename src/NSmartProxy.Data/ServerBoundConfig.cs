@@ -10,8 +10,8 @@ namespace NSmartProxy.Data
     [Serializable]
     public class ServerBoundConfig
     {
-        public HashSet<string> UsersBanlist;
-        public UserPortBound UserPortBoundList;
+        public HashSet<string> UsersBanlist = new HashSet<string>();
+        public Dictionary<string, UserPortBound> UserPortBounds = new Dictionary<string, UserPortBound>();
 
         public class UserPortBound
         {

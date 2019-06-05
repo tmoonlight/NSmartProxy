@@ -42,8 +42,8 @@ namespace NSmartProxy
         public async Task ListenServiceClient(IDbOperator dbOp)
         {
             //侦听，并且构造连接池
-            Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
-            TcpListener listener = new TcpListener(IPAddress.Any, Server.ClientServicePort);
+            Server.Logger.Debug("Listening client on port " + ServerContext.ServerConfig.ClientServicePort + "...");
+            TcpListener listener = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ClientServicePort);
             listener.Start(1000);
             while (true)
             {
@@ -140,7 +140,7 @@ namespace NSmartProxy
         //   2          2
         //  clientid    count
         //  methodType  value = 0
-        public byte[] ArrageConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes, int highPriorityClientId)
+        public byte[] ArrangeConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes, int highPriorityClientId)
         {
             // byte[] arrangedBytes = new byte[256];
             ClientModel clientModel = new ClientModel();
@@ -156,7 +156,7 @@ namespace NSmartProxy
             }
 
 
-            //2.分配clientid
+            //2.分配clientid //TODO 这一段可能不会再用到了
             int appCount = (int)appRequestBytes[2];
 
             if (clientId == 0)
@@ -197,6 +197,7 @@ namespace NSmartProxy
 
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     //查找port的起始端口如果未指定，则设置为20000
+                    //TODO 如果端口是指定的并且是绑定的，则直接使用该端口即可
                     if (startPort == 0) startPort = 20000;
                     int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
                     NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];

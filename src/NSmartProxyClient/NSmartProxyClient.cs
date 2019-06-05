@@ -112,7 +112,7 @@ namespace NSmartProxy
         private static void SetConfig(Router clientRouter)
         {
 
-            Config config = new Config();
+            NSPClientConfig config = new NSPClientConfig();
             config.ProviderAddress = Configuration.GetSection("ProviderAddress").Value;
             config.ProviderPort = int.Parse(Configuration.GetSection("ProviderPort").Value);
             config.ProviderConfigPort = int.Parse(Configuration.GetSection("ProviderConfigPort").Value);
@@ -129,7 +129,7 @@ namespace NSmartProxy
                 });
             }
             // Configuration.GetSection("1").
-            clientRouter.SetConifiguration(config);
+            clientRouter.SetConfiguration(config);
         }
     }
 }

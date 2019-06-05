@@ -55,7 +55,7 @@ namespace NSmartProxy.Client
         public Action DoServerNoResponse = delegate { };
         public Action<ClientStatus, List<string>> StatusChanged = delegate { };
 
-        internal Config ClientConfig;
+        internal NSPClientConfig ClientConfig;
         internal LoginInfo CurrentLoginInfo;
 
         internal static INSmartLogger Logger = new NullLogger();   //inject
@@ -71,7 +71,7 @@ namespace NSmartProxy.Client
             Logger = logger;
         }
 
-        public Router SetConifiguration(Config config)
+        public Router SetConfiguration(NSPClientConfig config)
         {
             ClientConfig = config;
             return this;

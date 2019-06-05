@@ -13,6 +13,7 @@ using NSmartProxy.Data;
 using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Authorize;
+using NSmartProxy.Data.Config;
 using NSmartProxy.Data.Entity;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
@@ -45,12 +46,13 @@ namespace NSmartProxy
     public class Server
     {
 
-        public static int ClientServicePort = 9973;   //服务端代理转发端口
-        public static int ConfigServicePort = 12307;  //服务端配置通讯端口
-        public static int WebManagementPort = 0;    //远端管理端口
+        //TODO 放到一个实体里
+        //public static int ClientServicePort = 19974;   //服务端代理转发端口
+        //public static int ConfigServicePort = 12308;  //服务端配置通讯端口
+        //public static int WebManagementPort = 12309;    //远端管理端口
 
-        public const string USER_DB_NAME = "./nsmart_user";
-        public const string SECURE_KEY_FILE = "./nsmart_sec_key";
+        public const string USER_DB_PATH = "./nsmart_user";
+        public const string SECURE_KEY_FILE_PATH = "./nsmart_sec_key";
 
         protected ClientConnectionManager ConnectionManager = null;
         protected IDbOperator DbOp;
@@ -65,22 +67,40 @@ namespace NSmartProxy
             ServerContext = new NSPServerContext();
         }
 
+        /// <summary>
+        /// 设置服务端的配置文件，保存服务端配置时可以写入此文件
+        /// </summary>
+        /// <param name="configPath"></param>
+        /// <returns></returns>
+        public Server SetServerConfigPath(string configPath) //bad design 
+        {
+            ServerContext.ServerConfigPath = configPath;
+            return this;
+        }
+
         public Server SetAnonymousLogin(bool isSupportAnonymous)
         {
             ServerContext.SupportAnonymousLogin = isSupportAnonymous;
             return this;
         }
 
-        //必须设置远程端口才可以通信
-        public Server SetWebPort(int port)
+        public Server SetConfiguration(NSPServerConfig config)
         {
-            WebManagementPort = port;
+            this.ServerContext.ServerConfig = config;
             return this;
         }
 
+        //必须设置远程端口才可以通信 //TODO 合并到配置里
+        //public Server SetWebPort(int port)
+        //{
+        //    WebManagementPort = port;
+        //    return this;
+        //}
+
         public async Task Start()
         {
-            DbOp = new NSmartDbOperator(USER_DB_NAME, USER_DB_NAME + "_index");
+            DbOp = new NSmartDbOperator(USER_DB_PATH, USER_DB_PATH + "_index");//加载数据库
+            //从配置文件加载服务端配置
             InitSecureKey();
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             CancellationTokenSource ctsConfig = new CancellationTokenSource();
@@ -95,10 +115,10 @@ namespace NSmartProxy
             Logger.Debug("NSmart server started");
 
             //2.开启http服务
-            if (WebManagementPort > 0)
+            if (ServerContext.ServerConfig.WebAPIPort > 0)
             {
                 var httpServer = new HttpServer(Logger, DbOp, ServerContext);
-                httpServer.StartHttpService(ctsHttp, WebManagementPort);
+                httpServer.StartHttpService(ctsHttp, ServerContext.ServerConfig.WebAPIPort);
             }
 
             //3.开启心跳检测线程 
@@ -124,14 +144,14 @@ namespace NSmartProxy
         private void InitSecureKey()
         {
             //生成密钥
-            if (File.Exists(SECURE_KEY_FILE))
+            if (File.Exists(SECURE_KEY_FILE_PATH))
             {
-                EncryptHelper.AES_Key = File.ReadAllText(SECURE_KEY_FILE);//prikey
+                EncryptHelper.AES_Key = File.ReadAllText(SECURE_KEY_FILE_PATH);//prikey
             }
             else
             {
                 EncryptHelper.AES_Key = RandomHelper.NextString(8);
-                File.WriteAllText(SECURE_KEY_FILE, EncryptHelper.AES_Key);
+                File.WriteAllText(SECURE_KEY_FILE_PATH, EncryptHelper.AES_Key);
             }
         }
 
@@ -173,9 +193,9 @@ namespace NSmartProxy
 
         private async Task StartConfigService(CancellationTokenSource accepting)
         {
-            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ConfigServicePort);
+            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ConfigServicePort);
 
-            Logger.Debug("Listening config request on port " + ConfigServicePort.ToString() + "...");
+            Logger.Debug("Listening config request on port " + ServerContext.ServerConfig.ConfigServicePort + "...");
             var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
             await taskResultConfig; //block here to hold open the server
@@ -430,7 +450,7 @@ namespace NSmartProxy
             //3.分配配置ID，并且写回给客户端
             try
             {
-                byte[] arrangedIds = ConnectionManager.ArrageConfigIds(appRequestBytes, consumerPortBytes, clientIdFromToken);
+                byte[] arrangedIds = ConnectionManager.ArrangeConfigIds(appRequestBytes, consumerPortBytes, clientIdFromToken);
                 Server.Logger.Debug("apprequest arranged");
                 await nstream.WriteAsync(arrangedIds);
             }

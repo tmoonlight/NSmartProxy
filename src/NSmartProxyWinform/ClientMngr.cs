@@ -26,7 +26,7 @@ namespace NSmartProxyWinform
         public Router clientRouter;
         private Log4netLogger logger;
         private bool configChanged = false;
-        private Config config;
+        private NSPClientConfig config;
 
         private const string NULL_CLIENT_TEXT = "<未编辑节点>";
         private const string RANDOM_PORT_TEXT = "<随机>";
@@ -181,7 +181,7 @@ namespace NSmartProxyWinform
             }
         }
 
-        private void StartClientRouter(Config config, Action<ClientStatus, List<string>> loaded)
+        private void StartClientRouter(NSPClientConfig config, Action<ClientStatus, List<string>> loaded)
         {
             clientRouter = new Router(logger);
             //TaskScheduler.UnobservedTaskException +=
@@ -193,9 +193,9 @@ namespace NSmartProxyWinform
             tsk.ConfigureAwait(false);//异步会导致无法抛出错误,同步又会导致锁死，必须再invoke一次？
         }
 
-        private void SetConfig(Router clientRouter, Config config)
+        private void SetConfig(Router clientRouter, NSPClientConfig config)
         {
-            clientRouter.SetConifiguration(config);
+            clientRouter.SetConfiguration(config);
         }
 
         public void ShowInfo(string info)
@@ -385,7 +385,7 @@ namespace NSmartProxyWinform
 
         private void RefreshFormFromConfig()
         {
-            Config conf = ConfigHelper.ReadAllConfig(Program.CONFIG_FILE_PATH);
+            NSPClientConfig conf = ConfigHelper.ReadAllConfig<NSPClientConfig>(Program.CONFIG_FILE_PATH);
             tbxProviderAddr.Text = conf.ProviderAddress;
             tbxConfigPort.Text = conf.ProviderConfigPort.ToString();
             tbxReversePort.Text = conf.ProviderPort.ToString();
@@ -411,7 +411,7 @@ namespace NSmartProxyWinform
 
         private bool SaveFormDataToConfigFile()
         {
-            config = new Config();
+            config = new NSPClientConfig();
             //1.刷新配置
             config.ProviderAddress = tbxProviderAddr.Text;
             config.ProviderConfigPort = int.Parse(tbxConfigPort.Text);

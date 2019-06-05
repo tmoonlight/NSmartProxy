@@ -28,7 +28,7 @@ namespace NSmartProxy.Client
         public List<TcpClient> ConnectedConnections;
         public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
         public Action ServerNoResponse = delegate { };
-        public Config ClientConfig;
+        public NSPClientConfig ClientConfig;
 
         public int ClientID
         {
@@ -46,7 +46,7 @@ namespace NSmartProxy.Client
         /// 初始化配置，返回服务端返回的配置
         /// </summary>
         /// <returns></returns>
-        public async Task<ClientModel> InitConfig(Config config)
+        public async Task<ClientModel> InitConfig(NSPClientConfig config)
         {
             ClientConfig = config;
             ClientModel clientModel = await ReadConfigFromProvider();

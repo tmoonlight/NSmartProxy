@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 using NSmartProxy.Data;
+using NSmartProxy.Data.Config;
 
 namespace NSmartProxy.Authorize
 {
+    /// <summary>
+    /// 存放服务端的状态，以供其他组件共享
+    /// </summary>
     public class NSPServerContext
     {
         public NSPClientCollection Clients;
         public Dictionary<int, NSPApp> PortAppMap;//端口和app的映射关系
-        public ServerBoundConfig BoundConfig; 
-
+        public NSPServerConfig ServerConfig;
         public HashSet<string> TokenCaches; //服务端会话池，登陆后的会话都在这里，每天需要做定时清理
 
         private bool supportAnonymousLogin = true;
@@ -20,13 +23,15 @@ namespace NSmartProxy.Authorize
             TokenCaches = new HashSet<string>();
             Clients = new NSPClientCollection();
             PortAppMap = new Dictionary<int, NSPApp>();
-            BoundConfig = new ServerBoundConfig();
+            //ServerConfig = new NSPServerConfig();
         }
 
         /// <summary>
         /// 支持客户端匿名登陆
         /// </summary>
         public bool SupportAnonymousLogin { get => supportAnonymousLogin; set => supportAnonymousLogin = value; }
+
+        public string ServerConfigPath { get; set; }
 
         /// <summary>
         /// 上下文中删除特定客户端

@@ -21,8 +21,24 @@ namespace NSmartProxy
 
         public static bool ReleasePort(int port)
         {
-            return _usedPorts.Remove(port);
+            try
+            {
+                mutex.WaitOne();
+                _usedPorts.Remove(port);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
         }
+
+        private static readonly Mutex mutex = new Lazy<Mutex>(() =>
+            new Mutex(false,
+                PortReleaseGuid)).Value;
+        /*string.Concat("./Global/", PortReleaseGuid)*/
 
         /// <summary>
         /// 查找一个端口
@@ -47,9 +63,8 @@ namespace NSmartProxy
             bool isAvailable = true;
 
             var mutex = new Mutex(false,
-                PortReleaseGuid
-                /*string.Concat("./Global/", PortReleaseGuid)*/);
-            mutex.WaitOne();
+                PortReleaseGuid);
+            mutex.WaitOne();　//全局锁
             try
             {
                 for (int i = 0; i < PortCount; i++)
@@ -104,9 +119,7 @@ namespace NSmartProxy
             // int port = startPort;
             bool isAvailable = true;
             List<int> usedPortList = new List<int>(ports.Count);
-            var mutex = new Mutex(false,
-                PortReleaseGuid
-                /*string.Concat("./Global/", PortReleaseGuid)*/);
+
             mutex.WaitOne();
             try
             {
@@ -139,8 +152,7 @@ namespace NSmartProxy
 
 
         /// <summary> 
-        /// Check if startPort is available, incrementing and 
-        /// checking again if it's in use until a free port is found 
+        /// 找UDP空闲端口
         /// </summary> 
         /// <param name="startPort">The first port to check</param> 
         /// <returns>The first available port</returns> 
@@ -298,5 +310,50 @@ namespace NSmartProxy
             return buffer;
         }
 
+        /// <summary>
+        /// 增加排除端口，这些端口永远不会被分配到
+        /// </summary>
+        /// <param name="usedPorts"></param>
+        public static void AddUsedPorts(List<int> usedPorts)
+        {
+            try
+            {
+                mutex.WaitOne();
+                foreach (var port in usedPorts)
+                {
+                    usedPorts.Add(port);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+
+        }
+
+        /// <summary>
+        /// 删除排除端口
+        /// </summary>
+        /// <param name="usedPorts"></param>
+        public static void RemoveUsedPorts(List<int> usedPorts)
+        {
+            try
+            {
+                mutex.WaitOne();
+                foreach (var port in usedPorts)
+                {
+                    usedPorts.Remove(port);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+
+        }
     }
 }

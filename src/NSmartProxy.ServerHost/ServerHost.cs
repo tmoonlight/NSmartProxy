@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using System.Threading;
+using NSmartProxy.Data.Config;
+using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
 
 namespace NSmartProxy.ServerHost
@@ -41,6 +43,7 @@ namespace NSmartProxy.ServerHost
         public static IConfigurationRoot Configuration { get; set; }
         public static ILog Logger;
 
+        public const string CONFIG_FILE_PATH = "./appsettings.json";
         static void Main(string[] args)
         {
             if (!mutex.WaitOne(3, false))
@@ -60,7 +63,7 @@ namespace NSmartProxy.ServerHost
             Logger.Debug($"*** {Global.NSmartProxyServerName} ***");
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
-              .AddJsonFile("appsettings.json");
+              .AddJsonFile(CONFIG_FILE_PATH);
 
             Configuration = builder.Build();
             StartServer();
@@ -68,16 +71,37 @@ namespace NSmartProxy.ServerHost
 
         private static void StartServer()
         {
-            try
+            //try
+            //{
+            //    Server.ClientServicePort = int.Parse(Configuration.GetSection("ClientServicePort").Value);
+            //    Server.ConfigServicePort = int.Parse(Configuration.GetSection("ConfigServicePort").Value);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Logger.Debug("配置文件读取失败：" + ex.ToString());
+            //    return;
+            //}
+
+            NSPServerConfig serverConfig = null;
+            //初始化配置
+            if (!File.Exists(CONFIG_FILE_PATH))
             {
-                Server.ClientServicePort = int.Parse(Configuration.GetSection("ClientServicePort").Value);
-                Server.ConfigServicePort = int.Parse(Configuration.GetSection("ConfigServicePort").Value);
+                serverConfig = new NSPServerConfig();
+                serverConfig.SaveChanges(CONFIG_FILE_PATH);
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Debug("配置文件读取失败：" + ex.ToString());
-                return;
+                serverConfig = ConfigHelper.ReadAllConfig<NSPServerConfig>(CONFIG_FILE_PATH);
             }
+
+            foreach (var (user,userbound) in serverConfig.BoundConfig.UserPortBounds)
+            {
+                if (userbound.Bound != null & userbound.Bound.Count > 0)
+                {
+                    NetworkUtil.AddUsedPorts(userbound.Bound);
+                }
+            }
+
             Server srv = new Server(new Log4netLogger());
 
             int retryCount = 0;
@@ -88,8 +112,10 @@ namespace NSmartProxy.ServerHost
                 try
                 {
                     watch.Start();
-                    srv.SetWebPort(int.Parse(Configuration.GetSection("WebAPIPort").Value))
+                    srv//.SetWebPort(int.Parse(Configuration.GetSection("WebAPIPort").Value))
+                       .SetConfiguration(serverConfig)
                        .SetAnonymousLogin(true)
+                       .SetServerConfigPath(CONFIG_FILE_PATH)
                        .Start()
                        .Wait();
                 }
@@ -127,9 +153,5 @@ namespace NSmartProxy.ServerHost
                 // ignored
             }
         }
-    }
-
-    internal class NSmartProxyClient
-    {
     }
 }
