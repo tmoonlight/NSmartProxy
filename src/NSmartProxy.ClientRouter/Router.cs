@@ -126,7 +126,7 @@ namespace NSmartProxy.Client
                     }
                     else
                     {
-                        //匿名登陆，未提供登陆信息时，使用空用户名密码尝试匿名登陆
+                        //匿名登陆，未提供登陆信息时，使用空用户名密码自动注册并尝试匿名登陆
                         Router.Logger.Debug("未提供登陆信息，尝试匿名登陆");
                         CurrentLoginInfo = new LoginInfo() { UserName = "", UserPwd = "" };
                         var loginResult = await Login();
@@ -295,7 +295,6 @@ namespace NSmartProxy.Client
                     int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
                     if (readByteCount == 0)
                     {
-                        //TODO XXX
                         //抛出错误以便上层重启客户端。
                         _waiter.TrySetResult(new Exception($"连接{appId}被服务器主动切断，已断开连接"));
                         return;
@@ -310,7 +309,6 @@ namespace NSmartProxy.Client
                     throw;
                 }
 
-                //TODO 遗留代码，待优化
                 //连接后设置client为null 
                 if (ConnectionManager.ExistClient(appId, providerClient))
                 {

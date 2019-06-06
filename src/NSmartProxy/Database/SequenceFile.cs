@@ -84,7 +84,7 @@ namespace NSmartProxy.Database
             return br.ReadInt64();
         }
 
-        //TODO 删除似乎还有问题
+        //TODO 删除有时似乎还有问题，需要进一步测试
         public void Delete(int index)
         {
             rf.Position = 0;

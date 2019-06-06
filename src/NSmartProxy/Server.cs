@@ -45,12 +45,6 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-
-        //TODO 放到一个实体里
-        //public static int ClientServicePort = 19974;   //服务端代理转发端口
-        //public static int ConfigServicePort = 12308;  //服务端配置通讯端口
-        //public static int WebManagementPort = 12309;    //远端管理端口
-
         public const string USER_DB_PATH = "./nsmart_user";
         public const string SECURE_KEY_FILE_PATH = "./nsmart_sec_key";
 
@@ -78,6 +72,8 @@ namespace NSmartProxy
             return this;
         }
 
+       
+
         public Server SetAnonymousLogin(bool isSupportAnonymous)
         {
             ServerContext.SupportAnonymousLogin = isSupportAnonymous;
@@ -86,7 +82,8 @@ namespace NSmartProxy
 
         public Server SetConfiguration(NSPServerConfig config)
         {
-            this.ServerContext.ServerConfig = config;
+            ServerContext.ServerConfig = config;
+            ServerContext.UpdatePortMap();
             return this;
         }
 
@@ -421,8 +418,8 @@ namespace NSmartProxy
 
             //if (IsReconnect) 因为加入了始终校验的机制，取消重连规则
             //{
-                ServerContext.CloseAllSourceByClient(clientIdFromToken);
-           // }
+            ServerContext.CloseAllSourceByClient(clientIdFromToken);
+            // }
 
             //1.3 获取客户端请求数
             int configRequestLength = 3;

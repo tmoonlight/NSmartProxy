@@ -28,7 +28,7 @@ namespace NSmartProxy
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
 
         private NSPServerContext ServerContext;
-     
+
 
         private ClientConnectionManager()
         {
@@ -194,12 +194,19 @@ namespace NSmartProxy
                 for (int i = 0; i < appCount; i++)
                 {
                     int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
-
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     //查找port的起始端口如果未指定，则设置为20000
-                    //TODO 如果端口是指定的并且是绑定的，则直接使用该端口即可
                     if (startPort == 0) startPort = 20000;
-                    int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
+                    int port = 0;
+                    //TODO QQQ 如果端口是指定的并且是绑定的，则直接使用该端口即可
+                    if (IsBoundedByUser(clientId, startPort))
+                    {
+                        port = startPort;
+                    }
+                    else
+                    {
+                        port = NetworkUtil.FindOneAvailableTCPPort(startPort);
+                    }
                     NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];
                     app.ClientId = clientId;
                     app.AppId = arrangedAppid;
@@ -221,6 +228,17 @@ namespace NSmartProxy
                 Logger.Debug(" <=端口已分配。");
             }
             return clientModel.ToBytes();
+        }
+
+        private bool IsBoundedByUser(int clientId, int port)
+        {
+            var boundHash = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
+            ServerBoundConfig.UserPortBound userBound;
+            if (boundHash.TryGetValue(clientId.ToString(), out userBound))
+            {
+                return userBound.Bound.Contains(port);
+            }
+            return false;
         }
 
         private ClientIDAppID GetAppFromBytes(byte[] bytes)

@@ -120,7 +120,7 @@ namespace NSmartProxyWinform
             return true;
         }
 
-        //TODO ***状态控制
+        //状态控制
         private void StartOrStop()
         {
             btnStart.Enabled = false;

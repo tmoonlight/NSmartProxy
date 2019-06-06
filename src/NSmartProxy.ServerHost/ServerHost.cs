@@ -94,13 +94,7 @@ namespace NSmartProxy.ServerHost
                 serverConfig = ConfigHelper.ReadAllConfig<NSPServerConfig>(CONFIG_FILE_PATH);
             }
 
-            foreach (var (user,userbound) in serverConfig.BoundConfig.UserPortBounds)
-            {
-                if (userbound.Bound != null & userbound.Bound.Count > 0)
-                {
-                    NetworkUtil.AddUsedPorts(userbound.Bound);
-                }
-            }
+            
 
             Server srv = new Server(new Log4netLogger());
 

@@ -106,7 +106,7 @@ namespace NSmartProxy.Extension
 
             var request = context.Request;
             var response = context.Response;
-            //TODO XX 设置该同源策略为了方便调试，请确保web项目也位于locahost5671上
+            //TODO XX 设置该同源策略为了方便调试，真实项目可以确保同源
 
 #if DEBUG
             response.AddHeader("Access-Control-Allow-Origin", "*");
@@ -125,7 +125,7 @@ namespace NSmartProxy.Extension
                 if (idx2 > 0) unit = unit.Substring(0, idx2);
                 int idx3 = unit.LastIndexOf(".");
 
-                //TODO 通过后缀获取不同的文件，若无后缀，则调用接口
+                //通过后缀获取不同的文件，若无后缀，则调用接口
                 if (idx3 > 0)
                 {
 
