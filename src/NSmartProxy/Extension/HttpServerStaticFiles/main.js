@@ -25,9 +25,8 @@ var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文
                 location.href = "/login.html";
             }
         }
-        $(".active").removeClass("active");
-        var hrefTag = "#" + storedHash.substring(storedHash.lastIndexOf("#") + 1);
-        $("a[href='" + hrefTag + "']").addClass("active");
+
+        
     }
 
     function loadContent(storedHash) {
@@ -45,6 +44,9 @@ var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文
             if (feather)
                 feather.replace();
         });
+        $(".active").removeClass("active");
+        var hrefTag = "#" + storedHash.substring(storedHash.lastIndexOf("#") + 1);
+        $("a[href='" + hrefTag + "']").addClass("active");
         return storedHash;
     }
 

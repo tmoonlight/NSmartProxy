@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using NSmartProxy.Authorize;
+using NSmartProxy.Data;
 using NSmartProxy.Data.DTO;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Data.Entity;
@@ -257,6 +258,14 @@ window.location.href='main.html';
                     Dbop.DeleteHash(userNameArr[i]);
                 }
 
+                //删除用户绑定
+                lock (userLocker)
+                {
+                    if (ServerContext.ServerConfig.BoundConfig.UserPortBounds.ContainsKey(userIndex))
+                        ServerContext.ServerConfig.BoundConfig.UserPortBounds.Remove(userIndex);
+                }
+                //刷新绑定列表
+                ServerContext.UpdatePortMap();
             }
             catch (Exception ex)
             {
@@ -268,9 +277,20 @@ window.location.href='main.html';
         [Secure]
         public List<string> GetUsers()
         {
-            //using (var dbop = Dbop.Open())
-            //{
-            return Dbop.Select(0, 999);
+            List<string> userStrList = Dbop.Select(0, 999);
+            for (int i = 0; i < userStrList.Count; i++)
+            {
+                var user = userStrList[i].ToObject<User>();
+                var userBounds = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
+                if (userBounds.ContainsKey(user.userId))
+                {
+                    if (userBounds[user.userId].Bound != null)
+                        user.boundPorts = string.Join(',', userBounds[user.userId].Bound);
+                }
+                userStrList[i] = user.ToJsonString();
+            }
+
+            return userStrList;
             //}
         }
 
@@ -412,7 +432,7 @@ window.location.href='main.html';
             }
 
             //TODO QQQ这个地址怎么传进来
-            ServerContext.ServerConfig.BoundConfig.SaveChanges(ServerContext.ServerConfigPath);
+            ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
 
 
             //写入数据
@@ -422,29 +442,63 @@ window.location.href='main.html';
         /// <summary>
         /// 将用户和端口绑定，以防被其他用户占用
         /// </summary>
-        /// <param name="username"></param>
+        /// <param name="userId"></param>
         /// <param name="ports"></param>
         /// <returns></returns>
         [API]
         [Secure]
-        public bool BindUserToPort(string username, string ports)
+        public string BindUserToPort(string userId, string ports)
         {
-            var portsList = ports.Split(",").Select(str => int.Parse(str)).ToList();
+            List<int> portsList = null;
+            try
+            {
+                if (string.IsNullOrEmpty(ports))
+                {
+                    portsList = new List<int>();
+                }
+                else
+                {
+                    portsList = ports.Split(",").Select(str => int.Parse(str)).ToList();
+                }
+            }
+            catch
+            {
+                return "字符串格式不正确，只允许逗号分隔的数字";
+            }
+
+            //取绑定列表和用户列表的交集
+            var userBound = GetUserBounds(userId);
             lock (userLocker)
             {
-                var unAvailabelPorts = NetworkUtil.FindUnAvailableTCPPorts(portsList);
+                var unAvailabelPorts = NetworkUtil.FindUnAvailableTCPPorts(portsList.Except(userBound).ToList());
                 if (unAvailabelPorts.Count > 0)
                 {
-                    Server.Logger.Debug($"端口{string.Join(',', unAvailabelPorts)}被占用");
-                    return false;
+                    string msg = $"端口{string.Join(',', unAvailabelPorts)}无法使用";
+                    Server.Logger.Debug(msg);
+                    //throw new Exception(msg);
+                    return msg;
                 }
                 //TODO 绑定端口到用户
                 var userBounds = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
-                userBounds[username].Bound = portsList;
-                userBounds.SaveChanges(ServerContext.ServerConfigPath);
+                userBounds[userId] = new UserPortBound() { Bound = portsList, UserId = userId };
+                //TODO QQQ还需要刷新一下端口绑定
+                ServerContext.UpdatePortMap();
+                ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
             }
 
-            return true;
+            return "操作成功。";
+        }
+
+        private List<int> GetUserBounds(string userId)
+        {
+            var bounds = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
+            if (bounds.ContainsKey(userId))
+            {
+                if (bounds[userId].Bound != null)
+
+                    return bounds[userId].Bound;
+            }
+            return new List<int>();
         }
 
         #region  json转换用的私有方法

@@ -129,9 +129,11 @@ namespace NSmartProxy
                     ipGlobalProperties.GetActiveTcpListeners();
                 for (int i = ports.Count - 1; i > -1; i--)
                 {
-                    _usedPorts.Contains(ports[i]);
-                    ports.Remove(ports[i]);
-                    usedPortList.Add(ports[i]);
+                    if (ports[i] > 65535 || ports[i] < 1|| _usedPorts.Contains(ports[i]))
+                    {
+                        usedPortList.Add(ports[i]);
+                        ports.Remove(ports[i]);
+                    }
                 }
                 foreach (IPEndPoint endPoint in endPoints)
                 {
@@ -142,7 +144,7 @@ namespace NSmartProxy
                     }
                 }
 
-                return usedPortList;
+                return usedPortList.Distinct().ToList();
             }
             finally
             {
@@ -311,6 +313,30 @@ namespace NSmartProxy
         }
 
         /// <summary>
+        /// 清空排除端口集合
+        /// </summary>
+        public static void ClearAllUsedPorts()
+        {
+            try
+            {
+                mutex.WaitOne();
+                _usedPorts = new HashSet<int>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+        }
+
+        public static void ReAddUsedPorts(List<int> usedPorts)
+        {
+            ClearAllUsedPorts();
+            AddUsedPorts(usedPorts);
+        }
+
+        /// <summary>
         /// 增加排除端口，这些端口永远不会被分配到
         /// </summary>
         /// <param name="usedPorts"></param>
@@ -321,7 +347,8 @@ namespace NSmartProxy
                 mutex.WaitOne();
                 foreach (var port in usedPorts)
                 {
-                    usedPorts.Add(port);
+                    if (!_usedPorts.Contains(port))
+                        _usedPorts.Add(port);
                 }
             }
             catch (Exception e)

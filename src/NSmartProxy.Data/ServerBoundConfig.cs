@@ -13,10 +13,12 @@ namespace NSmartProxy.Data
         public HashSet<string> UsersBanlist = new HashSet<string>();
         public Dictionary<string, UserPortBound> UserPortBounds = new Dictionary<string, UserPortBound>();
 
-        public class UserPortBound
-        {
-            public string UserName;
-            public List<int> Bound = new List<int>();
-        }
+        
+    }
+
+    public class UserPortBound
+    {
+        public string UserId;
+        public List<int> Bound = new List<int>();
     }
 }

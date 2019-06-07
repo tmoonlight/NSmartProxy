@@ -33,7 +33,19 @@ namespace NSmartProxy.Authorize
 
         public string ServerConfigPath { get; set; }
 
-        public void UpdatePortMap() //使得被用户绑定的端口无法被分配到
+        public void UpdatePortMap() //重新添加
+        {
+            NetworkUtil.ClearAllUsedPorts();
+            foreach (var (user, userbound) in ServerConfig.BoundConfig.UserPortBounds)
+            {
+                if (userbound.Bound != null & userbound.Bound.Count > 0)
+                {
+                    NetworkUtil.AddUsedPorts(userbound.Bound);
+                }
+            }
+        }
+
+        public void AddPortMap() //使得被用户绑定的端口无法被分配到
         {
             foreach (var (user, userbound) in ServerConfig.BoundConfig.UserPortBounds)
             {

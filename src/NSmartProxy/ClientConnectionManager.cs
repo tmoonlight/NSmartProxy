@@ -233,7 +233,7 @@ namespace NSmartProxy
         private bool IsBoundedByUser(int clientId, int port)
         {
             var boundHash = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
-            ServerBoundConfig.UserPortBound userBound;
+            UserPortBound userBound;
             if (boundHash.TryGetValue(clientId.ToString(), out userBound))
             {
                 return userBound.Bound.Contains(port);
