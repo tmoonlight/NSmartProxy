@@ -33,6 +33,9 @@ namespace NSmartProxy.Authorize
 
         public string ServerConfigPath { get; set; }
 
+        /// <summary>
+        /// 同步配置和排出网络端口列表，保持他们的一致性
+        /// </summary>
         public void UpdatePortMap() //重新添加
         {
             NetworkUtil.ClearAllUsedPorts();

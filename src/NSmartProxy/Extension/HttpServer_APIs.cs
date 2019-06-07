@@ -98,11 +98,40 @@ namespace NSmartProxy.Extension
 
         #region config
 
-        private const string C_OPEN_DASH_BOARD = nameof(C_OPEN_DASH_BOARD);
-        private const string C_OPEN_LOG_TRACK = nameof(C_OPEN_LOG_TRACK);
+        //private const string C_OPEN_DASH_BOARD = nameof(C_OPEN_DASH_BOARD);
+        //private const string C_OPEN_LOG_TRACK = nameof(C_OPEN_LOG_TRACK);
+        private const string AllowAnonymousUser = nameof(AllowAnonymousUser);
         //API SetConfig
         //API GetConifgs
-        //public string 
+        [API]
+        [Secure]
+        public string SetConfig(string key, string value)
+        {
+            switch (key)
+            {
+                case AllowAnonymousUser:
+                    ServerContext.SupportAnonymousLogin = (value == "1");
+                    ; break;
+                default: return "";
+            }
+
+            return "";
+        }
+
+        [API]
+        [Secure]
+        public string GetConfig(string key, string value)
+        {
+            switch (key)
+            {
+                case AllowAnonymousUser:
+                    return ServerContext.SupportAnonymousLogin ? "1" : "0";
+                    ; break;
+                default: return "";
+            }
+
+            return "";
+        }
 
         #endregion
 
@@ -116,6 +145,8 @@ namespace NSmartProxy.Extension
             {
                 return "Error: User not exist.Please <a href='javascript:history.go(-1)'>go backward</a>.";
             }
+
+
             if (user.userPwd != EncryptHelper.SHA256(userpwd))
             {
                 return "Error: Wrong password.Please <a href='javascript:history.go(-1)'>go backward</a>.";
@@ -136,31 +167,31 @@ window.location.href='main.html';
             ", token);
         }
 
-        /// <summary>
-        /// 提供非web登陆的方法byid
-        /// </summary>
-        /// <param name="userid"></param>
-        /// <param name="userpwd"></param>
-        /// <returns></returns>
-        [API]
-        public string LoginFromClientById(string userid, string userpwd)
-        {
+        ///// <summary>
+        ///// 提供非web登陆的方法byid
+        ///// </summary>
+        ///// <param name="userid"></param>
+        ///// <param name="userpwd"></param>
+        ///// <returns></returns>
+        //[API]
+        //public string LoginFromClientById(string userid, string userpwd)
+        //{
 
-            //1.校验
-            dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
-            if (user == null)
-            {
-                return "error: user not exist.";
-            }
-            if (user.userPwd != userpwd)
-            {
-                return "error: wrong password.";
-            }
+        //    //1.校验
+        //    dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
+        //    if (user == null)
+        //    {
+        //        return "error: user not exist.";
+        //    }
+        //    if (user.userPwd != userpwd)
+        //    {
+        //        return "error: wrong password.";
+        //    }
 
-            //2.给token
-            string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
-            return EncryptHelper.AES_Encrypt(output);
-        }
+        //    //2.给token
+        //    string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
+        //    return EncryptHelper.AES_Encrypt(output);
+        //}
 
         /// <summary>
         /// 提供非web的登陆方法
@@ -198,6 +229,11 @@ window.location.href='main.html';
             if (user == null)
             {
                 throw new Exception("error: user not exist.");
+            }
+
+            if (ServerContext.ServerConfig.BoundConfig.UsersBanlist.Contains(user.userId))
+            {
+                throw new Exception("Error: User has banned.");
             }
 
             if (user.userPwd != EncryptHelper.SHA256(userpwd))
@@ -266,6 +302,7 @@ window.location.href='main.html';
                 }
                 //刷新绑定列表
                 ServerContext.UpdatePortMap();
+                ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
             }
             catch (Exception ex)
             {
@@ -280,13 +317,19 @@ window.location.href='main.html';
             List<string> userStrList = Dbop.Select(0, 999);
             for (int i = 0; i < userStrList.Count; i++)
             {
-                var user = userStrList[i].ToObject<User>();
+                var user = userStrList[i].ToObject<UserDTO>();
                 var userBounds = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
                 if (userBounds.ContainsKey(user.userId))
                 {
                     if (userBounds[user.userId].Bound != null)
                         user.boundPorts = string.Join(',', userBounds[user.userId].Bound);
                 }
+                var banlist = ServerContext.ServerConfig.BoundConfig.UsersBanlist;
+                user.isBanned = banlist?.Contains(user.userId).ToString().ToLower();
+                //
+
+                user.isOnline = ServerContext.Clients.ContainsKey(int.Parse(user.userId)).ToString().ToLower();
+
                 userStrList[i] = user.ToJsonString();
             }
 
@@ -401,14 +444,16 @@ window.location.href='main.html';
         }
 
         private object userLocker = new object();
+
         /// <summary>
         /// 禁止客户端访问
         /// </summary>
-        /// <param name="clientIdStr"></param>
+        /// <param name="clientIdStr">用户id字符串，逗号分隔</param>
+        /// <param name="addToBanlist">是否加入黑名单 1为加入 0位不加入</param>
         /// <returns></returns>
         [API]
         [Secure]
-        public bool ForbidClient(string clientIdStr, string addToBanlist = "")
+        public bool BanUsers(string clientIdStr, string addToBanlist = "1")
         {
             if (ServerContext == null) return false;
             var idStrs = clientIdStr.Split(",");
@@ -418,11 +463,11 @@ window.location.href='main.html';
                 var id = int.Parse(idStr);
                 ServerContext.CloseAllSourceByClient(id);
             }
-
-            lock (userLocker)
+            if (addToBanlist.Trim() == "1")
             {
-                if (addToBanlist.Trim() == "1")
+                lock (userLocker)
                 {
+
                     //TODO QQQ 加入禁用列表 需要考虑线程安全
                     foreach (var idStr in idStrs)
                     {
@@ -431,10 +476,27 @@ window.location.href='main.html';
                 }
             }
 
-            //TODO QQQ这个地址怎么传进来
             ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
+            //写入数据
+            return true;
+        }
 
+        [API]
+        [Secure]
+        public bool UnBanUsers(string clientIdStr)
+        {
+            if (ServerContext == null) return false;
+            var idStrs = clientIdStr.Split(",");
 
+            lock (userLocker)
+            {
+                //TODO QQQ 剔除禁用列表 需要考虑线程安全
+                foreach (var idStr in idStrs)
+                {
+                    ServerContext.ServerConfig.BoundConfig.UsersBanlist.Remove(idStr);
+                }
+            }
+            ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
             //写入数据
             return true;
         }

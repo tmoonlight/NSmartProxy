@@ -115,8 +115,6 @@ namespace NSmartProxy
         /// <returns>The first available port</returns> 
         public static List<int> FindUnAvailableTCPPorts(List<int> ports)
         {
-            //int[] arrangedPorts = new int[PortCount];
-            // int port = startPort;
             bool isAvailable = true;
             List<int> usedPortList = new List<int>(ports.Count);
 
@@ -212,7 +210,7 @@ namespace NSmartProxy
                 var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
                 var connectAsync = configClient.ConnectAsync(addess, port);
                 //超时则dispose掉
-                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+                var completedTask = await Task.WhenAny(delayDispose, connectAsync);
                 if (!connectAsync.IsCompleted)
                 {
                     Console.WriteLine("ConnectAndSend连接超时,5秒后重试");

@@ -139,7 +139,6 @@ namespace NSmartProxy.Extension
                     ProcessMIME(response, unit.Substring(idx3));
                     //TODO 权限控制（只是控制html权限而已）
                   
-
                     //读文件优先去缓存读
                     MemoryStream memoryStream;
                     if (FilesCache.TryGetValue(unit.TrimStart('/'), out memoryStream))
@@ -154,7 +153,6 @@ namespace NSmartProxy.Extension
                             await fs.CopyToAsync(response.OutputStream);
                         }
                     }
-
                 }
                 else  //url中没有小数点则是接口
                 {

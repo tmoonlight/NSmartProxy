@@ -72,7 +72,7 @@ namespace NSmartProxy
             return this;
         }
 
-       
+
 
         public Server SetAnonymousLogin(bool isSupportAnonymous)
         {
@@ -414,7 +414,14 @@ namespace NSmartProxy
             //TODO !!!!兼容原有的重连逻辑
 
             //TODO !!!!获取Token，截取clientID，校验
+            //TODO !!!!这里的校验逻辑和httpserver_api存在太多重复，需要重构
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
+            //var userClaims = StringUtil.ConvertStringToTokenClaims(clientIdFromToken);
+            if (clientIdFromToken == 0)
+            {
+                client.Close();
+                return false;
+            }
 
             //if (IsReconnect) 因为加入了始终校验的机制，取消重连规则
             //{
@@ -510,7 +517,16 @@ namespace NSmartProxy
                 }
                 else
                 {
-                    clientIdFromToken = int.Parse(userJson.ToObject<User>().userId);
+                    var userId = userJson.ToObject<User>().userId;
+                    if (ServerContext.ServerConfig.BoundConfig.UsersBanlist.Contains(userId))
+                    {
+                        Server.Logger.Debug("用户被禁用");
+                        return 0;
+                    }
+                    else
+                    {
+                        clientIdFromToken = int.Parse(userId);
+                    }
                 }
             }
 

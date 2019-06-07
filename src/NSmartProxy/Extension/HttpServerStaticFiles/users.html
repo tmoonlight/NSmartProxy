@@ -2,13 +2,19 @@
     <h1 class="h3">用户</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <!--<div class="btn-group mr-2">-->
-            <button type="button" class="btn btn-outline-primary mr-2" onclick="addUser()"> <span data-feather="user"></span> 新用户</button>
-            <button type="button" class="btn btn-outline-danger mr-2" onclick="delUser()"><span data-feather="user-x"></span> 删除</button>
-            <button type="button" class="btn btn-outline-warning"><span data-feather="zap-off"></span> 下线</button>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addUser()"><span data-feather="user"></span> 新增</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mr-2" onclick="delUser()"><span data-feather="user-x"></span> 删除</button>
+
+        </div>
+        <div class="btn-group" role="group">
+               <button type="button" class="btn btn-sm btn-outline-secondary" onclick="banUsers()"><span data-feather="zap-off"></span> 断开</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="unBanUsers()"><span data-feather="zap"></span> 恢复</button>
+        </div>
         <!--</div>-->
 
     </div>
-</div>
+    </div>
 
 <div class="mb-2 collapse" id="divAddUser">
     <form class="bv-form" id="frmAddUser">
@@ -58,7 +64,7 @@
                 <td>无效内容</td>
                 <td>无效内容</td>
                 <td>无效内容</td>
-                <td>无效内容</td>
+                <td><span data-feather='user'></span></td>
                 <td>无效内容</td>
             </tr>
         </tbody>

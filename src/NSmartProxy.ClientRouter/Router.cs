@@ -122,7 +122,8 @@ namespace NSmartProxy.Client
 
                         arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
                         //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登陆
-
+                        //TODO ***** 这是个trick：防止匿名用户被服务端踢了之后无限申请新账号
+                        CurrentLoginInfo = null;
                     }
                     else
                     {
@@ -132,6 +133,8 @@ namespace NSmartProxy.Client
                         var loginResult = await Login();
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
+                        //保存缓存到磁盘
+                        File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
                     }
                 }
                 catch (Exception ex)
@@ -187,7 +190,7 @@ namespace NSmartProxy.Client
                     Logger.Debug("**************************************");
                     ConnectionManager.PollingToProvider(StatusChanged, tunnelstrs);
                     //3.创建心跳连接
-                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token,_waiter);
+                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token, _waiter);
 
                     IsStarted = true;
                     Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;

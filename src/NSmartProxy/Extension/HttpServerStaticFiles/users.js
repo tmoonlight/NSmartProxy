@@ -44,21 +44,42 @@ function addUser_submit() {
 }
 
 function delUser() {
-    if (!confirm('是否删除')) {
-        return;
-    }
+
     var ids = [];
     var userNames = [];
     $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
         ids.push($(this).val());//将选中的值添加到数组chk_value中    
         userNames.push($(this).closest("tr").find(".td_username").html());
     });
-
+    if (ids.length == 0) return;
+    if (!confirm('是否删除')) {
+        return;
+    }
+  
     $.get(basepath + "RemoveUser?id=" + ids.join(',') + '&usernames=' + userNames.join(','), function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
         alert('删除成功');
         selectUsers();
     });
+}
 
+
+function delOneUser(userIndex, userName) {
+    if (!confirm('是否删除')) {
+        return;
+    }
+
+    $.get(basepath + "RemoveUser?id=" + userIndex + '&usernames=' + userName, function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        alert('删除成功');
+        selectUsers();
+    });
 }
 function selectUsers() {
 
@@ -66,39 +87,56 @@ function selectUsers() {
         var data = res.Data;
         var htmlStr = "";
         var i = 0;
+        var htmlIsBanned = "<span data-feather='zap-off' color='red'></span> ";
+        var htmlIsConnected = "<span data-feather='activity' color='green'></span> ";
+        var htmlIsAdmin = "<span data-feather='star' color='orange'></span> ";
         for (i in data) {
             var user = $.parseJSON(data[i]);
             htmlStr += "<tr>" +
-                "<td> <input type='checkbox' name='cbxUserIds' value='" + i + "'></td>" +
+                "<td> <input type='checkbox' style='zoom:150%;' name='cbxUserIds' value='" + i + "'></td>" +
                 "<td>" + i + "</td>" +
-                "<td>" + user.userId + "</td>" +
+                "<td class='td_userid'>" + user.userId + "</td>" +
                 "<td class='td_username'>" + user.userName + "</td>" +
                 "<td>" + user.regTime + "</td>" +
-                "<td>" + 1 + "</td>" +
+                "<td>";
+            if (user.isAdmin == "1") htmlStr += htmlIsAdmin;
+            if (user.isOnline == "true") htmlStr += htmlIsConnected;
+            if (user.isBanned == "true") htmlStr += htmlIsBanned;
+
+            htmlStr += "</td>" +
                 "<td class='td-ports'>" + user.boundPorts + "</td>" +
                 "<td>" +
-                dropDownButtonHtml(user.boundPorts, user.userId) +
+                dropDownButtonHtml(user, i) +
                 //"<button type=\"button\" onclick='changeBind(" + user.userId + ")' class=\"btn btn-primary btn-sm\">绑定</button>" +
                 //"&nbsp;<button type=\"button\" onclick='changeBind(" + user.userId + ")' class=\"btn btn-primary btn-sm\">断开</button>" +
                 "</td>" +
                 "</tr>";
+            //alert(user.isBanned == "true");
             i++;
         }
         $("#user_tb_body").html(htmlStr);
+        if (feather)
+            feather.replace();
 
     });
 }
 
-function dropDownButtonHtml(ports, userId) {
-    return "<div class=\"btn-group\">" +
+function dropDownButtonHtml(user, userIndex) {
+    var html = "<div class=\"btn-group\">" +
         "<button class=\"btn btn-primary btn-sm dropdown-toggle\" type=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">" +
         "操作</button>\r\n      <div class=\"dropdown-menu\" x-placement=\"bottom-start\" style=\"position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 31px, 0px);\">" +
-        "<a class=\"dropdown-item\" href=\"javascript:changeBind('" + ports + "','" + userId + "')\">端口绑定</a>" +
-        "<a class=\"dropdown-item\" href=\"#\">断开用户</a>" +
-        "<div class=\"dropdown-divider\"></div>" +
-        "<a class=\"dropdown-item\" href=\"#\">编辑用户</a>" +
-        "<a class=\"dropdown-item\" href=\"#\">删除用户</a>" +
+        "<a class=\"dropdown-item\" href=\"javascript:changeBind('" + user.boundPorts + "','" + user.userId + "')\">端口绑定</a>";
+    if (user.isBanned == "true") {
+        html += "<a class=\"dropdown-item\" href=\"javascript:unBanOneUser('" + user.userId + "')\">恢复断开</a>";
+    } else {
+        html += "<a class=\"dropdown-item\" href=\"javascript:banOneUser('" + user.userId + "')\">断开用户</a>";
+    }
+
+    html += "<div class=\"dropdown-divider\"></div>" +
+        "<a class=\"dropdown-item\" href=\"\">重命名用户</a>" +
+        "<a class=\"dropdown-item\" href=\"javascript:delOneUser('" + userIndex + "','" + user.userName + "')\">删除用户</a>" +
         "</div></div>";
+    return html;
 }
 
 function changeBind(ports, userId) {
@@ -119,6 +157,7 @@ function changeBind(ports, userId) {
         // }
     });
 }
+
 
 function initValidate() {
     $('#divAddUser').bootstrapValidator({
@@ -160,5 +199,76 @@ function initValidate() {
                 }
             }
         }
+    });
+}
+
+function banUsers() {
+    var addToBanlist = "0";
+    
+    var ids = [];
+    // var userNames = [];
+    $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
+        ids.push($(this).closest("tr").find(".td_userid").html());
+    });
+
+    if (ids.length == 0) return;
+    if (confirm('是否同时将这些用户加入黑名单？')) {
+        addToBanlist = "1";
+    }
+    $.get(basepath + "BanUsers?clientIdStr=" + ids.join(',') + "&addToBanlist=" + addToBanlist, function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        alert('操作成功');
+        selectUsers();
+    });
+}
+
+function banOneUser(userId) {
+    if (userId == "") return;
+    var addToBanlist = "0";
+    if (confirm('是否同时将用户加入黑名单？')) {
+        addToBanlist = "1";
+    }
+   
+    $.get(basepath + "BanUsers?clientIdStr=" + userId + "&addToBanlist=" + addToBanlist, function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        alert('操作成功');
+        selectUsers();
+    });
+}
+
+function unBanUsers() {
+    var ids = [];
+    // var userNames = [];
+    $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
+        ids.push($(this).closest("tr").find(".td_userid").html());
+    });
+
+    if (ids.length == 0) return;
+
+    $.get(basepath + "UnBanUsers?clientIdStr=" + ids.join(','), function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        alert('操作成功');
+        selectUsers();
+    });
+}
+
+function unBanOneUser(userId) {
+    
+    $.get(basepath + "UnBanUsers?clientIdStr=" + userId, function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        alert('操作成功');
+        selectUsers();
     });
 }

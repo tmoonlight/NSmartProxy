@@ -56,11 +56,11 @@
         {
             type: 'doughnut',
             data: {
-                labels: ['已关闭', '半连接','全连接'],
+                labels: ['已关闭', '半连接', '全连接'],
                 datasets: [
                     {
                         label: '内存占用',
-                        data: [0, 0,0],
+                        data: [0, 0, 0],
                         backgroundColor: [
                             "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
                         ]
@@ -74,6 +74,7 @@
                 }
             }
         });
+    getLogFileTable(10)
     getClientsInfo();
 
     var myChart2 = new Chart(ctx2,
@@ -119,46 +120,61 @@
                     text: '在线用户'
                 }
             }
-          
+
         });
 
     $("#myChart").click(
         function (evt) {
-            var url = "连接管理" ;
+            var url = "连接管理";
             alert(url);
         }
-    ); 
+    );
 
     $("#myChart2").click(
         function (evt) {
             var url = " ";
             alert(url);
         }
-    ); 
+    );
 
     $("#myChart3").click(
         function (evt) {
             var url = "用户管理";
             alert(url);
         }
-    ); 
+    );
     //定时更新数据
     if (window.intevalId) {
         window.clearInterval(window.intevalId);
     }
     window.intevalId = setInterval(function () {
 
-            getClientsInfo();
-            //myChart2.data.datasets.pop();
-            //更新数据
-            myChart2.data.datasets[0].data[1] += 3;
-            //myChart2.data.datasets[1] = 10;
-            //myChart2.data.datasets.push({
-            //label: label,
-            // backgroundColor: color,
-            //  data: [12, 19]
-            //});
-            myChart2.update();
-        }, 5000
+        getClientsInfo();
+        getLogFileTable(10);
+        //myChart2.data.datasets.pop();
+        //更新数据
+        myChart2.data.datasets[0].data[1] += 3;
+        //myChart2.data.datasets[1] = 10;
+        //myChart2.data.datasets.push({
+        //label: label,
+        // backgroundColor: color,
+        //  data: [12, 19]
+        //});
+        myChart2.update();
+    }, 5000
     );
 }());
+
+function getLogFileTable(lines) {
+    var apiUrl = basepath + "GetLogFileInfo?lastLines=" + lines;
+    $.get(apiUrl,
+        function (res) {
+            var data = res.Data;
+            var logText = "";
+            for (i in data) {
+                logText += " <tr><td>" + i + "</td> <td>" + data[i] + "</td></tr> ";
+            }
+            $("#tbodyLogs").html(logText);
+        }
+    );
+}
