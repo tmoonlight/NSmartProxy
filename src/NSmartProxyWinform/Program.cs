@@ -24,7 +24,7 @@ namespace NSmartProxyWinform
         public const string LOGGER_REPO_NAME = "NSmartClientRouterRepository";
         public const string CONFIG_FILE_PATH = "./appsettings.json";
 
-        public static string[] Args;
+        //public static string[] Args;
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>

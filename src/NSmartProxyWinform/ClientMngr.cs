@@ -25,7 +25,7 @@ namespace NSmartProxyWinform
     {
         public Router clientRouter;
         private Log4netLogger logger;
-        private bool configChanged = false;
+       // private bool configChanged = false;
         private NSPClientConfig config;
 
         private const string NULL_CLIENT_TEXT = "<未编辑节点>";
@@ -294,7 +294,7 @@ namespace NSmartProxyWinform
 
         private void ConfigValueChanged(object sender, EventArgs e)
         {
-            configChanged = true;
+            //configChanged = true;
             //btnLogin.Text = " 未登录";
         }
 
@@ -329,7 +329,7 @@ namespace NSmartProxyWinform
                 listBox1.SelectedIndex = originIndex;
             }
 
-            configChanged = true;
+            //configChanged = true;
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -338,7 +338,7 @@ namespace NSmartProxyWinform
             listBox1.Items.Remove(listBox1.SelectedItem);
             if (originIndex < listBox1.Items.Count)
                 listBox1.SelectedIndex = originIndex;
-            configChanged = true;
+            //configChanged = true;
         }
 
         private void btnDuplicate_Click(object sender, EventArgs e)

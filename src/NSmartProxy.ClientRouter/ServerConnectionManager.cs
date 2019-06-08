@@ -22,7 +22,7 @@ namespace NSmartProxy.Client
 
     public class ServerConnectionManager
     {
-        private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
+        //private int MAX_CONNECT_SIZE = 6;//magic value,单个应用最大连接数,有些应用端支持多连接，需要调高此值，当该值较大时，此值会增加
         private int _clientID = 0;
 
         public List<TcpClient> ConnectedConnections;

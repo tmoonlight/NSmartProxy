@@ -115,7 +115,7 @@ namespace NSmartProxy
         /// <returns>The first available port</returns> 
         public static List<int> FindUnAvailableTCPPorts(List<int> ports)
         {
-            bool isAvailable = true;
+            //bool isAvailable = true;
             List<int> usedPortList = new List<int>(ports.Count);
 
             mutex.WaitOne();
