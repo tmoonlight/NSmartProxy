@@ -120,7 +120,7 @@ namespace NSmartProxy.Extension
 
         [API]
         [Secure]
-        public string GetConfig(string key, string value)
+        public string GetConfig(string key)
         {
             switch (key)
             {

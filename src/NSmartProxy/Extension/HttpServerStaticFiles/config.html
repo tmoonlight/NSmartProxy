@@ -3,7 +3,7 @@
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
             <button type="button" class="btn btn-sm btn-outline-secondary"> <span data-feather="refresh-ccw"></span>
-                刷新日志</button>
+                刷新配置</button>
         </div>
        
     </div>
@@ -16,8 +16,8 @@
     <input type="checkbox" class="custom-control-input" id="customSwitch2">
     <label class="custom-control-label" for="customSwitch2">全量日志跟踪</label>
 </div>-->
-<div class="custom-control custom-switch">
-    <input type="checkbox" class="custom-control-input" id="customSwitch3">
-    <label class="custom-control-label" for="customSwitch3">匿名登陆</label>
+<div class="custom-control custom-switch" onclick="toggleConfig(this)">
+    <input type="checkbox" class="custom-control-input" id="configAllowAnonymousUser" change ="toggleConfig(this)">
+    <label class="custom-control-label" for="configAllowAnonymousUser">匿名登陆</label>
 
 </div>

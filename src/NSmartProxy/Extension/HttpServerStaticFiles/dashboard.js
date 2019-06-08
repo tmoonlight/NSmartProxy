@@ -74,7 +74,7 @@
                 }
             }
         });
-    getLogFileTable(10)
+    getLogFileTable(10);
     getClientsInfo();
 
     var myChart2 = new Chart(ctx2,
@@ -95,7 +95,7 @@
             options: {
                 title: {
                     display: true,
-                    text: '内存'
+                    text: '连接历史'
                 }
             }
         });
