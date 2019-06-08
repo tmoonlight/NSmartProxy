@@ -14,7 +14,7 @@ namespace NSmartProxy.Authorize
         public NSPClientCollection Clients;
         public Dictionary<int, NSPApp> PortAppMap;//端口和app的映射关系
         public NSPServerConfig ServerConfig;
-        public HashSet<string> TokenCaches; //服务端会话池，登陆后的会话都在这里，每天需要做定时清理
+        public HashSet<string> TokenCaches; //服务端会话池，登录后的会话都在这里，每天需要做定时清理
 
         private bool supportAnonymousLogin = true;
 
@@ -27,7 +27,7 @@ namespace NSmartProxy.Authorize
         }
 
         /// <summary>
-        /// 支持客户端匿名登陆
+        /// 支持客户端匿名登录
         /// </summary>
         public bool SupportAnonymousLogin { get => supportAnonymousLogin; set => supportAnonymousLogin = value; }
 

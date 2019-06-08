@@ -55,7 +55,7 @@ namespace NSmartProxy
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            //用户登陆
+            //用户登录
             if (args.Length == 4)
             {
                 _currentLoginInfo = new LoginInfo();

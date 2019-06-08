@@ -48,12 +48,14 @@ namespace NSmartProxy.ServerHost
         {
             if (!mutex.WaitOne(3, false))
             {
-                string msg = "Another instance of the program is running.";
+                string msg = "Another instance of the program is running.It may cause fatal error.";
                 //Logger.Error(msg, new Exception(msg));
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.Write(msg);
-                return;
+                //return;
+                Console.ForegroundColor = default(ConsoleColor);
             }
-
+            Console.WriteLine("Initializing..");
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartServerRepository");
             XmlConfigurator.ConfigureAndWatch(loggerRepository, new FileInfo("log4net.config"));

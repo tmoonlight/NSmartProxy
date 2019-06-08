@@ -168,7 +168,7 @@ window.location.href='main.html';
         }
 
         ///// <summary>
-        ///// 提供非web登陆的方法byid
+        ///// 提供非web登录的方法byid
         ///// </summary>
         ///// <param name="userid"></param>
         ///// <param name="userpwd"></param>
@@ -194,7 +194,7 @@ window.location.href='main.html';
         //}
 
         /// <summary>
-        /// 提供非web的登陆方法
+        /// 提供非web的登录方法
         /// </summary>
         /// <param name="username"></param>
         /// <param name="userpwd"></param>
@@ -204,7 +204,7 @@ window.location.href='main.html';
         {
             User user = null;
             string isAnonymous = "0";
-            //匿名登陆时創建一個用戶
+            //匿名登录时創建一個用戶
             if (ServerContext.SupportAnonymousLogin && string.IsNullOrEmpty(username))
             {
 

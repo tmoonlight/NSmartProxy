@@ -169,7 +169,7 @@ namespace NSmartProxy.Authorize
                 else
                     return new AuthResult()
                     {
-                        ErrorMessage = "校验失败，服务端不支持匿名登陆",
+                        ErrorMessage = "校验失败，服务端不支持匿名登录",
                         ResultState = AuthState.Fail
                     };
             }

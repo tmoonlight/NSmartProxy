@@ -52,6 +52,9 @@ namespace NSmartProxyWinform
             btnLogin.Location = new Point(12, btnLogin.Location.Y);
             btnOpenInExplorer.Hide();
 
+            //有登录缓存文件，则判断为“已登录”
+            if (File.Exists(Router.NSMART_CLIENT_CACHE_PATH)) btnLogin.Text = " 已登录";
+
         }
 
         private void RefreshLoginState()
@@ -154,7 +157,7 @@ namespace NSmartProxyWinform
                             }
                             else if (status == ClientStatus.LoginError)
                             {
-                                MessageBox.Show("客户端登陆失败，详情请查看日志。");
+                                MessageBox.Show("客户端登录失败，详情请查看日志。");
                                 btnStart.Enabled = true;
                             }
                         }
@@ -292,6 +295,7 @@ namespace NSmartProxyWinform
         private void ConfigValueChanged(object sender, EventArgs e)
         {
             configChanged = true;
+            //btnLogin.Text = " 未登录";
         }
 
         private void listBox1_Leave(object sender, EventArgs e)
@@ -495,7 +499,9 @@ namespace NSmartProxyWinform
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-
+            Login frmLogin = new Login(clientRouter, this);
+            frmLogin.ShowDialog();
+            if (frmLogin.Success) btnLogin.Text = "已登录";
         }
 
         //日志
@@ -515,5 +521,6 @@ namespace NSmartProxyWinform
             btnOpenInExplorer.Hide();
             btnLogin.Show();
         }
+
     }
 }

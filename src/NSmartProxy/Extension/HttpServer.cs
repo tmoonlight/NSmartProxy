@@ -185,17 +185,17 @@ namespace NSmartProxy.Extension
                         }
 
                         //TODO 先不校验，方便调试
-                        //if (method.GetCustomAttribute<SecureAttribute>() != null)
-                        //{
-                        //    if (request.Cookies["NSPTK"] == null)
-                        //        throw new Exception("用户未登陆。");
-                        //    //TODO cookie，根据不同的用户角色分配权限。
-                        //    var UserClaims = StringUtil.ConvertStringToTokenClaims(request.Cookies["NSPTK"].Value);
-                        //    if (string.IsNullOrEmpty(UserClaims.UserKey))
-                        //    {
-                        //        throw new Exception("登陆信息异常。");
-                        //    }
-                        //}
+                        if (method.GetCustomAttribute<SecureAttribute>() != null)
+                        {
+                            if (request.Cookies["NSPTK"] == null)
+                                throw new Exception("用户未登录。");
+                            //TODO cookie，根据不同的用户角色分配权限。
+                            var UserClaims = StringUtil.ConvertStringToTokenClaims(request.Cookies["NSPTK"].Value);
+                            if (string.IsNullOrEmpty(UserClaims.UserKey))
+                            {
+                                throw new Exception("登录信息异常。");
+                            }
+                        }
 
                         if (method.GetCustomAttribute<APIAttribute>() != null)
                         {

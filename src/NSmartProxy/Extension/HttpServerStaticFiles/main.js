@@ -1,5 +1,5 @@
 ﻿//TODO 想个办法让他们同步
-var basepath = "http://localhost:12309/";//api根地址,这里需要和配置文件一致
+var basepath = "/";//api根地址,这里需要和配置文件一致
 
 //hashchange事件，路由是如此实现的
 (function () {

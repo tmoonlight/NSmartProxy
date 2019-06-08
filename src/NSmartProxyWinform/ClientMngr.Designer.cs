@@ -486,7 +486,6 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TextBox tbxConfigPort;
         private System.Windows.Forms.TextBox tbxReversePort;
-        private System.Windows.Forms.TextBox tbxProviderAddr;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
@@ -512,6 +511,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ErrorProvider errorProvider1;
         private System.Windows.Forms.Button btnLogin;
+        public System.Windows.Forms.TextBox tbxProviderAddr;
     }
 }
 

@@ -93,7 +93,7 @@ namespace NSmartProxy.Client
         {
             if (AlwaysReconnect) IsStarted = true;
             var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
-            //登陆功能
+            //登录功能
             string arrangedToken = Global.NO_TOKEN_STRING;
 
             while (!oneLiveToken.IsCancellationRequested)
@@ -107,10 +107,10 @@ namespace NSmartProxy.Client
                 var appIdIpPortConfig = ClientConfig.Clients;
                 int clientId = 0;
 
-                //0.5 处理登陆/重登录/匿名登陆逻辑
+                //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
-                    //登陆
+                    //登录
                     if (CurrentLoginInfo != null)
                     {
                         var loginResult = await Login();
@@ -118,17 +118,17 @@ namespace NSmartProxy.Client
                         clientId = loginResult.Item2;
                     }
                     else if (File.Exists(NSMART_CLIENT_CACHE_PATH))
-                    { //登陆缓存
+                    { //登录缓存
 
                         arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
-                        //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登陆
+                        //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
                         //TODO ***** 这是个trick：防止匿名用户被服务端踢了之后无限申请新账号
                         CurrentLoginInfo = null;
                     }
                     else
                     {
-                        //匿名登陆，未提供登陆信息时，使用空用户名密码自动注册并尝试匿名登陆
-                        Router.Logger.Debug("未提供登陆信息，尝试匿名登陆");
+                        //匿名登录，未提供登录信息时，使用空用户名密码自动注册并尝试匿名登录
+                        Router.Logger.Debug("未提供登录信息，尝试匿名登录");
                         CurrentLoginInfo = new LoginInfo() { UserName = "", UserPwd = "" };
                         var loginResult = await Login();
                         arrangedToken = loginResult.Item1;
@@ -226,7 +226,7 @@ namespace NSmartProxy.Client
             var result = await disp.LoginFromClient(CurrentLoginInfo.UserName ?? "", CurrentLoginInfo.UserPwd ?? "");
             if (result.State == 1)
             {
-                Router.Logger.Debug("登陆成功");
+                Router.Logger.Debug("登录成功");
                 var data = result.Data;
                 arrangedToken = data.Token;
                 Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
@@ -236,7 +236,7 @@ namespace NSmartProxy.Client
             else
             {
                 StatusChanged(ClientStatus.LoginError, null);
-                throw new Exception("登陆失败，服务端返回错误如下：" + result.Msg);
+                throw new Exception("登录失败，服务端返回错误如下：" + result.Msg);
             }
 
             return (arrangedToken, clientId);

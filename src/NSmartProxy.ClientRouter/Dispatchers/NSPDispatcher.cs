@@ -21,8 +21,8 @@ namespace NSmartProxy.ClientRouter.Dispatchers
         {
             string url = $"http://{BaseUrl}/LoginFromClient";
             HttpClient client = new HttpClient();
-            var httpmsg = await client.GetAsync($"{url}?username={username}&userpwd={userpwd}");
-            var httpstr = await httpmsg.Content.ReadAsStringAsync();
+            var httpmsg = await client.GetAsync($"{url}?username={username}&userpwd={userpwd}").ConfigureAwait(false);
+            var httpstr = await httpmsg.Content.ReadAsStringAsync().ConfigureAwait(false);
             return JsonConvert.DeserializeObject<HttpResult<LoginFormClientResult>>(httpstr);
         }
 
@@ -30,8 +30,8 @@ namespace NSmartProxy.ClientRouter.Dispatchers
         {
             string url = $"http://{BaseUrl}/LoginFromClientById";
             HttpClient client = new HttpClient();
-            var httpmsg = await client.GetAsync($"{url}?username={userid}&userpwd={userpwd}");
-            var httpstr = await httpmsg.Content.ReadAsStringAsync();
+            var httpmsg = await client.GetAsync($"{url}?username={userid}&userpwd={userpwd}").ConfigureAwait(false);
+            var httpstr = await httpmsg.Content.ReadAsStringAsync().ConfigureAwait(false);
             return JsonConvert.DeserializeObject<HttpResult<LoginFormClientResult>>(httpstr);
         }
 
