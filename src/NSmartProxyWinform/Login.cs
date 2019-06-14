@@ -54,7 +54,7 @@ namespace NSmartProxyWinform
             }
 
 
-            string baseHttpPath = null;
+            string baseEndPoint = null;
             if (clientRouter == null)
             {
                 var providerAddr = parentForm.tbxProviderAddr.Text;
@@ -63,17 +63,17 @@ namespace NSmartProxyWinform
                     MessageBox.Show("请先在主窗体设置“服务器地址”");
                 }
 
-                baseHttpPath = $"{providerAddr}:{DEFAULT_WEB_PORT}";
+                baseEndPoint = $"{providerAddr}:{DEFAULT_WEB_PORT}";
             }
             else
             {
                 var config = clientRouter.ConnectionManager.ClientConfig;
-                baseHttpPath = $"http://{config.ProviderAddress}:{config.ProviderWebPort}";
+                baseEndPoint = $"{config.ProviderAddress}:{config.ProviderWebPort}";
             }
 
             btnLogin.Enabled = false;
-            NSPDispatcher dispatcher = new NSPDispatcher(baseHttpPath);
-            var connectAsync = dispatcher.LoginFromClient(tbxPassword.Text, tbxUser.Text);
+            NSPDispatcher dispatcher = new NSPDispatcher(baseEndPoint);
+            var connectAsync = dispatcher.LoginFromClient(tbxUser.Text, tbxPassword.Text);
             var delayDispose = Task.Delay(TimeSpan.FromSeconds(5000));
             var comletedTask = Task.WhenAny(delayDispose, connectAsync).Result;
             if (!connectAsync.IsCompleted) //超时

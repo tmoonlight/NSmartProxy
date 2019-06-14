@@ -17,6 +17,7 @@ using log4net.Appender;
 using log4net.Repository;
 using Newtonsoft.Json;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 using NSmartProxyWinform.Util;
 
 namespace NSmartProxyWinform
@@ -29,7 +30,7 @@ namespace NSmartProxyWinform
         private NSPClientConfig config;
 
         private const string NULL_CLIENT_TEXT = "<未编辑节点>";
-        private const string RANDOM_PORT_TEXT = "<随机>";
+        //private const string RANDOM_PORT_TEXT = "<随机>";
         private const string START_TAG_TEXT = "1";
         private const string END_TAG_TEXT = "0";
         public bool IsStarted
@@ -54,6 +55,8 @@ namespace NSmartProxyWinform
 
             //有登录缓存文件，则判断为“已登录”
             if (File.Exists(Router.NSMART_CLIENT_CACHE_PATH)) btnLogin.Text = " 已登录";
+
+            this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
 
         }
 
