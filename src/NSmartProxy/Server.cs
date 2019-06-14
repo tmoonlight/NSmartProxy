@@ -303,7 +303,9 @@ namespace NSmartProxy
         {
             try
             {
+#if DEBUG
                 Server.Logger.Debug("config request received.");
+#endif
                 var nstream = client.GetStream();
 
                 //0.读取协议名
@@ -312,7 +314,9 @@ namespace NSmartProxy
 
                 int resultByte0 = await nstream.ReadAsync(protoRequestBytes);
                 Protocol proto = (Protocol)protoRequestBytes[0];
+#if DEBUG
                 Server.Logger.Debug("appRequestBytes received.");
+#endif
                 if (resultByte0 == 0)
                 {
                     CloseClient(client);
@@ -335,10 +339,8 @@ namespace NSmartProxy
                         break;
                     default:
                         throw new Exception("接收到异常请求。");
-                        //break;
                 }
 
-                //if (await ProcessAppRequestProtocol(client)) return;
             }
             catch (Exception e)
             {
@@ -386,7 +388,9 @@ namespace NSmartProxy
             //1.2 响应ACK 
             await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
+#if DEBUG
             Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
+#endif
             //2.更新最后更新时间
             if (ServerContext.Clients.ContainsKey(clientID))
             {

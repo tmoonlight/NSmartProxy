@@ -167,32 +167,6 @@ window.location.href='main.html';
             ", token);
         }
 
-        ///// <summary>
-        ///// 提供非web登录的方法byid
-        ///// </summary>
-        ///// <param name="userid"></param>
-        ///// <param name="userpwd"></param>
-        ///// <returns></returns>
-        //[API]
-        //public string LoginFromClientById(string userid, string userpwd)
-        //{
-
-        //    //1.校验
-        //    dynamic user = Dbop.Get(long.Parse(userid))?.ToDynamic();
-        //    if (user == null)
-        //    {
-        //        return "error: user not exist.";
-        //    }
-        //    if (user.userPwd != userpwd)
-        //    {
-        //        return "error: wrong password.";
-        //    }
-
-        //    //2.给token
-        //    string output = $"{userid}|{DateTime.Now.ToString("yyyy-MM-dd")}";
-        //    return EncryptHelper.AES_Encrypt(output);
-        //}
-
         /// <summary>
         /// 提供非web的登录方法
         /// </summary>
@@ -381,7 +355,6 @@ window.location.href='main.html';
 
                 json.D();
                 json.Append("]").C();
-                ;
 
                 //隧道状态
                 json.Append(KV2Json("tunnels"));
