@@ -576,7 +576,12 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                await fromStream.CopyToAsync(toStream, ct);
+                byte[] buffer = new byte[81920];
+                int bytesRead;
+                while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                {
+                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                }
             }
             Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
@@ -585,7 +590,12 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                await fromStream.CopyToAsync(toStream, ct);
+                byte[] buffer = new byte[81920];
+                int bytesRead;
+                while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                {
+                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                }
             }
             Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
         }
