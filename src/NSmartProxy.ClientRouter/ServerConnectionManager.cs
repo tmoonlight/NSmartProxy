@@ -138,8 +138,12 @@ namespace NSmartProxy.Client
             //读端口配置，此处数组的长度会限制使用的节点数（targetserver）
             //如果您的机器够给力，可以调高此值
             byte[] serverConfig = new byte[256];
+            //TODO 任何read都应该设置超时
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
-            if (readBytesCount == 0) Router.Logger.Debug("服务器关闭了本次连接");
+            if (readBytesCount == 0)
+                Router.Logger.Debug("服务器关闭了本次连接");
+            else if (readBytesCount == -1)
+                Router.Logger.Debug("连接超时");
 
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }

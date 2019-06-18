@@ -402,7 +402,7 @@ namespace NSmartProxy
             }
 
             //3.接收完立即关闭
-            //client.Close();
+            client.Close();
         }
 
         private async Task<bool> ProcessAppRequestProtocol(TcpClient client, bool IsReconnect = false)

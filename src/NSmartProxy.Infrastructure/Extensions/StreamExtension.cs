@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace NSmartProxy.Infrastructure
@@ -11,6 +12,24 @@ namespace NSmartProxy.Infrastructure
             if (count == 0) count = buffer.Length;
             await stream.WriteAsync(buffer, offset, count);
             await stream.FlushAsync();
+        }
+
+        /// <summary>
+        /// 带超时的readasync,timeout 毫秒
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="TimeOut"></param>
+        /// <returns></returns>
+        public static async Task<int> ReadAsync(this NetworkStream stream, byte[] buffer, int offset, int count, int timeOut)
+        {
+            var receiveCount = 0;
+            var receiveTask = Task.Run(async () => { receiveCount = await stream.ReadAsync(buffer, offset, count); });
+            var isReceived = await Task.WhenAny(receiveTask, Task.Delay(timeOut)) == receiveTask;
+            if (!isReceived) return -1;
+            return receiveCount;
         }
     }
 }
