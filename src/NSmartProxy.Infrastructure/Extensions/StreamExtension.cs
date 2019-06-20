@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy.Infrastructure
 {
@@ -30,6 +31,12 @@ namespace NSmartProxy.Infrastructure
             var isReceived = await Task.WhenAny(receiveTask, Task.Delay(timeOut)) == receiveTask;
             if (!isReceived) return -1;
             return receiveCount;
+        }
+
+       
+        public static async Task<int> ReadAsyncEx(this NetworkStream stream, byte[] buffer)
+        {
+            return await stream.ReadAsync(buffer,0,buffer.Length,Global.DefaultConnectTimeout);
         }
     }
 }

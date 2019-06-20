@@ -11,6 +11,7 @@ using System.Threading.Tasks.Dataflow;
 using NSmartProxy.Authorize;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 
 namespace NSmartProxy
@@ -93,7 +94,14 @@ namespace NSmartProxy
 
                 //读取头四个字节
                 byte[] bytes = new byte[4];
-                await iClient.GetStream().ReadAsync(bytes);
+                if (await iClient.GetStream().ReadAsync(bytes, 0, bytes.Length, Global.DefaultConnectTimeout) < 1)
+                {
+                    Server.Logger.Debug("服务端read出错，关闭连接");
+                    incomeClient.Client.Close();
+                    return;
+                }
+
+                
 
                 var clientIdAppId = GetAppFromBytes(bytes);
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID

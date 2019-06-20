@@ -23,7 +23,16 @@ namespace NSmartProxy.Extension
 
         //TODO XXXX
         #region  dashboard
-
+        [Secure]
+        [API]
+        public ServerStatusDTO GetServerStatus()
+        {
+            ServerStatusDTO dto = new ServerStatusDTO();
+            dto.connectCount = ServerContext.ConnectCount;
+            dto.totalReceivedBytes = ServerContext.TotalReceivedBytes;
+            dto.totalSentBytes = ServerContext.TotalSentBytes;
+            return dto;
+        }
 
         #endregion
 

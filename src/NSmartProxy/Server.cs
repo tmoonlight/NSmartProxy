@@ -265,8 +265,8 @@ namespace NSmartProxy
             TcpTunnel tunnel = new TcpTunnel();
             tunnel.ConsumerClient = consumerClient;
             ServerContext.PortAppMap[consumerPort].Tunnels.Add(tunnel);
-            Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
-
+            //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
+            ServerContext.ConnectCount += 1;
             //II.弹出先前已经准备好的socket
             TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
 
@@ -304,24 +304,27 @@ namespace NSmartProxy
             try
             {
 #if DEBUG
-                Server.Logger.Debug("config request received.");
+                //Server.Logger.Debug("config request received.");
 #endif
+                ServerContext.ClientConnectCount += 1;
                 var nstream = client.GetStream();
 
                 //0.读取协议名
                 int protoRequestLength = 1;
                 byte[] protoRequestBytes = new byte[protoRequestLength];
 
-                int resultByte0 = await nstream.ReadAsync(protoRequestBytes);
-                Protocol proto = (Protocol)protoRequestBytes[0];
-#if DEBUG
-                Server.Logger.Debug("appRequestBytes received.");
-#endif
-                if (resultByte0 == 0)
+                int resultByte0 = await nstream.ReadAsync(protoRequestBytes, 0, protoRequestBytes.Length, Global.DefaultConnectTimeout);
+                if (resultByte0 < 1)
                 {
-                    CloseClient(client);
+                    Server.Logger.Debug("服务端read失败，关闭连接");
+                    client.Client.Close();
                     return;
                 }
+
+                Protocol proto = (Protocol)protoRequestBytes[0];
+#if DEBUG
+                //Server.Logger.Debug("appRequestBytes received.");
+#endif
 
                 switch (proto)
                 {
@@ -356,11 +359,12 @@ namespace NSmartProxy
             NetworkStream nstream = client.GetStream();
             int closeClientLength = 2;
             byte[] appRequestBytes = new byte[closeClientLength];
-            int resultByte = await nstream.ReadAsync(appRequestBytes);
+            int resultByte = await nstream.ReadAsync(appRequestBytes, 0, appRequestBytes.Length, Global.DefaultConnectTimeout);
             //Server.Logger.Debug("appRequestBytes received.");
-            if (resultByte == 0)
+            if (resultByte < 1)
             {
-                CloseClient(client);
+                Server.Logger.Debug("服务端read失败，关闭连接");
+                client.Client.Close();
                 return;
             }
 
@@ -378,9 +382,9 @@ namespace NSmartProxy
             NetworkStream nstream = client.GetStream();
             int heartBeatLength = 2;
             byte[] appRequestBytes = new byte[heartBeatLength];
-            int resultByte = await nstream.ReadAsync(appRequestBytes);
+            int resultByte = await nstream.ReadAsync(appRequestBytes, 0, appRequestBytes.Length, Global.DefaultConnectTimeout);
             //Server.Logger.Debug("appRequestBytes received.");
-            if (resultByte == 0)
+            if (resultByte < 1)
             {
                 CloseClient(client);
                 return;
@@ -389,8 +393,9 @@ namespace NSmartProxy
             await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
 #if DEBUG
-            Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
+            //Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
 #endif
+            ServerContext.ClientConnectCount += 1;
             //2.更新最后更新时间
             if (ServerContext.Clients.ContainsKey(clientID))
             {
@@ -435,20 +440,22 @@ namespace NSmartProxy
             //1.3 获取客户端请求数
             int configRequestLength = 3;
             byte[] appRequestBytes = new byte[configRequestLength];
-            int resultByte = await nstream.ReadAsync(appRequestBytes);
-            Server.Logger.Debug("appRequestBytes received.");
-            if (resultByte == 0)
+            int resultByte = await nstream.ReadAsyncEx(appRequestBytes);
+            if (resultByte < 1)
             {
                 CloseClient(client);
                 return true;
             }
 
+            Server.Logger.Debug("appRequestBytes received.");
+            ServerContext.ClientConnectCount += 1;
+
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];
             byte[] consumerPortBytes = new byte[appCount * 2];
-            int resultByte2 = await nstream.ReadAsync(consumerPortBytes);
-            Server.Logger.Debug("consumerPortBytes received.");
-            if (resultByte2 == 0)
+            int resultByte2 = await nstream.ReadAsyncEx(consumerPortBytes);
+            //Server.Logger.Debug("consumerPortBytes received.");
+            if (resultByte2 < 1)
             {
                 CloseClient(client);
                 return true;
@@ -491,9 +498,9 @@ namespace NSmartProxy
             //1.1 获取token长度
             int tokenLengthLength = 2;
             byte[] tokenLengthBytes = new byte[tokenLengthLength];
-            int resultByte01 = await nstream.ReadAsync(tokenLengthBytes);
+            int resultByte01 = await nstream.ReadAsyncEx(tokenLengthBytes);
             Server.Logger.Debug("tokenLengthBytes received.");
-            if (resultByte01 == 0)
+            if (resultByte01 < 1)
             {
                 CloseClient(client);
                 return 0;
@@ -502,9 +509,9 @@ namespace NSmartProxy
             //1.2 获取token
             int tokenLength = StringUtil.DoubleBytesToInt(tokenLengthBytes);
             byte[] tokenBytes = new byte[tokenLength];
-            int resultByte02 = await nstream.ReadAsync(tokenBytes);
+            int resultByte02 = await nstream.ReadAsyncEx(tokenBytes);
             Server.Logger.Debug("tokenBytes received.");
-            if (resultByte02 == 0)
+            if (resultByte02 < 1)
             {
                 CloseClient(client);
                 return 0;
@@ -581,6 +588,7 @@ namespace NSmartProxy
                 while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                 {
                     await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    ServerContext.TotalSentBytes += bytesRead;//上行
                 }
             }
             Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
@@ -595,7 +603,10 @@ namespace NSmartProxy
                 while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                 {
                     await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    ServerContext.TotalReceivedBytes += bytesRead;//下行
                 }
+
+                
             }
             Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
         }

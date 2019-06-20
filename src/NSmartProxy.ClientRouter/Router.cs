@@ -392,7 +392,6 @@ namespace NSmartProxy.Client
         }
 
 
-
         private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string epString)
         {
             using (fromStream)
