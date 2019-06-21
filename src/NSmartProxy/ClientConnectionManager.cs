@@ -101,7 +101,7 @@ namespace NSmartProxy
                     return;
                 }
 
-                
+
 
                 var clientIdAppId = GetAppFromBytes(bytes);
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID
@@ -130,11 +130,12 @@ namespace NSmartProxy
 
         public async Task<TcpClient> GetClient(int consumerPort)
         {
-            var clientID = ServerContext.PortAppMap[consumerPort].ClientId;
-            var appID = ServerContext.PortAppMap[consumerPort].AppId;
+            var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
+            var appId = ServerContext.PortAppMap[consumerPort].AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
-            TcpClient client = await ServerContext.Clients[clientID].AppMap[appID].PopClientAsync();
+            TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
+            if (client == null) return null;
             ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
             return client;
         }

@@ -53,8 +53,10 @@ namespace NSmartProxy.ServerHost
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.Write(msg);
                 //return;
-                Console.ForegroundColor = default(ConsoleColor);
+                //Console.ForegroundColor = default(ConsoleColor);
             }
+
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("Initializing..");
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartServerRepository");

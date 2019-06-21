@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy
 {
@@ -45,7 +46,12 @@ namespace NSmartProxy
         /// <returns></returns>
         public async Task<TcpClient> PopClientAsync()
         {
-            return await TcpClientBlocks.ReceiveAsync();
+            TcpClient tcpClient = null;
+            var receiveTask = Task.Run(async () => { tcpClient = await TcpClientBlocks.ReceiveAsync(); });
+            await Task.WhenAny(receiveTask, Task.Delay(Global.DefaultPopClientTimeout));
+            //if (!isReceived) return -1;
+            return tcpClient;
+            //return await TcpClientBlocks.ReceiveAsync();
         }
 
         /// <summary>

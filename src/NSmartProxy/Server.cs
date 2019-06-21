@@ -262,13 +262,19 @@ namespace NSmartProxy
 
         private async Task ProcessConsumeRequestAsync(int consumerPort, string clientApp, TcpClient consumerClient, CancellationToken ct)
         {
-            TcpTunnel tunnel = new TcpTunnel();
-            tunnel.ConsumerClient = consumerClient;
+            TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
             ServerContext.PortAppMap[consumerPort].Tunnels.Add(tunnel);
             //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
             ServerContext.ConnectCount += 1;
             //II.弹出先前已经准备好的socket
             TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
+            if (s2pClient == null)
+            {
+                Logger.Debug($"端口{consumerPort}获取反弹连接超时，关闭传输。");
+                //获取clientid
+                //关闭本次连接
+                ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ClientId);
+            }
 
             tunnel.ClientServerClient = s2pClient;
             //✳关键过程✳
@@ -606,7 +612,7 @@ namespace NSmartProxy
                     ServerContext.TotalReceivedBytes += bytesRead;//下行
                 }
 
-                
+
             }
             Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
         }
