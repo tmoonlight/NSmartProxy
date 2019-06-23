@@ -185,6 +185,7 @@ namespace NSmartProxy.Extension
                         }
 
                         //TODO 先不校验，方便调试
+#if !DEBUG
                         if (method.GetCustomAttribute<SecureAttribute>() != null)
                         {
                             if (request.Cookies["NSPTK"] == null)
@@ -196,6 +197,7 @@ namespace NSmartProxy.Extension
                                 throw new Exception("登录信息异常。");
                             }
                         }
+#endif
 
                         if (method.GetCustomAttribute<APIAttribute>() != null)
                         {

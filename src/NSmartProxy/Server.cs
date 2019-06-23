@@ -591,13 +591,21 @@ namespace NSmartProxy
             {
                 byte[] buffer = new byte[81920];
                 int bytesRead;
-                while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                try
                 {
-                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                    ServerContext.TotalSentBytes += bytesRead;//上行
+                    while ((bytesRead =
+                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                    {
+                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        ServerContext.TotalSentBytes += bytesRead; //上行
+                    }
+                }
+                catch (IOException ioe)
+                {
+                    //Server.Logger.Info(ioe.Message);
                 }
             }
-            Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
+            //Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
@@ -606,15 +614,23 @@ namespace NSmartProxy
             {
                 byte[] buffer = new byte[81920];
                 int bytesRead;
-                while ((bytesRead = await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                try
                 {
-                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                    ServerContext.TotalReceivedBytes += bytesRead;//下行
+                    while ((bytesRead =
+                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                    {
+                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        ServerContext.TotalReceivedBytes += bytesRead; //下行
+                    }
+                }
+                catch (IOException ioe)
+                {
+                    //Server.Logger.Info(ioe.Message);
                 }
 
 
             }
-            Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
+            //Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
         }
 
         private void CloseClient(TcpClient client)

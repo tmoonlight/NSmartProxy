@@ -1,5 +1,6 @@
-﻿//TODO 想个办法让他们同步
-var basepath = "/";//api根地址,这里需要和配置文件一致
+﻿//TODO 调试用
+//var basepath = "/";//api根地址,这里需要和配置文件一致
+var basepath = "http://localhost:12309/";
 
 //hashchange事件，路由是如此实现的
 (function () {
@@ -25,8 +26,6 @@ var basepath = "/";//api根地址,这里需要和配置文件一致
                 location.href = "/login.html";
             }
         }
-
-        
     }
 
     function loadContent(storedHash) {
