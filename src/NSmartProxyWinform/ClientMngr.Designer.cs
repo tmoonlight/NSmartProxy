@@ -64,19 +64,19 @@
             this.label3 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.btnUnRegWinSrv = new System.Windows.Forms.Button();
+            this.btnRegWinSrv = new System.Windows.Forms.Button();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.btnLogin = new System.Windows.Forms.Button();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabServerConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.tabPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnStart
@@ -431,6 +431,37 @@
             this.tabServerConfig.Size = new System.Drawing.Size(533, 380);
             this.tabServerConfig.TabIndex = 5;
             // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.btnUnRegWinSrv);
+            this.tabPage3.Controls.Add(this.btnRegWinSrv);
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(525, 354);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "服务";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // btnUnRegWinSrv
+            // 
+            this.btnUnRegWinSrv.Location = new System.Drawing.Point(180, 155);
+            this.btnUnRegWinSrv.Name = "btnUnRegWinSrv";
+            this.btnUnRegWinSrv.Size = new System.Drawing.Size(154, 49);
+            this.btnUnRegWinSrv.TabIndex = 1;
+            this.btnUnRegWinSrv.Text = "卸载windows服务";
+            this.btnUnRegWinSrv.UseVisualStyleBackColor = true;
+            this.btnUnRegWinSrv.Click += new System.EventHandler(this.btnUnRegWinSrv_Click);
+            // 
+            // btnRegWinSrv
+            // 
+            this.btnRegWinSrv.Location = new System.Drawing.Point(180, 100);
+            this.btnRegWinSrv.Name = "btnRegWinSrv";
+            this.btnRegWinSrv.Size = new System.Drawing.Size(154, 49);
+            this.btnRegWinSrv.TabIndex = 0;
+            this.btnRegWinSrv.Text = "注册为windows服务";
+            this.btnRegWinSrv.UseVisualStyleBackColor = true;
+            this.btnRegWinSrv.Click += new System.EventHandler(this.btnRegWinSrv_Click);
+            // 
             // errorProvider1
             // 
             this.errorProvider1.ContainerControl = this;
@@ -446,35 +477,6 @@
             this.btnLogin.Text = "  未登录";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-            // 
-            // tabPage3
-            // 
-            this.tabPage3.Controls.Add(this.button2);
-            this.tabPage3.Controls.Add(this.button1);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(525, 354);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "服务";
-            this.tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(180, 100);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(154, 49);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "注册为windows服务";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(180, 155);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(154, 49);
-            this.button2.TabIndex = 1;
-            this.button2.Text = "卸载windows服务";
-            this.button2.UseVisualStyleBackColor = true;
             // 
             // ClientMngr
             // 
@@ -503,8 +505,8 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabServerConfig.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.tabPage3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -548,8 +550,8 @@
         private System.Windows.Forms.Button btnLogin;
         public System.Windows.Forms.TextBox tbxProviderAddr;
         private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button btnRegWinSrv;
+        private System.Windows.Forms.Button btnUnRegWinSrv;
     }
 }
 

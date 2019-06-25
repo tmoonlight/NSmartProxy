@@ -525,5 +525,14 @@ namespace NSmartProxyWinform
             btnLogin.Show();
         }
 
+        private void btnRegWinSrv_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("还未实现：（");
+        }
+
+        private void btnUnRegWinSrv_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
