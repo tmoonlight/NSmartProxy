@@ -1,5 +1,6 @@
 
 <img src="https://github.com/tmoonlight/NSmartProxy/blob/master/NSmartProxyNew.png">
+<img src="https://dev.azure.com/tmoonlight/NSmartProxy/_apis/build/status/tmoonlight.NSmartProxy?branchName=master">
 
 # NSmartProxy
 
