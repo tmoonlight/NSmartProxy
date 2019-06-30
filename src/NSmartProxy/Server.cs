@@ -389,22 +389,19 @@ namespace NSmartProxy
             int heartBeatLength = 2;
             byte[] appRequestBytes = new byte[heartBeatLength];
             int resultByte = await nstream.ReadAsync(appRequestBytes, 0, appRequestBytes.Length, Global.DefaultConnectTimeout);
-            //Server.Logger.Debug("appRequestBytes received.");
             if (resultByte < 1)
             {
                 CloseClient(client);
                 return;
             }
-            //1.2 响应ACK 
-            await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+           
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
-#if DEBUG
-            //Server.Logger.Debug($"Now processing {clientID}'s Heartbeat protocol....");
-#endif
             ServerContext.ClientConnectCount += 1;
             //2.更新最后更新时间
             if (ServerContext.Clients.ContainsKey(clientID))
             {
+                //2.2 响应ACK 
+                await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
                 ServerContext.Clients[clientID].LastUpdateTime = DateTime.Now;
             }
             else
@@ -438,10 +435,7 @@ namespace NSmartProxy
                 return false;
             }
 
-            //if (IsReconnect) 因为加入了始终校验的机制，取消重连规则
-            //{
             ServerContext.CloseAllSourceByClient(clientIdFromToken);
-            // }
 
             //1.3 获取客户端请求数
             int configRequestLength = 3;

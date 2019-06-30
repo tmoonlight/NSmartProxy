@@ -51,7 +51,7 @@ namespace NSmartProxy.ServerHost
                 string msg = "Another instance of the program is running.It may cause fatal error.";
                 //Logger.Error(msg, new Exception(msg));
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.Write(msg);
+                Console.WriteLine(msg);
                 //return;
                 //Console.ForegroundColor = default(ConsoleColor);
             }
