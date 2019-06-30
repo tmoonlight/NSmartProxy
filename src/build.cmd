@@ -11,10 +11,10 @@ set nsp_client_winfform_path=%BuildPath%/nspclient_winform_%Ver%
 
 rem del %~dp0/../build/*.*
 rem NSPClient
-dotnet publish .\NSmartProxyClient\NSmartProxyClient.csproj -o %nsp_server_path%
+dotnet publish .\NSmartProxyClient\NSmartProxyClient.csproj -c release -o %nsp_server_path%
 
 rem NSPServer
-dotnet publish .\NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj -o %nsp_client_path%
+dotnet publish .\NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj -c release -o %nsp_client_path%
 
 rem NSPWinform
 MSBuild .\NSmartProxyWinform\NSmartProxyWinform.csproj /t:build /p:OutDir=%nsp_client_winfform_path%
