@@ -241,8 +241,10 @@ namespace NSmartProxy.Client
         /// <returns></returns>
         public static ServerConnectionManager Create(int clientId)
         {
-            var scm = new ServerConnectionManager();
-            scm._clientID = clientId;
+            var scm = new ServerConnectionManager
+            {
+                _clientID = clientId
+            };
             return scm;
         }
 

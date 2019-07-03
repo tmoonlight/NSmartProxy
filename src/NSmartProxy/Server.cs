@@ -108,18 +108,18 @@ namespace NSmartProxy
             ConnectionManager = ClientConnectionManager.GetInstance().SetServerContext(ServerContext);
             //注册客户端发生连接时的事件
             ConnectionManager.AppTcpClientMapConfigConnected += ConnectionManager_AppAdded;
-            ConnectionManager.ListenServiceClient(DbOp);
+            _ = ConnectionManager.ListenServiceClient(DbOp);
             Logger.Debug("NSmart server started");
 
             //2.开启http服务
             if (ServerContext.ServerConfig.WebAPIPort > 0)
             {
                 var httpServer = new HttpServer(Logger, DbOp, ServerContext);
-                httpServer.StartHttpService(ctsHttp, ServerContext.ServerConfig.WebAPIPort);
+                _ = httpServer.StartHttpService(ctsHttp, ServerContext.ServerConfig.WebAPIPort);
             }
 
             //3.开启心跳检测线程 
-            ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
+            _ = ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
             //4.开启配置服务(常开)
             try
@@ -214,9 +214,9 @@ namespace NSmartProxy
                     kv.Value.ClientId == e.App.ClientId) port = kv.Key;
             }
             if (port == 0) throw new Exception("app未注册");
-            var ct = new CancellationToken();
+            //var ct = new CancellationToken();
 
-            ListenConsumeAsync(port);
+            _ = ListenConsumeAsync(port);
         }
 
         /// <summary>
@@ -247,12 +247,12 @@ namespace NSmartProxy
                     //Task.Factory.StartNew(consumerlistener.AcceptTcpClientAsync())
 
                     var consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
+                    _ = ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
                 }
             }
             catch (ObjectDisposedException ode)
             {
-                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止");
+                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止"+ ode.ToString());
             }
             catch (Exception ex)
             {
@@ -280,7 +280,7 @@ namespace NSmartProxy
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
-            s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+            _ = s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
 
             await TcpTransferAsync(consumerClient, s2pClient, clientApp, ct);
         }
@@ -301,7 +301,7 @@ namespace NSmartProxy
             while (true)
             {
                 var client = await listenerConfigService.AcceptTcpClientAsync();
-                ProcessConfigRequestAsync(client);
+                _ = ProcessConfigRequestAsync(client);
             }
         }
 
@@ -594,8 +594,10 @@ namespace NSmartProxy
                         ServerContext.TotalSentBytes += bytesRead; //上行
                     }
                 }
-                catch (IOException ioe)
+                catch (Exception ioe)
                 {
+                    if (ioe is IOException) { return; } //Suppress this exception.
+                    throw;
                     //Server.Logger.Info(ioe.Message);
                 }
             }
@@ -617,8 +619,10 @@ namespace NSmartProxy
                         ServerContext.TotalReceivedBytes += bytesRead; //下行
                     }
                 }
-                catch (IOException ioe)
+                catch (Exception ioe)
                 {
+                    if (ioe is IOException) { return; } //Suppress this exception.
+                    throw;
                     //Server.Logger.Info(ioe.Message);
                 }
 

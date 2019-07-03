@@ -10,9 +10,9 @@ namespace NSmartProxy.Database
         private FileStream rf;
         private BinaryWriter bw;
         private BinaryReader br;
-        private long tableSize = 1024L; //1k
+        private readonly long tableSize = 1024L; //1k
         private const int SEQUENCE_ITEM_LENGTH = 8;
-        private string filePath;
+        private readonly string filePath;
         public SequenceFile(String file)
         {
             filePath = file;
@@ -33,7 +33,7 @@ namespace NSmartProxy.Database
                     bw.Write(0L);
                 }
             }
-            catch (Exception ex)
+            catch //(Exception ex)
             {
                 bw.Close(); br.Close(); rf.Close();
                 throw;

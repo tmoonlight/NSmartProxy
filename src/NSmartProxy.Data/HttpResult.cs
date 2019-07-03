@@ -36,9 +36,10 @@ namespace NSmartProxy.Data
     public class HttpResult<T>
     {
 
-        private static HttpResult<T> nullSuccessResult;
+        private static readonly HttpResult<T> nullSuccessResult = new HttpResult<T>() { state = 1 };
         public HttpResult()
         {
+
         }
 
         //1代表成功 0代表失败
@@ -57,7 +58,7 @@ namespace NSmartProxy.Data
         {
             get
             {
-                return nullSuccessResult ?? new HttpResult<T>() { state = 1 };
+                return nullSuccessResult;// ?? new HttpResult<T>() { state = 1 };
             }
         }
     }

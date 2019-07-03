@@ -53,7 +53,7 @@ namespace NSmartProxy
                     incomeClient.Client.Client.LocalEndPoint.ToString() + "-" +
                     incomeClient.Client.Client.RemoteEndPoint.ToString());
                 incomeClient.Client.SetKeepAlive(out _);
-                ProcessReverseRequest(incomeClient);
+                _ = ProcessReverseRequest(incomeClient);
             }
 
         }
@@ -242,8 +242,7 @@ namespace NSmartProxy
         private bool IsBoundedByUser(int clientId, int port)
         {
             var boundHash = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
-            UserPortBound userBound;
-            if (boundHash.TryGetValue(clientId.ToString(), out userBound))
+            if (boundHash.TryGetValue(clientId.ToString(), out UserPortBound userBound))
             {
                 return userBound.Bound.Contains(port);
             }

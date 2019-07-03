@@ -189,13 +189,12 @@ namespace NSmartProxy.Client
                         tunnelstrs.Add(tunnelStr);
                     }
                     Logger.Debug("**************************************");
-                    ConnectionManager.PollingToProvider(StatusChanged, tunnelstrs);
+                    _ = ConnectionManager.PollingToProvider(StatusChanged, tunnelstrs);
                     //3.创建心跳连接
-                    ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token, _waiter);
+                    _ = ConnectionManager.StartHeartBeats(Global.HeartbeatInterval, HEARTBEAT_TOKEN_SRC.Token, _waiter);
 
                     IsStarted = true;
-                    Exception exception = await _waiter.Task.ConfigureAwait(false) as Exception;
-                    if (exception != null)
+                    if (await _waiter.Task.ConfigureAwait(false) is Exception exception)
                         Router.Logger.Debug($"程序异常终止:{exception.Message}。");
                     else Router.Logger.Debug($"未知异常。");
                 }
@@ -249,7 +248,7 @@ namespace NSmartProxy.Client
             foreach (TcpClient providerClient in args.NewClients)
             {
                 Router.Logger.Debug("Open server connection.");
-                OpenTrasferation(args.App.AppId, providerClient);
+                _ = OpenTrasferation(args.App.AppId, providerClient);
             }
 
         }
@@ -352,7 +351,7 @@ namespace NSmartProxy.Client
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
                 //targetServerStream.Write(buffer, 0, readByteCount);
-                TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString);
+                _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString);
                 //already close connection
 
             }

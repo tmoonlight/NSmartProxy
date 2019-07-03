@@ -97,7 +97,7 @@ namespace NSmartProxy.Extension
             while (true)
             {
                 var client = await httpService.GetContextAsync();
-                ProcessHttpRequestAsync(client);
+                _ = ProcessHttpRequestAsync(client);
             }
         }
 
@@ -138,10 +138,9 @@ namespace NSmartProxy.Extension
                     //mime类型
                     ProcessMIME(response, unit.Substring(idx3));
                     //TODO 权限控制（只是控制html权限而已）
-                  
+
                     //读文件优先去缓存读
-                    MemoryStream memoryStream;
-                    if (FilesCache.TryGetValue(unit.TrimStart('/'), out memoryStream))
+                    if (FilesCache.TryGetValue(unit.TrimStart('/'), out MemoryStream memoryStream))
                     {
                         memoryStream.Position = 0;
                         await memoryStream.CopyToAsync(response.OutputStream);
@@ -227,8 +226,7 @@ namespace NSmartProxy.Extension
                         else if (method.GetCustomAttribute<FileAPIAttribute>() != null)
                         {
                             response.ContentType = "application/octet-stream";
-                            FileDTO fileDto = method.Invoke(this, parameters) as FileDTO;
-                            if (fileDto == null)
+                            if (!(method.Invoke(this, parameters) is FileDTO fileDto))
                             {
                                 throw new Exception("文件返回失败，请查看错误日志。");
                             }
@@ -273,8 +271,7 @@ namespace NSmartProxy.Extension
                 response.ContentEncoding = Encoding.UTF8;
             }
 
-            string val = "";
-            if (_mimeMappings.TryGetValue(suffix, out val))
+            if (_mimeMappings.TryGetValue(suffix, out string val))
             {
                 // found!
                 response.ContentType = val;

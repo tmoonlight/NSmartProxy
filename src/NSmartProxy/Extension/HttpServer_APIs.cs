@@ -27,10 +27,12 @@ namespace NSmartProxy.Extension
         [API]
         public ServerStatusDTO GetServerStatus()
         {
-            ServerStatusDTO dto = new ServerStatusDTO();
-            dto.connectCount = ServerContext.ConnectCount;
-            dto.totalReceivedBytes = ServerContext.TotalReceivedBytes;
-            dto.totalSentBytes = ServerContext.TotalSentBytes;
+            ServerStatusDTO dto = new ServerStatusDTO
+            {
+                connectCount = ServerContext.ConnectCount,
+                totalReceivedBytes = ServerContext.TotalReceivedBytes,
+                totalSentBytes = ServerContext.TotalSentBytes
+            };
             return dto;
         }
 
@@ -135,11 +137,8 @@ namespace NSmartProxy.Extension
             {
                 case AllowAnonymousUser:
                     return ServerContext.SupportAnonymousLogin ? "1" : "0";
-                    ; break;
                 default: return "";
             }
-
-            return "";
         }
 
         #endregion
@@ -186,7 +185,6 @@ window.location.href='main.html';
         public LoginFormClientResult LoginFromClient(string username, string userpwd)
         {
             User user = null;
-            string isAnonymous = "0";
             //匿名登录时創建一個用戶
             if (ServerContext.SupportAnonymousLogin && string.IsNullOrEmpty(username))
             {
