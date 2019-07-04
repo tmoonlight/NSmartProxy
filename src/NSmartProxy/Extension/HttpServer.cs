@@ -111,7 +111,6 @@ namespace NSmartProxy.Extension
 #if DEBUG
             response.AddHeader("Access-Control-Allow-Origin", "*");
 #endif
-
             try
             {
                 //通过request来的值进行接口调用

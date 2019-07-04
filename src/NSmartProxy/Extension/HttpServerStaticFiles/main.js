@@ -7,11 +7,11 @@ var basepath = "/";//api根地址,这里需要和配置文件一致
     if ("onhashchange" in window) { // event supported?
         window.onhashchange = function () {
             hashChanged(window.location.hash);
-        }
+        };
     } else { // event not supported:
         var storedHash = window.location.hash;
         window.setInterval(function () {
-            if (window.location.hash != storedHash) {
+            if (window.location.hash !== storedHash) {
                 storedHash = window.location.hash;
                 hashChanged(storedHash);
             }
@@ -21,7 +21,7 @@ var basepath = "/";//api根地址,这里需要和配置文件一致
 
     function hashChanged(storedHash) {
         storedHash = loadContent(storedHash);
-        if (location.pathname.toUpperCase() !="/LOGIN.HTML") {
+        if (location.pathname.toUpperCase() !== "/LOGIN.HTML") {
             if (getCookie("NSPTK").length < 1) {
                 location.href = "/login.html";
             }
@@ -77,7 +77,7 @@ function getCookie(cookieName) {
     var arrCookie = strCookie.split("; ");
     for (var i = 0; i < arrCookie.length; i++) {
         var arr = arrCookie[i].split("=");
-        if (cookieName == arr[0]) {
+        if (cookieName === arr[0]) {
             return arr[1];
         }
     }
@@ -88,7 +88,7 @@ function delCookie(name) {
     var exp = new Date();
     exp.setTime(exp.getTime() - 1);
     var cval = getCookie(name);
-    if (cval != null) document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
+    if (cval !== null) document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString();
 }
 
 function signOut() {
