@@ -1,8 +1,8 @@
 
 <img src="https://github.com/tmoonlight/NSmartProxy/blob/master/NSmartProxyNew.png">
 
-![GitHub release](https://img.shields.io/github/release/tmoonlight/NSmartProxy.svg)
-![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)
+[![GitHub release](https://img.shields.io/github/release/tmoonlight/NSmartProxy.svg?logoColor=%21%5BGitHub%20release%5D%28https%3A%2F%2Fimg.shields.io%2Fgithub%2Frelease%2Ftmoonlight%2FNSmartProxy.svg%29)](https://github.com/tmoonlight/NSmartProxy/releases)
+[![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)](https://github.com/tmoonlight/NSmartProxy/blob/master/LICENSE)
 [![Build Status](https://dev.azure.com/tmoonlight/NSmartProxy/_apis/build/status/tmoonlight.NSmartProxy?branchName=master)](https://dev.azure.com/tmoonlight/NSmartProxy/_build/latest?definitionId=1&branchName=master)
 
 # NSmartProxy
