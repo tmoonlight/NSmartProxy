@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NSmartProxy.Data.DTO
+namespace NSmartProxy.Data.DTOs
 {
     public class LoginFormClientResult
     {

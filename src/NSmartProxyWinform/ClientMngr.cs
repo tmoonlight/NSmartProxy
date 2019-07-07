@@ -9,6 +9,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ using Newtonsoft.Json;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
 using NSmartProxyWinform.Util;
+using NSmartProxy.ClientRouter.Dispatchers;
 
 namespace NSmartProxyWinform
 {
@@ -26,7 +28,7 @@ namespace NSmartProxyWinform
     {
         public Router clientRouter;
         private Log4netLogger logger;
-       // private bool configChanged = false;
+        // private bool configChanged = false;
         private NSPClientConfig config;
 
         private const string NULL_CLIENT_TEXT = "<未编辑节点>";
@@ -90,10 +92,8 @@ namespace NSmartProxyWinform
             }
 
             if (ValidateRequired(tbxProviderAddr) &&
-                ValidateRequired(tbxConfigPort) &&
-                ValidateRequired(tbxReversePort) &&
-                ValidateMoreThanZero(tbxConfigPort) &&
-                ValidateMoreThanZero(tbxReversePort))
+                ValidateRequired(tbxWebPort) &&
+                ValidateMoreThanZero(tbxWebPort))
             {
                 isValid = true;
             }
@@ -394,8 +394,8 @@ namespace NSmartProxyWinform
         {
             NSPClientConfig conf = ConfigHelper.ReadAllConfig<NSPClientConfig>(Program.CONFIG_FILE_PATH);
             tbxProviderAddr.Text = conf.ProviderAddress;
-            tbxConfigPort.Text = conf.ProviderConfigPort.ToString();
-            tbxReversePort.Text = conf.ProviderPort.ToString();
+            //tbxConfigPort.Text = conf.ProviderConfigPort.ToString();
+            tbxWebPort.Text = conf.ProviderWebPort.ToString();
             //if(tbxReversePort.Text == "" ? tbxReversePort.Text = "0";
 
             listBox1.Items.Clear();
@@ -421,8 +421,9 @@ namespace NSmartProxyWinform
             config = new NSPClientConfig();
             //1.刷新配置
             config.ProviderAddress = tbxProviderAddr.Text;
-            config.ProviderConfigPort = int.Parse(tbxConfigPort.Text);
-            config.ProviderPort = int.Parse(tbxReversePort.Text);
+            //config.ProviderConfigPort = int.Parse(tbxConfigPort.Text);
+            //config.ProviderPort = int.Parse(tbxReversePort.Text);
+            config.ProviderWebPort = int.Parse(tbxWebPort.Text);
             //解决热心网友提出的bug：空值时无法保存。
 
             //2.保存配置到文件
@@ -532,7 +533,68 @@ namespace NSmartProxyWinform
 
         private void btnUnRegWinSrv_Click(object sender, EventArgs e)
         {
+            MessageBox.Show("还未实现：（");
+        }
 
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            btnTest.Enabled = false;
+            Application.DoEvents();
+            NSPDispatcher clientDispatcher = new NSPDispatcher($"{tbxProviderAddr.Text}:{tbxWebPort.Text}");
+            TcpClient tcpclient = new TcpClient();
+            try
+            {
+                var result = clientDispatcher.GetServerPorts().Result;
+                if (result.State == 1)
+                {
+
+                    var reversePort = result.Data.ReversePort;
+                    var configPort = result.Data.ConfigPort;
+
+                    string errMsg = "";
+                    try
+                    {
+                        tcpclient.Connect(tbxProviderAddr.Text, reversePort);
+                    }
+                    catch
+                    {
+                        errMsg += $"端口 {reversePort} 测试不通过;";
+                    }
+
+                    try
+                    {
+                        tcpclient.Connect(tbxProviderAddr.Text, configPort);
+                    }
+                    catch
+                    {
+                        errMsg += $"端口 {reversePort} 测试不通过;";
+                    }
+                    if (errMsg == "")
+                    {
+                        MessageBox.Show(errMsg);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"配置端口：反向连接端口{reversePort},配置端口{configPort}，测试通过！");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(" 获取端口配置失败，服务端返回错误如下：" + result.Msg);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+            finally
+            {
+                tcpclient.Close();
+            }
+
+
+            //taskwhenall
+            btnTest.Enabled = true;
         }
     }
 }

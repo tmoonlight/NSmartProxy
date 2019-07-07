@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NSmartProxy.Data;
-using NSmartProxy.Data.DTO;
+using NSmartProxy.Data.DTOs;
 
 namespace NSmartProxy.ClientRouter.Dispatchers
 {
     public class NSPDispatcher
     {
-        private string BaseUrl = "localhost";
+        private string BaseUrl;
         public NSPDispatcher(string baseUrl)
         {
             BaseUrl = baseUrl;
@@ -37,6 +37,14 @@ namespace NSmartProxy.ClientRouter.Dispatchers
 
         //TODO 增加一个校验用户token是否合法的方法
         //public 
-
+        //GetServerPorts
+        public async Task<HttpResult<ServerPortsDTO>> GetServerPorts()
+        {
+            string url = $"http://{BaseUrl}/GetServerPorts";
+            HttpClient client = new HttpClient();
+            var httpmsg = await client.GetAsync(url).ConfigureAwait(false);
+            var httpstr = await httpmsg.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return JsonConvert.DeserializeObject<HttpResult<ServerPortsDTO>>(httpstr);
+        }
     }
 }

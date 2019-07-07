@@ -77,8 +77,8 @@ namespace NSmartProxy.ServerHost
         {
             //try
             //{
-            //    Server.ClientServicePort = int.Parse(Configuration.GetSection("ClientServicePort").Value);
-            //    Server.ConfigServicePort = int.Parse(Configuration.GetSection("ConfigServicePort").Value);
+            //    Server.ReversePort = int.Parse(Configuration.GetSection("ReversePort").Value);
+            //    Server.ConfigPort = int.Parse(Configuration.GetSection("ConfigPort").Value);
             //}
             //catch (Exception ex)
             //{

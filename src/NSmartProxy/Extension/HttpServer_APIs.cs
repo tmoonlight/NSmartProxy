@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Text;
 using NSmartProxy.Authorize;
 using NSmartProxy.Data;
-using NSmartProxy.Data.DTO;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Data.Entity;
 using NSmartProxy.Database;
@@ -139,6 +138,18 @@ namespace NSmartProxy.Extension
                     return ServerContext.SupportAnonymousLogin ? "1" : "0";
                 default: return "";
             }
+        }
+
+        [API]
+        public ServerPortsDTO GetServerPorts()
+        {
+            var config = ServerContext.ServerConfig;
+            return new ServerPortsDTO()
+            {
+                ReversePort = config.ReversePort,
+                ConfigPort = config.ConfigPort,
+                WebAPIPort = config.WebAPIPort
+            };
         }
 
         #endregion

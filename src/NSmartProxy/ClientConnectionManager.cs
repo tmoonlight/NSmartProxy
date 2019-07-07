@@ -43,8 +43,8 @@ namespace NSmartProxy
         public async Task ListenServiceClient(IDbOperator dbOp)
         {
             //侦听，并且构造连接池
-            Server.Logger.Debug("Listening client on port " + ServerContext.ServerConfig.ClientServicePort + "...");
-            TcpListener listener = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ClientServicePort);
+            Server.Logger.Debug("Listening client on port " + ServerContext.ServerConfig.ReversePort + "...");
+            TcpListener listener = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ReversePort);
             listener.Start(1000);
             while (true)
             {

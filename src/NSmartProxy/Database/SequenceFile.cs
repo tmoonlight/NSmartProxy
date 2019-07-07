@@ -100,6 +100,7 @@ namespace NSmartProxy.Database
             bw.Write(0L);
             rf.Position = (index + 1) * SEQUENCE_ITEM_LENGTH;
             bw.Write(lastval);
+            bw.Flush();//连续删除有时会出bug，尝试提前flush到文件中 TODO 待验证
         }
 
         public void Clear()

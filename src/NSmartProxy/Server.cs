@@ -190,9 +190,9 @@ namespace NSmartProxy
 
         private async Task StartConfigService(CancellationTokenSource accepting)
         {
-            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ConfigServicePort);
+            TcpListener listenerConfigService = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ConfigPort);
 
-            Logger.Debug("Listening config request on port " + ServerContext.ServerConfig.ConfigServicePort + "...");
+            Logger.Debug("Listening config request on port " + ServerContext.ServerConfig.ConfigPort + "...");
             var taskResultConfig = AcceptConfigRequest(listenerConfigService);
 
             await taskResultConfig; //block here to hold open the server

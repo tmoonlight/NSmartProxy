@@ -83,7 +83,7 @@ namespace NSmartProxy.Client
             for (int j = 0; j < 3; j++)
             {
                 var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
-                var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ProviderConfigPort);
+                var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ConfigPort);
                 //超时则dispose掉
                 var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
                 if (!connectAsync.IsCompleted) //超时
@@ -187,7 +187,7 @@ namespace NSmartProxy.Client
             try
             {
                 //1.连接服务端
-                var state = await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ProviderPort);
+                var state = await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ReversePort);
                 switch (state)
                 {
                     case AuthState.Success:
@@ -323,7 +323,7 @@ namespace NSmartProxy.Client
                     try
                     {
                         client = await NetworkUtil.ConnectAndSend(config.ProviderAddress,
-                            config.ProviderConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
+                            config.ConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
                     }
                     catch (Exception ex)
                     {

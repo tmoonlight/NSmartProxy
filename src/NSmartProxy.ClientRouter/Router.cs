@@ -48,6 +48,7 @@ namespace NSmartProxy.Client
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
         CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         TaskCompletionSource<object> _waiter;
+        NSPDispatcher ClientDispatcher;
 
         public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
@@ -64,6 +65,7 @@ namespace NSmartProxy.Client
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
+            //ClientDispatcher = new NSPDispatcher();
         }
 
         public Router(INSmartLogger logger) : this()
@@ -71,9 +73,10 @@ namespace NSmartProxy.Client
             Logger = logger;
         }
 
-        public Router SetConfiguration(NSPClientConfig config)
+        public Router SetConfiguration(NSPClientConfig config)//start之前一定要执行该方法，否则出错
         {
             ClientConfig = config;
+            ClientDispatcher = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
             return this;
         }
 
@@ -107,6 +110,24 @@ namespace NSmartProxy.Client
                 var appIdIpPortConfig = ClientConfig.Clients;
                 int clientId = 0;
 
+                //0 获取服务器端口配置
+                try
+                {
+                    await InitServerPorts();
+                }
+                catch (Exception ex)//出错 重连
+                {
+                    if (IsStarted == false)
+                    { StatusChanged(ClientStatus.LoginError, null); return; }
+                    else
+                    {
+                        Logger.Error("获取服务器端口失败：" + ex.Message, ex);
+
+                        await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
+                        continue;
+                    }
+                }
+
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
@@ -138,10 +159,16 @@ namespace NSmartProxy.Client
                         File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception ex)//出错 重连
                 {
-                    Logger.Error("启动失败：" + ex.Message, ex);
-                    return;
+                    if (IsStarted == false)
+                    { StatusChanged(ClientStatus.LoginError, null); return; }
+                    else
+                    {
+                        Logger.Error("启动失败：" + ex.Message, ex);
+                        await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
+                        continue;
+                    }
                 }
                 //1.获取配置
                 ConnectionManager = ServerConnectionManager.Create(clientId);
@@ -151,7 +178,7 @@ namespace NSmartProxy.Client
                 ClientModel clientModel = null;//
                 try
                 {
-                    //非第一次则算作重连，发送clientid过去
+                    //从服务端初始化客户端配置
                     clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
                 }
                 catch (Exception ex)
@@ -166,8 +193,6 @@ namespace NSmartProxy.Client
                 {
                     int counter = 0;
 
-                    //1.5 写入缓存
-                    //File.WriteAllBytes(NSMART_CLIENT_CACHE_PATH, StringUtil.IntTo2Bytes(clientModel.ClientId));
                     //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
                     foreach (var app in appIdIpPortConfig)
                     {
@@ -218,12 +243,34 @@ namespace NSmartProxy.Client
             Router.Logger.Debug($"停止重试，循环终止。");
         }
 
+
+        /// <summary>
+        /// 初始化服务器端口配置，并返回配置的dto
+        /// </summary>
+        /// <returns></returns>
+        private async Task<ServerPortsDTO> InitServerPorts()
+        {
+            var result = await ClientDispatcher.GetServerPorts();
+            if (result.State == 1)
+            {
+                ClientConfig.ReversePort = result.Data.ReversePort;
+                ClientConfig.ConfigPort = result.Data.ConfigPort;
+                Router.Logger.Debug($"配置端口：反向连接端口{ClientConfig.ReversePort},配置端口{ClientConfig.ConfigPort}");
+                return result.Data;
+            }
+            else
+            {
+
+                throw new Exception("获取配置端口失败，服务端返回错误如下：" + result.Msg);
+            }
+        }
+
         private async Task<ValueTuple<string, int>> Login()
         {
             string arrangedToken;
             int clientId;
-            NSPDispatcher disp = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
-            var result = await disp.LoginFromClient(CurrentLoginInfo.UserName ?? "", CurrentLoginInfo.UserPwd ?? "");
+            //ClientDispatcher = new NSPDispatcher($"{ClientConfig.ProviderAddress}:{ClientConfig.ProviderWebPort}");
+            var result = await ClientDispatcher.LoginFromClient(CurrentLoginInfo.UserName ?? "", CurrentLoginInfo.UserPwd ?? "");
             if (result.State == 1)
             {
                 Router.Logger.Debug("登录成功");
@@ -235,7 +282,7 @@ namespace NSmartProxy.Client
             }
             else
             {
-                StatusChanged(ClientStatus.LoginError, null);
+
                 throw new Exception("登录失败，服务端返回错误如下：" + result.Msg);
             }
 
@@ -271,7 +318,7 @@ namespace NSmartProxy.Client
                 //服务端关闭
                 await NetworkUtil.ConnectAndSend(
                         config.ProviderAddress,
-                    config.ProviderConfigPort,
+                    config.ConfigPort,
                         Protocol.CloseClient,
                         StringUtil.IntTo2Bytes(this.ConnectionManager.ClientID),
                         true)
