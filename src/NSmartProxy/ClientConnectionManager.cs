@@ -80,6 +80,8 @@ namespace NSmartProxy
             try
             {
                 var result = await incomeClient.AuthorizeAsync();
+                if(result ==null ) return;//主动关闭
+                
                 if (!result.IsSuccess)
                 {
                     Server.Logger.Debug("SecurityTcpClient校验失败：" + incomeClient.ErrorMessage);

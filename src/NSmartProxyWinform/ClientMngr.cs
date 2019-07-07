@@ -585,7 +585,8 @@ namespace NSmartProxyWinform
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                logger.Debug(ex.ToString());
+                MessageBox.Show($"{tbxProviderAddr.Text}:{tbxWebPort.Text}连接失败。");
             }
             finally
             {

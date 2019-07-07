@@ -23,7 +23,7 @@ namespace NSmartProxyWinform.Util
         {
             Graphics g = Graphics.FromHwnd(base.Handle);
             if (!String.IsNullOrEmpty(this.PlaceHolderStr) && string.IsNullOrEmpty(this.Text))
-                g.DrawString(this.PlaceHolderStr, this.Font, new SolidBrush(Color.LightGray), 0, 0);
+                g.DrawString(this.PlaceHolderStr, this.Font, new SolidBrush(Color.Gray), 0, 0);
         }
     }
 }
