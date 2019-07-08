@@ -567,7 +567,7 @@ namespace NSmartProxyWinform
                     }
                     catch
                     {
-                        errMsg += $"端口 {reversePort} 测试不通过;";
+                        errMsg += $"端口 {configPort} 测试不通过;";
                     }
                     if (errMsg == "")
                     {
