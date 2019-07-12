@@ -17,5 +17,8 @@
         public const int DefaultWriteAckTimeout = 10000;//调用具备ack确认协议的等待时间
         public const int DefaultPopClientTimeout = 30000; //反弹连接超时时间
         public const int TokenExpiredMinutes = 60 * 24 * 30; //token过期时间（分钟）TODO 待生效
+
+        public const string DisplayName = "NSPClient";//windows服务显示名
+        public const string ServiceName = "NSPClient";//windows服务名
     }
 }

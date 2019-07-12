@@ -10,6 +10,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,9 @@ namespace NSmartProxyWinform
         //private const string RANDOM_PORT_TEXT = "<随机>";
         private const string START_TAG_TEXT = "1";
         private const string END_TAG_TEXT = "0";
+        private const string SERVICE_PATH = "NSmartProxyWinService.exe";
+        //private const string SERVICE_NAME = "NSmartProxy Client Service";
+
         public bool IsStarted
         {
             get => btnStart.Tag.ToString() == END_TAG_TEXT;
@@ -528,12 +532,22 @@ namespace NSmartProxyWinform
 
         private void btnRegWinSrv_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("还未实现：（");
+            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+                WinServiceHelper.UninstallService(SERVICE_PATH);
+            WinServiceHelper.InstallService(SERVICE_PATH);
+            //using (ServiceController control = new ServiceController(Global.ServiceName))
+            //{
+            //    if (control.Status == ServiceControllerStatus.Stopped)
+            //    {
+            //        control.Start();
+            //    }
+            //}
         }
 
         private void btnUnRegWinSrv_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("还未实现：（");
+            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+                WinServiceHelper.UninstallService(SERVICE_PATH);
         }
 
         private void btnTest_Click(object sender, EventArgs e)

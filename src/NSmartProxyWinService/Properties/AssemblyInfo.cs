@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("NSmartProxyWinform")]
+[assembly: AssemblyTitle("NSmartProxyWinService")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NSmartProxyWinform")]
+[assembly: AssemblyProduct("NSmartProxyWinService")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("b55f3df3-6657-4204-aeeb-b2360fc5fab1")]
+[assembly: Guid("d5488369-60d1-47e5-880d-8d5f49a0d777")]
 
 // 程序集的版本信息由下列四个值组成: 
 //
