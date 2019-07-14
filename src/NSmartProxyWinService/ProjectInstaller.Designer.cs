@@ -42,6 +42,7 @@
             this.serviceInstaller1.Description = "NSmartProxy客户端服务";
             this.serviceInstaller1.DisplayName = "NSPClient";
             this.serviceInstaller1.ServiceName = "NSPClient";
+            this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
             // ProjectInstaller
             // 

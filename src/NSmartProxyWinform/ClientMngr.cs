@@ -37,7 +37,17 @@ namespace NSmartProxyWinform
         private const string START_TAG_TEXT = "1";
         private const string END_TAG_TEXT = "0";
         private const string SERVICE_PATH = "NSmartProxyWinService.exe";
+        private const string LOG_FILE_PATH = "log-file.log";
+
         //private const string SERVICE_NAME = "NSmartProxy Client Service";
+        // private bool? isServiceMode;
+        public bool IsServiceMode
+        {
+            get
+            {
+                return WinServiceHelper.IsServiceExisted(Global.ServiceName);
+            }
+        }
 
         public bool IsStarted
         {
@@ -49,7 +59,7 @@ namespace NSmartProxyWinform
             InitializeComponent();
             //将日志写入窗体中。
             logger = new Log4netLogger();
-            logger.BeforeWriteLog = (msg) => { ShowInfo(msg.ToString()); };
+            logger.BeforeWriteLog = (msg) => { ShowLogInfo(msg.ToString()); };
             //右下角小图标
             notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
             RefreshLoginState();
@@ -134,61 +144,142 @@ namespace NSmartProxyWinform
         private void StartOrStop()
         {
             btnStart.Enabled = false;
+            var isService = this.IsServiceMode;
+
+
             if (btnStart.Tag.ToString() == START_TAG_TEXT)
             {
-                StartClientRouter(config, (status, tunelStr) =>
+                if (isService)
                 {
-                    btnStart.Invoke(new Action(
-                        () =>
+                    using (ServiceController control = new ServiceController(Global.ServiceName))
+                    {
+                        if (control.Status == ServiceControllerStatus.Stopped)
                         {
-                            if (status == ClientStatus.Started)
-                            {
-                                notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
-                                listBox1.ForeColor = Color.Green;
-                                listBox1.Items.Clear();
-                                foreach (var tunnel in tunelStr)
-                                {
-                                    notifyIconNSPClient.BalloonTipText += "\r\n" + tunnel.ToString();
-                                    listBox1.Items.Add(tunnel.Substring(tunnel.IndexOf(':') + 1).Trim());
-                                }
-                                notifyIconNSPClient.ShowBalloonTip(5000);
-                                btnStart.Text = "停止";
-                                btnStart.Tag = END_TAG_TEXT;
-                                notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
-                                btnStart.Enabled = true;
-                            }
-                            else if (status == ClientStatus.Stopped)
-                            {
-                                MessageBox.Show("客户端连接失败，详情请查看日志。");
-                                btnStart.Enabled = true;
-                            }
-                            else if (status == ClientStatus.LoginError)
-                            {
-                                MessageBox.Show("客户端登录失败，详情请查看日志。");
-                                btnStart.Enabled = true;
-                            }
+                            control.Start();
                         }
-                        ));
+                        RefreshServiceBtnStatus();
 
-                });
+                    }
+                }
+                else
+                {
+                    #region 启动客户端
+                    StartClientRouter(config, (status, tunelStr) =>
+                    {
+                        btnStart.Invoke(new Action(
+                            () =>
+                            {
+                                if (status == ClientStatus.Started)
+                                {
+                                    notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
+                                    listBox1.ForeColor = Color.Green;
+                                    listBox1.Items.Clear();
+                                    foreach (var tunnel in tunelStr)
+                                    {
+                                        notifyIconNSPClient.BalloonTipText += "\r\n" + tunnel.ToString();
+                                        listBox1.Items.Add(tunnel.Substring(tunnel.IndexOf(':') + 1).Trim());
+                                    }
+                                    notifyIconNSPClient.ShowBalloonTip(5000);
+                                    SetUIToRunning();
+                                }
+                                else if (status == ClientStatus.Stopped)
+                                {
+                                    MessageBox.Show("客户端连接失败，详情请查看日志。");
+                                    btnStart.Enabled = true;
+                                }
+                                else if (status == ClientStatus.LoginError)
+                                {
+                                    MessageBox.Show("客户端登录失败，详情请查看日志。");
+                                    btnStart.Enabled = true;
+                                }
+                            }
+                            ));
+
+                    });
+                    #endregion
+                }
 
             }
             else
             {
-                var tsk = clientRouter.Close();
-                tsk.ContinueWith(t => btnStart.Invoke(new Action(
-                    () =>
+                if (isService)
+                {
+                    using (ServiceController control = new ServiceController(Global.ServiceName))
                     {
-                        if (t.IsFaulted) { logger.Error("客户端关闭失败", null); btnStart.Enabled = true; return; }
-                        listBox1.ForeColor = Color.Black;
-                        btnStart.Text = "开始";
-                        btnStart.Tag = START_TAG_TEXT;
-                        notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
-
-                        btnStart.Enabled = true;
+                        control.Stop();
                     }
-                )));
+                    RefreshServiceBtnStatus();
+                }
+                else
+                {
+                    #region 关闭客户端
+                    var tsk = clientRouter.Close();
+                    tsk.ContinueWith(t => btnStart.Invoke(new Action(
+                        () =>
+                        {
+                            if (t.IsFaulted) { logger.Error("客户端关闭失败", null); btnStart.Enabled = true; return; }
+                            listBox1.ForeColor = Color.Black;
+                            SetUIToStop();
+                        }
+                    )));
+                    #endregion
+                }
             }
+
+        }
+
+        private void SetUIToStop()
+        {
+            btnStart.Text = "开始";
+            btnStart.Tag = START_TAG_TEXT;
+            notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
+            btnStart.Enabled = true;
+        }
+
+        private void SetUIToRunning()
+        {
+            btnStart.Text = "停止";
+            btnStart.Tag = END_TAG_TEXT;
+            notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
+            btnStart.Enabled = true;
+        }
+
+        private void RefreshServiceBtnStatus()
+        {
+            btnStart.Enabled = false;
+            btnStart.Invoke(new Action(() =>
+            {
+                ServiceController control = new ServiceController(Global.ServiceName);
+
+                Task tskRunning = Task.Run(() => { try { control.WaitForStatus(ServiceControllerStatus.Running, new TimeSpan(0, 0, 4)); } catch { } });
+                Task tskStopping = Task.Run(() => { try { control.WaitForStatus(ServiceControllerStatus.Stopped, new TimeSpan(0, 0, 4)); } catch { } });
+                Task tskTimeout = Task.Delay(3000);
+                Task resultTsk = Task.WhenAny(tskRunning, tskStopping, tskTimeout);
+                resultTsk.ContinueWith(t => { control.Close(); });
+                resultTsk.Wait();
+                if (tskRunning.IsCompleted)
+                {
+                    string tip = $"内网穿透后台服务({Global.ServiceName})已启动，详情请查看文件日志";
+                    SetUIToRunning();
+                    notifyIconNSPClient.BalloonTipText = tip;
+                    ShowLogInfo(tip);
+                }
+                else if (tskStopping.IsCompleted)
+                {
+                    SetUIToStop();
+                    ShowLogInfo($"内网穿透后台服务({Global.ServiceName})已激活，但处于关闭状态。");
+                }
+                else
+                {
+                    string tip = $"服务状态异常。";
+                }
+
+            }));
+        }
+
+        private void FileWatcherForLog_Changed(object sender, FileSystemEventArgs e)
+        {
+            //   e.ChangeType = WatcherChangeTypes
         }
 
         private void StartClientRouter(NSPClientConfig config, Action<ClientStatus, List<string>> loaded)
@@ -208,7 +299,7 @@ namespace NSmartProxyWinform
             clientRouter.SetConfiguration(config);
         }
 
-        public void ShowInfo(string info)
+        public void ShowLogInfo(string info)
         {
             tbxLog.Invoke(
                 new Action(() =>
@@ -469,6 +560,24 @@ namespace NSmartProxyWinform
         {
             RefreshFormFromConfig();
             RegisterHotKey();
+            RefreshWinServiceState();
+
+        }
+
+        private void RefreshWinServiceState()
+        {
+            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+            {
+                btnRegWinSrv.Enabled = false;
+                btnUnRegWinSrv.Enabled = true;
+                RefreshServiceBtnStatus();
+            }
+            else
+            {
+
+                btnRegWinSrv.Enabled = true;
+                btnUnRegWinSrv.Enabled = false;
+            }
         }
 
         private void RegisterHotKey()
@@ -485,7 +594,7 @@ namespace NSmartProxyWinform
                 case WM_HOTKEY:
                     switch (m.WParam.ToInt32())
                     {
-                        case 100:    //按下的是Shift+O   
+                        case 100:    //按下的是Ctrl+Shift+O   
                             {
                                 if (this.Visible == true)
                                 {
@@ -542,12 +651,14 @@ namespace NSmartProxyWinform
             //        control.Start();
             //    }
             //}
+            RefreshWinServiceState();
         }
 
         private void btnUnRegWinSrv_Click(object sender, EventArgs e)
         {
             if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
                 WinServiceHelper.UninstallService(SERVICE_PATH);
+            RefreshWinServiceState();
         }
 
         private void btnTest_Click(object sender, EventArgs e)
