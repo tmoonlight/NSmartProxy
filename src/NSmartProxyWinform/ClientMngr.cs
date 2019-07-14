@@ -329,7 +329,9 @@ namespace NSmartProxyWinform
 
         private void ExitProgram()
         {
-            if (MessageBox.Show("确认退出？", "NSmartProxy", MessageBoxButtons.OKCancel) == DialogResult.OK)
+            string tip = "确认退出？";
+            if (IsServiceMode) tip += "服务将在后台运行。";
+            if (MessageBox.Show(tip, "NSmartProxy", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
                 notifyIconNSPClient.Dispose();
                 Environment.Exit(0);
