@@ -98,11 +98,11 @@ namespace NSmartProxyWinform
 
         public void ClearLoginCache()
         {
-            File.Delete(Router.NSMART_CLIENT_CACHE_PATH);
+            File.Delete(Router.NspClientCachePath);
         }
         public void CreateLoginCache(string token)
         {
-            File.WriteAllText(Router.NSMART_CLIENT_CACHE_PATH, token);
+            File.WriteAllText(Router.NspClientCachePath, token);
         }
     }
 }

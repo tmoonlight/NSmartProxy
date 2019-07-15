@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Shared;
 using System.IO;
+using System.Reflection;
 using NSmartProxy.ClientRouter.Dispatchers;
 using NSmartProxy.Data.Models;
 
@@ -42,7 +43,9 @@ namespace NSmartProxy.Client
 
     public class Router
     {
-        public const string NSMART_CLIENT_CACHE_PATH = "./cli_cache_v2.cache";
+        public static string NspClientCachePath = null;
+
+        public static string NSMART_CLIENT_CACHE_FILE = "cli_cache_v2.cache";
         CancellationTokenSource ONE_LIVE_TOKEN_SRC;
         CancellationTokenSource CANCEL_TOKEN_SRC;
         CancellationTokenSource TRANSFERING_TOKEN_SRC;
@@ -66,6 +69,9 @@ namespace NSmartProxy.Client
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
             //ClientDispatcher = new NSPDispatcher();
+            string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
+            string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
+            NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
         }
 
         public Router(INSmartLogger logger) : this()
@@ -138,10 +144,10 @@ namespace NSmartProxy.Client
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
                     }
-                    else if (File.Exists(NSMART_CLIENT_CACHE_PATH))
+                    else if (File.Exists(NspClientCachePath))
                     { //登录缓存
 
-                        arrangedToken = File.ReadAllText(NSMART_CLIENT_CACHE_PATH);
+                        arrangedToken = File.ReadAllText(NspClientCachePath);
                         //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
                         //TODO ***** 这是个trick：防止匿名用户被服务端踢了之后无限申请新账号
                         //TODO 待解决 版本号无法显示的问题
@@ -156,7 +162,7 @@ namespace NSmartProxy.Client
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
                         //保存缓存到磁盘
-                        File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
+                        File.WriteAllText(NspClientCachePath, arrangedToken);
                     }
                 }
                 catch (Exception ex)//出错 重连
@@ -278,7 +284,7 @@ namespace NSmartProxy.Client
                 arrangedToken = data.Token;
                 Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
                 clientId = int.Parse(data.Userid);
-                File.WriteAllText(NSMART_CLIENT_CACHE_PATH, arrangedToken);
+                File.WriteAllText(NspClientCachePath, arrangedToken);
             }
             else
             {

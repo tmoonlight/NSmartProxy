@@ -70,7 +70,7 @@ namespace NSmartProxyWinform
             btnOpenInExplorer.Hide();
 
             //有登录缓存文件，则判断为“已登录”
-            if (File.Exists(Router.NSMART_CLIENT_CACHE_PATH)) btnLogin.Text = " 已登录";
+            if (File.Exists(Router.NspClientCachePath)) btnLogin.Text = " 已登录";
 
             this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
 
@@ -78,7 +78,7 @@ namespace NSmartProxyWinform
 
         private void RefreshLoginState()
         {
-            if (File.Exists(Router.NSMART_CLIENT_CACHE_PATH))
+            if (File.Exists(Router.NspClientCachePath))
             {
                 btnLogin.Image = Properties.Resources.logined;
             }
@@ -619,6 +619,7 @@ namespace NSmartProxyWinform
         private void btnLogin_Click(object sender, EventArgs e)
         {
             Login frmLogin = new Login(clientRouter, this);
+            frmLogin.StartPosition = FormStartPosition.CenterScreen;
             frmLogin.ShowDialog();
             if (frmLogin.Success) btnLogin.Text = "已登录";
         }
