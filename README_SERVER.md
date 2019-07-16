@@ -36,7 +36,7 @@ sudo dotnet NSmartProxy.ServerHost.dll
 运行安装目录下的run.cmd
 ```
 
-第三步 登陆进入web端，出厂用户密码为admin/admin
+第三步 登陆http://ip:12309 进入web端，出厂用户密码为admin/admin
 
 <img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_1.gif" />
 
