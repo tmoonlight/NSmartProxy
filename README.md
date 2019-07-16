@@ -29,13 +29,11 @@ NSmartProxy包含两个服务程序：<br />
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
-1. 打开安装目录下的appsettings.json文件，配置服务地址，映射地址和端口：<br />
+1. 打开安装目录下的appsettings.json文件，配置服务地址，映射地址和端口（windows版本也可直接进入界面配置）：<br />
 ```
 {
-  "ProviderPort": "19974",                     //反向连接的端口
-  "ProviderConfigPort": "12308",              //配置服务的端口
-  "ProviderAddress": "2017studio.imwork.net", //配置服务的地址，可以是域名（eg.:domain.com）也可以是ip（eg.:211.5.5.4）
-  //"ProviderAddress": "192.168.0.106",
+  "ProviderWebPort": 12309,			//服务器端口
+  "ProviderAddress": "2017studio.imwork.net",	//服务器地址
 
   //反向代理客户端，可以配置多个
   "Clients": [
@@ -66,7 +64,8 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 ```
 * Windows：
 
-	解压client.zip，运行run.cmd即可
+	解压nspclient*.zip，运行NSmartProxyWinform.exe即可:
+<img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
 
 * P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md)。
 
