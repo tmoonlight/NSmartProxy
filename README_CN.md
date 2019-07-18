@@ -5,7 +5,7 @@
 [![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)](https://github.com/tmoonlight/NSmartProxy/blob/master/LICENSE)
 [![Build Status](https://dev.azure.com/tmoonlight/NSmartProxy/_apis/build/status/tmoonlight.NSmartProxy?branchName=master)](https://dev.azure.com/tmoonlight/NSmartProxy/_build/latest?definitionId=1&branchName=master)
 
-中文版 | [English](https://github.com/tmoonlight/NSmartProxy/edit/master/README_EN.md)
+中文版 | [English](https://github.com/tmoonlight/NSmartProxy/edit/master/README.md)
 
 # NSmartProxy
 
