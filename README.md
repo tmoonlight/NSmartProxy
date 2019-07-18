@@ -69,9 +69,7 @@ NSmartProxy supports various port mappings based on TCP services. The following 
 	Unzip nspclient*.zip and run NSmartProxyWinform.exe:
 <img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
 
-* P.S： The above is the configuration method of the client. In general, you can use the free service (2017studio.imwork.net) to perform intranet mapping. If you want 
-
-to build the NSmartProxy server yourself, please click [here](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md).
+* P.S： The above is the configuration method of the client. In general, you can use the free service (2017studio.imwork.net) to perform intranet mapping. If you want to build the NSmartProxy server yourself, please click [here](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md).
 
 ## Use Cases
 We have already described the method of mapping the services of the intranet to the external network, and there are more interesting usages waiting for you to 
