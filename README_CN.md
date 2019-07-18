@@ -5,7 +5,7 @@
 [![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)](https://github.com/tmoonlight/NSmartProxy/blob/master/LICENSE)
 [![Build Status](https://dev.azure.com/tmoonlight/NSmartProxy/_apis/build/status/tmoonlight.NSmartProxy?branchName=master)](https://dev.azure.com/tmoonlight/NSmartProxy/_build/latest?definitionId=1&branchName=master)
 
-中文版 | [English](https://github.com/tmoonlight/NSmartProxy/edit/master/README.md)
+中文版 | [English](https://github.com/tmoonlight/NSmartProxy/blob/master/README.md)
 
 # NSmartProxy
 
@@ -69,7 +69,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 	解压nspclient*.zip，运行NSmartProxyWinform.exe即可:
 <img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
 
-* P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md)。
+* P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER_CN.md)。
 
 ## 使用案例
 以上已经讲述了将内网的服务映射到外网的方法，还有更多有趣的用法等着你发掘：<br />
