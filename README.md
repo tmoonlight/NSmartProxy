@@ -12,9 +12,10 @@
 NSmartProxy is a reverse proxy tool that creates a secure tunnel from a public endpoint to a locally service.
 
 ## Characteristics
-1.Cross-platform, client and server can run on MacOS, Linux, Windows systems;<br />
+1. Cross-platform, client and server can run on MacOS, Linux, Windows systems;<br />
 2. Easy to use and simple to configure;<br />
 3. Multi-end mapping, one NSmartProxy client can map multiple service nodes.
+
 4. Supports all protocols under the TCP protocol stack (such as FTP, Telnet, SMTP, HTTP/HTTPS, POP3, SMB, VNC, RDP. UDP protocol is not supported at present.)
 
 ## Operating principle
