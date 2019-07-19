@@ -38,12 +38,12 @@ steps:
 #     configuration: '$(buildConfiguration)'
 - bash: |
     mkdir ./build
-    mkdir ./build/nspclient
-    mkdir ./build/nspclient/NSmartProxyClient
+    mkdir ./build/$(clientImageName)
+    mkdir ./build/$(clientImageName)/$(clientProjectName)
     mkdir ./build/nspserver
     mkdir ./build/nspserver/NSmartProxy.ServerHost
   displayName: Create build directory
-  workingDirectory: './'
+  workingDirectory: '$(Build.ArtifactStagingDirectory)/'
 
 - task: DotNetCoreCLI@2
   inputs:
@@ -51,6 +51,7 @@ steps:
     publishWebProjects: false
     projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
     arguments: ' --output ./build/nspserver'
+    workingDirectory: '$(Build.ArtifactStagingDirectory)/'
 
 - task: DotNetCoreCLI@2
   inputs:
@@ -58,6 +59,7 @@ steps:
     publishWebProjects: false
     projects: './src/NSmartProxyClient/NSmartProxyClient.csproj'
     arguments: ' --output ./build/nspclient'
+    workingDirectory: '$(Build.ArtifactStagingDirectory)/'
 
 - task: Bash@3
   inputs:
@@ -67,7 +69,7 @@ steps:
       docker build . -t nspserver -f Dockerfile
       docker tag nspserver tmoonlight/nspserver
       docker push tmoonlight/nspserver
-    workingDirectory: './build/nspserver/NSmartProxy.ServerHost'
+    workingDirectory: '$(Build.ArtifactStagingDirectory)/build/nspserver/NSmartProxy.ServerHost'
 
 - task: Bash@3
   inputs:
@@ -77,4 +79,4 @@ steps:
       docker build . -t nspclient -f Dockerfile
       docker tag nspclient tmoonlight/nspclient
       docker push tmoonlight/nspclient
-    workingDirectory: './build/nspclient/NSmartProxyClient'
+    workingDirectory: '$(Build.ArtifactStagingDirectory)/build/nspclient/NSmartProxyClient'
