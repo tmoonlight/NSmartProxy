@@ -13,6 +13,10 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  clientImageName:'nspclient' 
+  serverImageName:'nspserver'
+  clientProjectName:'NSmartProxyClient'
+  ServerProjectName:'NSmartProxy.ServerHost'
 
 steps:
 # - task: NuGetToolInstaller@0
@@ -63,7 +67,7 @@ steps:
       docker build . -t nspserver -f Dockerfile
       docker tag nspserver tmoonlight/nspserver
       docker push tmoonlight/nspserver
-    workingDirectory: './build/nspserver'
+    workingDirectory: './build/nspserver/NSmartProxy.ServerHost'
 
 - task: Bash@3
   inputs:
@@ -73,4 +77,4 @@ steps:
       docker build . -t nspclient -f Dockerfile
       docker tag nspclient tmoonlight/nspclient
       docker push tmoonlight/nspclient
-    workingDirectory: './build/nspclient'
+    workingDirectory: './build/nspclient/NSmartProxyClient'
