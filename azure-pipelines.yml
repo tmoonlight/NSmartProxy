@@ -79,4 +79,4 @@ steps:
       docker build . -t nspclient -f Dockerfile
       docker tag nspclient tmoonlight/nspclient
       docker push tmoonlight/nspclient
-    workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspclient/NSmartProxyClient'
+    workingDirectory: './build/nspclient/NSmartProxyClient'
