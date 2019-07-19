@@ -45,13 +45,13 @@ steps:
   displayName: Create build directory
   workingDirectory: '$(System.DefaultWorkingDirectory)/'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
-    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspserver'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/'
+# - task: DotNetCoreCLI@2
+#   inputs:
+#     command: 'publish'
+#     publishWebProjects: false
+#     projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
+#     arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspserver'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/'
 
 - task: DotNetCoreCLI@2
   inputs:
@@ -60,6 +60,14 @@ steps:
     projects: './src/NSmartProxyClient/NSmartProxyClient.csproj'
     arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspclient'
     workingDirectory: '$(System.DefaultWorkingDirectory)/'
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      ls
+    workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspclient'
+
 
 - task: Bash@3
   inputs:
