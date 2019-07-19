@@ -61,15 +61,15 @@ steps:
     arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspclient'
     workingDirectory: '$(System.DefaultWorkingDirectory)/'
 
-- task: Bash@3
-  inputs:
-    targetType: 'inline'
-    script: |
-      docker login -u $(dhName) -p $(dhPwd)
-      docker build . -t nspserver -f Dockerfile
-      docker tag nspserver tmoonlight/nspserver
-      docker push tmoonlight/nspserver
-    workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspserver/NSmartProxy.ServerHost'
+# - task: Bash@3
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       docker login -u $(dhName) -p $(dhPwd)
+#       docker build . -t nspserver -f Dockerfile
+#       docker tag nspserver tmoonlight/nspserver
+#       docker push tmoonlight/nspserver
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspserver/NSmartProxy.ServerHost'
 
 - task: Bash@3
   inputs:
