@@ -37,6 +37,7 @@ steps:
     mkdir ./build/nspclient
     mkdir ./build/nspserver
   displayName: Create build directory
+  workingDirectory: './'
 
 - task: DotNetCoreCLI@2
   inputs:
