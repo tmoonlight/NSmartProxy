@@ -35,18 +35,16 @@ steps:
 #     platform: '$(buildPlatform)'
 #     configuration: '$(buildConfiguration)'
 
-- task: NSPServer@2
+- task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
     publishWebProjects: false
     projects: ./src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
     arguments: ' --output ./build/NSPServer'
 
-- task: NSPClient@2
+- task: DotNetCoreCLI@2
   inputs:
     command: 'publish'
     publishWebProjects: false
     projects: './src/NSmartProxy.ClientRouter/NSmartProxy.ClientRouter.csproj'
     arguments: ' --output ./build/NSPClient'
-
-
