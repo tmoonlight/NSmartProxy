@@ -13,10 +13,10 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  clientImageName:'nspclient' 
-  serverImageName:'nspserver'
-  clientProjectName:'NSmartProxyClient'
-  ServerProjectName:'NSmartProxy.ServerHost'
+  clientImageName: 'nspclient'
+  serverImageName: 'nspserver'
+  clientProjectName: 'NSmartProxyClient'
+  serverProjectName: 'NSmartProxy.ServerHost'
 
 steps:
 # - task: NuGetToolInstaller@0
