@@ -15,7 +15,11 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: NuGetToolInstaller@0
+# - task: NuGetToolInstaller@0
+
+variables:
+  dockerId: test-docker-id 
+  imageName: test-image-name
 
 # - task: NuGetCommand@2
 #   inputs:
@@ -32,12 +36,19 @@ steps:
 #   inputs:
 #     platform: '$(buildPlatform)'
 #     configuration: '$(buildConfiguration)'
-- task: DotNetCoreCLI@2
+
+- task: NSPServer@2
   inputs:
-    command: 'build'
+    command: 'publish'
+    publishWebProjects: false
+    projects: ./src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
+    arguments: ' --output ./build/NSPServer'
+
+- task: NSPClient@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
     projects: './src/NSmartProxy.ClientRouter/NSmartProxy.ClientRouter.csproj'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
+    arguments: ' --output ./build/NSPClient'
+
 
