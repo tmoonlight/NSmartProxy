@@ -13,13 +13,11 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  dockerId: test-docker-id 
+  imageName: test-image-name
 
 steps:
 # - task: NuGetToolInstaller@0
-
-variables:
-  dockerId: test-docker-id 
-  imageName: test-image-name
 
 # - task: NuGetCommand@2
 #   inputs:
