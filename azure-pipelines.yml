@@ -66,7 +66,7 @@ steps:
     targetType: 'inline'
     script: |
       docker login -u $(dhName) -p $(dhPwd)
-      docker build ./build/nspclient -t nspclient -f ./build/nspclient/NSmartProxyClient/Dockerfile
+      docker build ./build/nspclient/NSmartProxyClient -t nspclient -f ./build/nspclient/NSmartProxyClient/Dockerfile
       docker tag nspclient tmoonlight/nspclient
       docker push tmoonlight/nspclient
     workingDirectory: '$(System.DefaultWorkingDirectory)'
@@ -76,7 +76,7 @@ steps:
     targetType: 'inline'
     script: |
       docker login -u $(dhName) -p $(dhPwd)
-      docker build ./build/nspserver -t nspserver -f ./build/nspserver/$(serverProjectName)/Dockerfile
+      docker build ./build/nspserver/$(serverProjectName) -t nspserver -f ./build/nspserver/$(serverProjectName)/Dockerfile
       docker tag nspserver tmoonlight/nspserver
       docker push tmoonlight/nspserver
     workingDirectory: '$(System.DefaultWorkingDirectory)'
