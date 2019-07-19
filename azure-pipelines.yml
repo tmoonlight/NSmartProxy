@@ -42,7 +42,7 @@ steps:
   inputs:
     command: 'publish'
     publishWebProjects: false
-    projects: ./src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
+    projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
     arguments: ' --output ./build/nspserver'
 
 - task: DotNetCoreCLI@2
