@@ -1,6 +1,6 @@
 <img src="https://github.com/tmoonlight/NSmartProxy/blob/master/NSmartProxyNew.png">
 
-# NSmartProxy ServerHost
+# NSmartProxy Server
 
 Here is the installation method of NSmartProxy server (Linux, windows, MacOS are compatible)<br />
 
