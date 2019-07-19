@@ -34,6 +34,7 @@ steps:
 #   inputs:
 #     platform: '$(buildPlatform)'
 #     configuration: '$(buildConfiguration)'
+- script: mkdir ./build
 
 - task: DotNetCoreCLI@2
   inputs:
