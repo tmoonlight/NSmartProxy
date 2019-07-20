@@ -10,6 +10,13 @@ Here is the installation method of NSmartProxy server (Linux, windows, MacOS are
 1. Install [.NET Core Environment](https://dotnet.microsoft.com/download)<br />
 2. Download the latest version of [NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
 
+#### Docker
+* You can run the nspserver directly without having to install the runtime. Four sets of ports are required to run the docker image: configuration port, reverse connection port, API service port and consumer port:
+```
+sudo docker pull tmoonlight/nspserver
+sudo docker run --name mynspserver -dit -p 7842:7842 -p 7841:7841 -p 12309:12309 -p 20000-20050 tmoonlight/nspserver
+```
+
 ## Instructions
 1. Unzip the package of NSmartProxy server.
 2. Open the appsettings.json file in the installation directory, set the reverse connection port and configure the service port:<br />
@@ -27,7 +34,7 @@ Here is the installation method of NSmartProxy server (Linux, windows, MacOS are
 * Linux/MacOS:
 Change directory to the installation directory ,then execute the following command:
 ```
-Sudo dotnet NSmartProxy.ServerHost.dll
+sudo dotnet NSmartProxy.ServerHost.dll
 ```
 * Windows:
 Press Windows+R to open the “Run” box. Type “cmd” into the box and then press Ctrl+Shift+Enter to run the command as an administrator.
