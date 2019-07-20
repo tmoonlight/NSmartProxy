@@ -12,7 +12,7 @@
 2.下载最新版的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases
 
 #### Docker
-* 拉取镜像 
+* 无需安装运行时，直接拉取镜像，即可运行，运行镜像时需要4组ip，分别对应服务端配置中的配置端口，反向连接端口，API服务端口，以及使用端口 ：
 ```
 sudo docker pull tmoonlight/nspserver
 sudo docker run --name mynspserver -dit -p 12308:12308 -p 12309:12309 -p 19974:19974 -p 20000-20050 tmoonlight/nspserver
