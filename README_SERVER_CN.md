@@ -9,7 +9,14 @@
 * 首先你需要一台具备独立IP的服务器，以下安装过程均在此机器上执行：
 #### Linux/Windows/MacOS
 1.安装[.NET Core环境](https://dotnet.microsoft.com/download)<br />
-2.下载最新版的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
+2.下载最新版的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases
+
+#### Docker
+* 拉取镜像 
+```
+sudo docker pull tmoonlight/nspserver
+sudo docker run --name mynspserver -dit -p 12308:12308 -p 12309:12309 -p 19974:19974 -p 20000-20050 tmoonlight/nspserver
+```
 
 ## 使用方法
 1. 解压缩NSmartProxy服务端的压缩包。
@@ -43,4 +50,3 @@ sudo dotnet NSmartProxy.ServerHost.dll
 第四步 进入服务端对用户进行各种管理操作
 
 <img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_2.gif" />
-
