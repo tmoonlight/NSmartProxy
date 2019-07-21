@@ -166,7 +166,6 @@ namespace NSmartProxy
                 clientId = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             }
 
-
             //2.分配clientid //TODO 这一段可能不会再用到了
             int appCount = (int)appRequestBytes[2];
 
@@ -207,9 +206,9 @@ namespace NSmartProxy
                     int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     //查找port的起始端口如果未指定，则设置为20000
-                    if (startPort == 0) startPort = 20000;
+                    if (startPort == 0) startPort = Global.StartArrangedPort;
                     int port = 0;
-                    //TODO QQQ 如果端口是指定的并且是绑定的，则直接使用该端口即可
+                    //如果端口是指定的并且是绑定的，不加任何检测
                     if (IsBoundedByUser(clientId, startPort))
                     {
                         port = startPort;

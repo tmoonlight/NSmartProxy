@@ -43,7 +43,7 @@ namespace NSmartProxy.Client
 
     public class Router
     {
-        public static string NspClientCachePath = null;
+        private static string nspClientCachePath = null;
 
         public static string NSMART_CLIENT_CACHE_FILE = "cli_cache_v2.cache";
         CancellationTokenSource ONE_LIVE_TOKEN_SRC;
@@ -65,13 +65,29 @@ namespace NSmartProxy.Client
         internal static INSmartLogger Logger = new NullLogger();   //inject
         internal static Guid TimeStamp; //时间戳，用来标识对象是否已经发生变化
 
+        public static string NspClientCachePath
+        {
+            get
+            {
+                if (nspClientCachePath == null)
+                {
+                    string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
+                    string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
+                    NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
+                }
+
+                return nspClientCachePath;
+            }
+            set => nspClientCachePath = value;
+        }
+
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
             //ClientDispatcher = new NSPDispatcher();
-            string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
-            string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
-            NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
+            //string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
+            //string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
+            //NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
         }
 
         public Router(INSmartLogger logger) : this()
@@ -406,13 +422,11 @@ namespace NSmartProxy.Client
                 //targetServerStream.Write(buffer, 0, readByteCount);
                 _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString);
                 //already close connection
-
             }
             catch (Exception ex)
             {
                 Logger.Debug("传输时出错：" + ex);
-                //关闭传输连接，服务端也会相应处理，把0request发送给消费端
-                //TODO ***: 连接时出错，重启客户端
+                //关闭传输连接
                 toTargetServer.Close();
                 providerClient.Close();
                 throw;

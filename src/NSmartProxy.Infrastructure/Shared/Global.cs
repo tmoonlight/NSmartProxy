@@ -20,5 +20,11 @@
 
         public const string DisplayName = "NSPClient";//windows服务显示名
         public const string ServiceName = "NSPClient";//windows服务名
+
+        #region 服务端配置
+
+        public const int StartArrangedPort = 20000;
+
+        #endregion
     }
 }

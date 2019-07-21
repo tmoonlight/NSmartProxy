@@ -182,7 +182,7 @@ namespace NSmartProxy.Extension
                             throw new Exception($"无效的方法名{unit}");
                         }
 
-                        //TODO 先不校验，方便调试
+                        //debug编译时不校验，方便调试
 #if !DEBUG
                         if (method.GetCustomAttribute<SecureAttribute>() != null)
                         {

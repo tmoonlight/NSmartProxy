@@ -22,6 +22,7 @@ using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
 using NSmartProxyWinform.Util;
 using NSmartProxy.ClientRouter.Dispatchers;
+using static NSmartProxy.Infrastructure.I18N;
 
 namespace NSmartProxyWinform
 {
@@ -29,7 +30,6 @@ namespace NSmartProxyWinform
     {
         public Router clientRouter;
         private Log4netLogger logger;
-        // private bool configChanged = false;
         private NSPClientConfig config;
 
         private const string NULL_CLIENT_TEXT = "<未编辑节点>";
@@ -39,8 +39,6 @@ namespace NSmartProxyWinform
         private const string SERVICE_PATH = "NSmartProxyWinService.exe";
         private const string LOG_FILE_PATH = "log-file.log";
 
-        //private const string SERVICE_NAME = "NSmartProxy Client Service";
-        // private bool? isServiceMode;
         public bool IsServiceMode
         {
             get
@@ -74,6 +72,40 @@ namespace NSmartProxyWinform
 
             this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
 
+            UpdateText();
+        }
+
+        private void UpdateText()
+        {
+            this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
+            btnStart.Text = L("开始");
+            btnOpenInExplorer.Text = L("资源管理器中打开");
+            启动内网穿透ToolStripMenuItem.Text = L("启动内网穿透");
+            配置ToolStripMenuItem.Text = L("配置...");
+            退出程序ToolStripMenuItem.Text = L("退出程序");
+            btnExit.Text = L("退出程序");
+            tabPage2.Text = L("日志");
+            tabPage1.Text = L("应用");
+            btnSaveConfig.Text = L("保存配置");
+            btnRefresh.Text = L("还原配置");
+            btnAddClient.Text = L("添加");
+            btnDuplicate.Text = L("复制");
+            btnDelete.Text = L("删除");
+            groupBox2.Text = L("节点配置");
+            label7.Text = L("* : 外网端口为0或者空则代表端口由服务端自动分派。");
+            label4.Text = L("内网地址");
+            label5.Text = L("内网端口");
+            label6.Text = L("外网端口(*可选)");
+            groupBox1.Text = L("外网服务器");
+            btnTest.Text = L("测试");
+            label1.Text = L("服务器地址");
+            label2.Text = L("端口");
+            tabPage3.Text = L("服务");
+            btnUnRegWinSrv.Text = L("卸载windows服务");
+            btnRegWinSrv.Text = L("注册为windows服务");
+            btnLogin.Text = L("  未登录");
+            tbxPort.PlaceHolderStr = L("<随机>");
+            Text = L("配置对话框");
         }
 
         private void RefreshLoginState()
@@ -101,7 +133,7 @@ namespace NSmartProxyWinform
             bool isValid = true;
             if (tbxProviderAddr.Text == "")
             {
-                errorProvider1.SetError(tbxProviderAddr, "必须填写服务器地址");
+                errorProvider1.SetError(tbxProviderAddr, L("必须填写服务器地址"));
                 isValid = false;
             }
 
@@ -123,7 +155,7 @@ namespace NSmartProxyWinform
         {
             if (int.Parse(ctrl.Text) < 1)
             {
-                errorProvider1.SetError(ctrl, "值必须大于0");
+                errorProvider1.SetError(ctrl, L("值必须大于0"));
                 return false;
             }
             return true;
@@ -134,7 +166,7 @@ namespace NSmartProxyWinform
         {
             if (ctrl.Text == "")
             {
-                errorProvider1.SetError(ctrl, "必填");
+                errorProvider1.SetError(ctrl, L("必填"));
                 return false;
             }
             return true;
@@ -171,7 +203,7 @@ namespace NSmartProxyWinform
                             {
                                 if (status == ClientStatus.Started)
                                 {
-                                    notifyIconNSPClient.BalloonTipText = "内网穿透已启动";
+                                    notifyIconNSPClient.BalloonTipText = L("内网穿透已启动");
                                     listBox1.ForeColor = Color.Green;
                                     listBox1.Items.Clear();
                                     foreach (var tunnel in tunelStr)
@@ -184,12 +216,12 @@ namespace NSmartProxyWinform
                                 }
                                 else if (status == ClientStatus.Stopped)
                                 {
-                                    MessageBox.Show("客户端连接失败，详情请查看日志。");
+                                    MessageBox.Show(L("客户端连接失败，详情请查看日志。"));
                                     btnStart.Enabled = true;
                                 }
                                 else if (status == ClientStatus.LoginError)
                                 {
-                                    MessageBox.Show("客户端登录失败，详情请查看日志。");
+                                    MessageBox.Show(L("客户端登录失败，详情请查看日志。"));
                                     btnStart.Enabled = true;
                                 }
                             }
@@ -217,7 +249,7 @@ namespace NSmartProxyWinform
                     tsk.ContinueWith(t => btnStart.Invoke(new Action(
                         () =>
                         {
-                            if (t.IsFaulted) { logger.Error("客户端关闭失败", null); btnStart.Enabled = true; return; }
+                            if (t.IsFaulted) { logger.Error(L("客户端关闭失败"), null); btnStart.Enabled = true; return; }
                             listBox1.ForeColor = Color.Black;
                             SetUIToStop();
                         }
@@ -230,7 +262,7 @@ namespace NSmartProxyWinform
 
         private void SetUIToStop()
         {
-            btnStart.Text = "开始";
+            btnStart.Text = L("开始");
             btnStart.Tag = START_TAG_TEXT;
             notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
             btnStart.Enabled = true;
@@ -238,7 +270,7 @@ namespace NSmartProxyWinform
 
         private void SetUIToRunning()
         {
-            btnStart.Text = "停止";
+            btnStart.Text = L("停止");
             btnStart.Tag = END_TAG_TEXT;
             notifyIconNSPClient.Icon = Properties.Resources.servicerunning;
             btnStart.Enabled = true;
@@ -271,7 +303,7 @@ namespace NSmartProxyWinform
                 }
                 else
                 {
-                    string tip = $"服务状态异常。";
+                    string tip = L("服务状态异常。");
                 }
 
             }));
@@ -329,8 +361,8 @@ namespace NSmartProxyWinform
 
         private void ExitProgram()
         {
-            string tip = "确认退出？";
-            if (IsServiceMode) tip += "服务将在后台运行。";
+            string tip = L("确认退出？");
+            if (IsServiceMode) tip += L("服务将在后台运行。");
             if (MessageBox.Show(tip, "NSmartProxy", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
                 notifyIconNSPClient.Dispose();
@@ -375,7 +407,7 @@ namespace NSmartProxyWinform
                 }, StringSplitOptions.None);
                 if (strParts.Length != 4)
                 {
-                    MessageBox.Show("非法选择项");
+                    MessageBox.Show(L("非法选择项"));
                     return;
                 }
 
@@ -509,7 +541,7 @@ namespace NSmartProxyWinform
             if (ValidateConfig())
             {
                 SaveFormDataToConfigFile();
-                MessageBox.Show("保存成功");
+                MessageBox.Show(L("保存成功"));
             }
         }
 
@@ -621,7 +653,7 @@ namespace NSmartProxyWinform
             Login frmLogin = new Login(clientRouter, this);
             frmLogin.StartPosition = FormStartPosition.CenterScreen;
             frmLogin.ShowDialog();
-            if (frmLogin.Success) btnLogin.Text = "已登录";
+            if (frmLogin.Success) btnLogin.Text = L("已登录");
         }
 
         //日志
@@ -708,7 +740,7 @@ namespace NSmartProxyWinform
                 }
                 else
                 {
-                    MessageBox.Show(" 获取端口配置失败，服务端返回错误如下：" + result.Msg);
+                    MessageBox.Show(L(" 获取端口配置失败，服务端返回错误如下：") + result.Msg);
                 }
             }
             catch (Exception ex)

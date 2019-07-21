@@ -141,7 +141,7 @@ namespace NSmartProxy.Client
             //TODO 任何read都应该设置超时
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0)
-                Router.Logger.Debug("服务器关闭了本次连接");
+                Router.Logger.Debug("服务器关闭了本次连接");//TODO 切换服务端时因为token的问题导致服务端无法使用
             else if (readBytesCount == -1)
                 Router.Logger.Debug("连接超时");
 

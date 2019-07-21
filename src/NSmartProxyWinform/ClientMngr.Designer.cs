@@ -287,21 +287,23 @@ namespace NSmartProxyWinform
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(43, 23);
+            this.label4.Location = new System.Drawing.Point(7, 23);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 12);
             this.label4.TabIndex = 0;
             this.label4.Text = "内网地址";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label5
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(43, 50);
+            this.label5.Location = new System.Drawing.Point(7, 50);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(53, 12);
             this.label5.TabIndex = 1;
             this.label5.Text = "内网端口";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // tbxTargetServerPort
             // 
@@ -323,6 +325,7 @@ namespace NSmartProxyWinform
             this.label6.Size = new System.Drawing.Size(95, 12);
             this.label6.TabIndex = 2;
             this.label6.Text = "外网端口(*可选)";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // groupBox1
             // 
@@ -451,7 +454,7 @@ namespace NSmartProxyWinform
             this.btnLogin.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnLogin.Location = new System.Drawing.Point(150, 398);
             this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(75, 23);
+            this.btnLogin.Size = new System.Drawing.Size(91, 23);
             this.btnLogin.TabIndex = 6;
             this.btnLogin.Text = "  未登录";
             this.btnLogin.UseVisualStyleBackColor = true;

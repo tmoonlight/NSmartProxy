@@ -187,6 +187,15 @@
     <None Include="Resources\base_checkmark_32.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="i18n\en.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="i18n\ol.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="i18n\zh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="nsp.ico" />
     <None Include="Resources\Permission_12796.png" />
     <Content Include="Resources\servicepaused.ico" />

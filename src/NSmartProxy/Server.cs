@@ -420,11 +420,6 @@ namespace NSmartProxy
             int clientIdFromToken = 0;
 
             //1.读取配置请求1
-            //如果是重连请求，则读取接下来5个字符，清
-            //空服务端所有与该client相关的所有连接配置
-
-            //TODO !!!!兼容原有的重连逻辑
-
             //TODO !!!!获取Token，截取clientID，校验
             //TODO !!!!这里的校验逻辑和httpserver_api存在太多重复，需要重构
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);

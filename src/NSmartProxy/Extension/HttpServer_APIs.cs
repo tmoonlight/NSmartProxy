@@ -20,7 +20,6 @@ namespace NSmartProxy.Extension
     partial class HttpServer
     {
 
-        //TODO XXXX
         #region  dashboard
         [Secure]
         [API]
@@ -108,11 +107,8 @@ namespace NSmartProxy.Extension
 
         #region config
 
-        //private const string C_OPEN_DASH_BOARD = nameof(C_OPEN_DASH_BOARD);
-        //private const string C_OPEN_LOG_TRACK = nameof(C_OPEN_LOG_TRACK);
         private const string AllowAnonymousUser = nameof(AllowAnonymousUser);
-        //API SetConfig
-        //API GetConifgs
+
         [API]
         [Secure]
         public string SetConfig(string key, string value)
@@ -365,8 +361,6 @@ window.location.href='main.html';
                         json.Append(KV2Json("rEndPoint", reverseClient.Client.RemoteEndPoint.ToString()));
                     }
 
-                    //json.Append(KV2Json("p", c)).C();
-                    //json.Append(KV2Json("port", ca.Key));
                     json.Append("}");
                     json.C();
                 }
@@ -397,8 +391,6 @@ window.location.href='main.html';
                     }
 
                     json.D();
-                    //json.Append(KV2Json("p", c)).C();
-                    //json.Append(KV2Json("port", ca.Key));
                     json.Append("}");
                     json.C();
                 }
@@ -528,7 +520,6 @@ window.location.href='main.html';
                 {
                     string msg = $"端口{string.Join(',', unAvailabelPorts)}无法使用";
                     Server.Logger.Debug(msg);
-                    //throw new Exception(msg);
                     return msg;
                 }
                 //TODO 绑定端口到用户
