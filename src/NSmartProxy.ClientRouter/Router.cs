@@ -153,7 +153,7 @@ namespace NSmartProxy.Client
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
-                    //登录
+                    //显式登录
                     if (CurrentLoginInfo != null)
                     {
                         var loginResult = await Login();
@@ -161,8 +161,8 @@ namespace NSmartProxy.Client
                         clientId = loginResult.Item2;
                     }
                     else if (File.Exists(NspClientCachePath))
-                    { //登录缓存
-
+                    { 
+                        //登录缓存
                         arrangedToken = File.ReadAllText(NspClientCachePath);
                         //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
                         //TODO ***** 这是个trick：防止匿名用户被服务端踢了之后无限申请新账号
@@ -171,6 +171,7 @@ namespace NSmartProxy.Client
                     }
                     else
                     {
+                        //首次登录
                         //匿名登录，未提供登录信息时，使用空用户名密码自动注册并尝试匿名登录
                         Router.Logger.Debug("未提供登录信息，尝试匿名登录");
                         CurrentLoginInfo = new LoginInfo() { UserName = "", UserPwd = "" };
@@ -486,6 +487,7 @@ namespace NSmartProxy.Client
             tc.Connect("127.0.0.1", port);
             tc.Client.Send(new byte[] { 0x00 });
         }
+
     }
 
 }
