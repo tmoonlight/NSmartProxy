@@ -22,7 +22,7 @@ NSmartProxy is a reverse proxy tool that creates a secure tunnel from a public e
 NSmartProxy contains two service programs:<br />
 * Server (NSPServer): Deployed on the external network to receive reverse connections from users and NSPClients and forward them to each other.
 * Client (NSPClient): Deployed on the internal network to forward requests and responses to access various services on the intranet.
-<img src="https://github.com/tmoonlight/NSmartProxy/blob/img/theo.png">
+<img src="https://github.com/tmoonlight/100lines/blob/master/theo_en.png">
 
 ## Preparation
 #### Linux/Windows/MacOS
@@ -67,7 +67,7 @@ NSmartProxy supports various port mappings based on TCP services. The following 
 * Windows：
 
 	Unzip nspclient*.zip and run NSmartProxyWinform.exe:
-<img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
+<img src="https://github.com/tmoonlight/100lines/raw/master/nsprrunnning_2_en.gif" />
 
 * P.S： The above is the configuration method of the client. In general, you can use the free service (2017studio.imwork.net) to perform intranet mapping. If you want to build the NSmartProxy server yourself, please click [here](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER.md).
 
