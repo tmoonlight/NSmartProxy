@@ -84,10 +84,6 @@ namespace NSmartProxy.Client
         public Router()
         {
             ONE_LIVE_TOKEN_SRC = new CancellationTokenSource();
-            //ClientDispatcher = new NSPDispatcher();
-            //string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
-            //string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
-            //NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
         }
 
         public Router(INSmartLogger logger) : this()
@@ -164,9 +160,8 @@ namespace NSmartProxy.Client
                     { 
                         //登录缓存
                         arrangedToken = File.ReadAllText(NspClientCachePath);
-                        //TODO 这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
-                        //TODO ***** 这是个trick：防止匿名用户被服务端踢了之后无限申请新账号
-                        //TODO 待解决 版本号无法显示的问题
+                        //这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
+                        //服务端校验token失效之后会主动关闭连接
                         CurrentLoginInfo = null;
                     }
                     else
@@ -258,8 +253,6 @@ namespace NSmartProxy.Client
                     ConnectionManager.CloseAllConnections();//关闭所有连接
                 //出错重试
                 await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
-                //TODO 返回错误码
-                //await Task.Delay(TimeSpan.FromHours(24), CANCEL_TOKEN.CurrentToken).ConfigureAwait(false);
                 Router.Logger.Debug($"连接关闭，开启重试");
             }
             //正常终止
@@ -400,7 +393,6 @@ namespace NSmartProxy.Client
                 //每移除一个链接则发起一个新的链接
                 Router.Logger.Debug(appId + "接收到连接请求");
                 //根据clientid_appid发送到固定的端口
-                //TODO 序列没有匹配元素？
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
 
                 //向服务端发起一次长连接，没有接收任何外来连接请求时，

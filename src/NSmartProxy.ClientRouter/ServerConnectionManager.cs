@@ -57,8 +57,8 @@ namespace NSmartProxy.Client
             }
             catch (Exception ex) //如果这里出错，则自动删除缓存
             {
-                Router.Logger.Debug("连接服务器失效，清空登陆缓存...");
                 ClearLoginCache();
+                Router.Logger.Debug("连接服务器失效，已清空登陆缓存");
                 throw ex;
             }
 

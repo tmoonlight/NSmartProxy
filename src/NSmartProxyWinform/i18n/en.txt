@@ -28,7 +28,8 @@ Configuration
 Login
 Anonymous Login
 Password
-Username保存成功
+Username
+保存成功
 保存成功
 登录成功
 登录失败
