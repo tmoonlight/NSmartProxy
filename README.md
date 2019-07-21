@@ -28,6 +28,12 @@ NSmartProxy contains two service programs:<br />
 #### Linux/Windows/MacOS
 1. Install [.NET Core Runtime](https://dotnet.microsoft.com/download)<br />
 2. Download the latest version of [NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
+#### Docker
+* You can run the nspserver directly without having to install the runtime:
+```
+sudo docker pull tmoonlight/nspclient
+sudo docker run --name mynspclient -dit tmoonlight/nspclient
+```
 
 ## Instructions
 NSmartProxy supports various port mappings based on TCP services. The following is an example of nspclient configuration which contains mstsc, iis, and ftp services:<br />
