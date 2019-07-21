@@ -28,6 +28,12 @@ NSmartProxy包含两个服务程序：<br />
 #### Linux/Windows/MacOS
 1. 安装[.NET Core Runtime](https://dotnet.microsoft.com/download)<br />
 2. 下载最新版本的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
+#### Docker
+* 如果当前机器上已经有了docker运行环境，则无需安装运行时，直接拉取镜像即可运行 ：
+```
+sudo docker pull tmoonlight/nspclient
+sudo docker run --name mynspclient -dit tmoonlight/nspclient
+```
 
 ## 使用方法
 NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp服务为例：<br />
