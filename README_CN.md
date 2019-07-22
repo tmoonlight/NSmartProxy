@@ -1,5 +1,5 @@
 
-<img src="https://github.com/tmoonlight/NSmartProxy/blob/master/NSmartProxyNew.png">
+<img src="https://github.com/tmoonlight/NSmartProxy/raw/master/NSmartProxyNew.png">
 
 [![GitHub release](https://img.shields.io/github/release/tmoonlight/NSmartProxy.svg?logoColor=%21%5BGitHub%20release%5D%28https%3A%2F%2Fimg.shields.io%2Fgithub%2Frelease%2Ftmoonlight%2FNSmartProxy.svg%29)](https://github.com/tmoonlight/NSmartProxy/releases)
 [![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)](https://github.com/tmoonlight/NSmartProxy/blob/master/LICENSE)
@@ -22,7 +22,7 @@ NSmartProxy是一款免费的内网穿透工具。
 NSmartProxy包含两个服务程序：<br />
 * 服务端（NSmartServer）：部署在外网，用来接收来自最终使用者和客户端的反向连接，并将它们进行相互转发。
 * 客户端（NSmartClientRouter）：部署在内网，用来转发访问内网各种服务的请求以及响应。
-<img src="https://github.com/tmoonlight/NSmartProxy/blob/img/theo.png">
+<img src="https://github.com/tmoonlight/NSmartProxy/raw/img/theo.png">
 
 ## 启动准备
 #### Linux/Windows/MacOS
