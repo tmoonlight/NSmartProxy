@@ -22,7 +22,7 @@ NSmartProxy is a reverse proxy tool that creates a secure tunnel from a public e
 NSmartProxy contains two service programs:<br />
 * Server (NSPServer): Deployed on the external network to receive reverse connections from users and NSPClients and forward them to each other.
 * Client (NSPClient): Deployed on the internal network to forward requests and responses to access various services on the intranet.
-<img src="https://github.com/tmoonlight/100lines/blob/master/theo_en.png">
+<img src="https://github.com/tmoonlight/100lines/raw/master/theo_en.png">
 
 ## Preparation
 #### Linux/Windows/MacOS
