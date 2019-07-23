@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NSmartProxy.Shared;
+using PeterKottas.DotNetCore.WindowsService;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,6 +11,43 @@ namespace NSmartProxy.ServerHost
         static void Main()
         {
             //wait
+            ServiceRunner<ServerHost>.Run(config =>
+            {
+                //var fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
+
+                var name = Global.NSPServerServiceName;
+                config.SetDisplayName(Global.NSPServerServiceName);
+                config.SetName(Global.NSPServerDisplayName);
+                config.SetDescription(Global.NSmartProxyServerName);
+
+                config.Service(serviceConfig =>
+                {
+                    serviceConfig.ServiceFactory((extraArguments, controller) =>
+                    {
+                        return new ServerHost();
+                    });
+
+                    serviceConfig.OnStart((service, extraParams) =>
+                    {
+                        Console.WriteLine("Service {0} started", name);
+                        service.Start();
+                    });
+
+                    serviceConfig.OnStop(service =>
+                    {
+                        Console.WriteLine("Service {0} stopped", name);
+                        service.Stop();
+                    });
+
+                    serviceConfig.OnError(e =>
+                    {
+                        // File.AppendAllText(fileName, $"Exception: {e.ToString()}\n");
+                        Console.WriteLine("Service {0} errored with exception : {1}", name, e.Message);
+                    });
+                });
+
+
+            });
         }
     }
 }

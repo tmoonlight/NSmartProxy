@@ -43,7 +43,7 @@ namespace NSmartProxyWinform
         {
             get
             {
-                return WinServiceHelper.IsServiceExisted(Global.ServiceName);
+                return WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName);
             }
         }
 
@@ -183,7 +183,7 @@ namespace NSmartProxyWinform
             {
                 if (isService)
                 {
-                    using (ServiceController control = new ServiceController(Global.ServiceName))
+                    using (ServiceController control = new ServiceController(Global.NSPClientServiceName))
                     {
                         if (control.Status == ServiceControllerStatus.Stopped)
                         {
@@ -236,7 +236,7 @@ namespace NSmartProxyWinform
             {
                 if (isService)
                 {
-                    using (ServiceController control = new ServiceController(Global.ServiceName))
+                    using (ServiceController control = new ServiceController(Global.NSPClientServiceName))
                     {
                         control.Stop();
                     }
@@ -281,7 +281,7 @@ namespace NSmartProxyWinform
             btnStart.Enabled = false;
             btnStart.Invoke(new Action(() =>
             {
-                ServiceController control = new ServiceController(Global.ServiceName);
+                ServiceController control = new ServiceController(Global.NSPClientServiceName);
 
                 Task tskRunning = Task.Run(() => { try { control.WaitForStatus(ServiceControllerStatus.Running, new TimeSpan(0, 0, 4)); } catch { } });
                 Task tskStopping = Task.Run(() => { try { control.WaitForStatus(ServiceControllerStatus.Stopped, new TimeSpan(0, 0, 4)); } catch { } });
@@ -291,7 +291,7 @@ namespace NSmartProxyWinform
                 resultTsk.Wait();
                 if (tskRunning.IsCompleted)
                 {
-                    string tip = $"内网穿透后台服务({Global.ServiceName})已启动，详情请查看文件日志";
+                    string tip = $"内网穿透后台服务({Global.NSPClientServiceName})已启动，详情请查看文件日志";
                     SetUIToRunning();
                     notifyIconNSPClient.BalloonTipText = tip;
                     ShowLogInfo(tip);
@@ -299,7 +299,7 @@ namespace NSmartProxyWinform
                 else if (tskStopping.IsCompleted)
                 {
                     SetUIToStop();
-                    ShowLogInfo($"内网穿透后台服务({Global.ServiceName})已激活，但处于关闭状态。");
+                    ShowLogInfo($"内网穿透后台服务({Global.NSPClientServiceName})已激活，但处于关闭状态。");
                 }
                 else
                 {
@@ -600,7 +600,7 @@ namespace NSmartProxyWinform
 
         private void RefreshWinServiceState()
         {
-            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+            if (WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName))
             {
                 btnRegWinSrv.Enabled = false;
                 btnUnRegWinSrv.Enabled = true;
@@ -676,7 +676,7 @@ namespace NSmartProxyWinform
 
         private void btnRegWinSrv_Click(object sender, EventArgs e)
         {
-            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+            if (WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName))
                 WinServiceHelper.UninstallService(SERVICE_PATH);
             WinServiceHelper.InstallService(SERVICE_PATH);
             //using (ServiceController control = new ServiceController(Global.ServiceName))
@@ -691,7 +691,7 @@ namespace NSmartProxyWinform
 
         private void btnUnRegWinSrv_Click(object sender, EventArgs e)
         {
-            if (WinServiceHelper.IsServiceExisted(Global.ServiceName))
+            if (WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName))
                 WinServiceHelper.UninstallService(SERVICE_PATH);
             RefreshWinServiceState();
         }

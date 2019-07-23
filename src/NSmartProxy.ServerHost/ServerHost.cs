@@ -151,6 +151,7 @@ namespace NSmartProxy.ServerHost
         {
             //
             Console.WriteLine(Global.NSmartProxyClientName +" STOPPED.");
+            Environment.Exit(0);
         }
     }
 }

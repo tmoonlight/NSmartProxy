@@ -18,12 +18,14 @@
         public const int DefaultPopClientTimeout = 30000; //反弹连接超时时间
         public const int TokenExpiredMinutes = 60 * 24 * 30; //token过期时间（分钟）TODO 待生效
 
-        public const string DisplayName = "NSPClient";//windows服务显示名
-        public const string ServiceName = "NSPClient";//windows服务名
+        public const string NSPClientDisplayName = "NSPClient";//windows服务显示名
+        public const string NSPClientServiceName = "NSPClient";//windows服务名
 
         #region 服务端配置
 
         public const int StartArrangedPort = 20000;
+        public const string NSPServerDisplayName = "NSPServer";//windows服务显示名
+        public const string NSPServerServiceName = "NSPServer";//windows服务名
 
         #endregion
     }
