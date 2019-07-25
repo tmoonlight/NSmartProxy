@@ -10,7 +10,7 @@ namespace NSmartProxy.Client
         //private bool isWorking = false;
 
         //public List<TcpClient> TcpClientGroup = new List<TcpClient>();
-        public TcpClient Client;
+        public TcpClient Client;//TODO 还是需要把这里改成复数
         public int AppId;  //1~255
         public int Port;   //0~65535
 

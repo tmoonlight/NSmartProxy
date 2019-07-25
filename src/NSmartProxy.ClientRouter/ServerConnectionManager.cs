@@ -233,7 +233,7 @@ namespace NSmartProxy.Client
             //统一管理连接
             ConnectedConnections.AddRange(clientList);
 
-            //事件循环1,这个方法必须放在最后
+            //事件循环1,这个方法必须放在最后 TODO 改为复数client，优化http请求
             ClientGroupConnected(this, new ClientGroupEventArgs()
             {
                 NewClients = clientList,
