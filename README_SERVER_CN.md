@@ -38,9 +38,10 @@ sudo docker run --name mynspserver -dit -p 7842:7842 -p 7841:7841 -p 12309:12309
 sudo dotnet NSmartProxy.ServerHost.dll
 ```
 * Windows：
+点击 Win+R 打开运行窗口. 输入 “cmd” 按下 Ctrl+Shift+Enter打开管理员身份运行的命令行窗口。 cd到安装目录，运行如下指令：
 
 ```
-运行安装目录下的run.cmd
+dotnet NSmartProxy.ServerHost.dll
 ```
 
 第三步 登陆http://ip:12309 进入web端，出厂用户密码为admin/admin
