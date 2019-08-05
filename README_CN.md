@@ -75,6 +75,7 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 
 	解压nspclient*.zip，运行NSmartProxyWinform.exe即可:
 <img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
+<br />
 3. 后台运行：<br />
 您还可以将NSmartProxy客户端注册为一个后台服务，方法如下：
 
