@@ -68,7 +68,7 @@ namespace NSmartProxyWinService
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
             XmlConfigurator.Configure(loggerRepository, new FileInfo(configFilePath));
-            NSPClientService.Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServerClient");
+            NSPClientService.Logger = LogManager.GetLogger(loggerRepository.Name, "NSPClientService");
             if (!loggerRepository.Configured) throw new Exception("log4net配置失败。log config failed.");
             Console.ForegroundColor = ConsoleColor.Yellow;
 
