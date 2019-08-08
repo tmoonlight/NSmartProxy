@@ -10,7 +10,8 @@
 # NSmartProxy
 
 #### 什么是NSmartProxy？<br />
-NSmartProxy是一款免费的内网穿透工具。
+NSmartProxy是一款免费的内网穿透工具。<br />
+使用中如果有任何问题和建议，可以[点击这里加入Gitter群组](https://gitter.im/tmoonlight/NSmartProxy)和我们一起讨论。
 
 ## 特点
 1. 跨平台，客户端和服务端均可运行在MacOS，Linux，Windows系统上；<br />
@@ -74,6 +75,15 @@ NSmartProxy支持各种基于TCP服务的端口映射，下面以mstsc,iis,ftp�
 
 	解压nspclient*.zip，运行NSmartProxyWinform.exe即可:
 <img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
+<br />
+3. 后台运行：<br />
+您还可以将NSmartProxy客户端注册为一个后台服务，方法如下：
+
+* Linux：
+
+* Windows：
+<img src="https://github.com/tmoonlight/NSmartProxy/raw/master/imgs/servicecn.png">
+
 
 * P.S： 以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果您还想自己搭建NSmartProxy服务端，请参考[这里](https://github.com/tmoonlight/NSmartProxy/blob/master/README_SERVER_CN.md)。
 

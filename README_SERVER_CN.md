@@ -51,3 +51,16 @@ dotnet NSmartProxy.ServerHost.dll
 第四步 进入服务端对用户进行各种管理操作
 
 <img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_2.gif" />
+
+* 注册为后台服务<br />
+您还可以将NSmartProxy客户端注册为一个后台服务，方法如下：
+以管理员身份打开命令行后，运行以下指令进行服务的注册和卸载：
+```
+rem 注册windows服务
+dotnet NSmartProxy.ServerHost.dll action:install
+```
+
+```
+rem 卸载windows服务
+dotnet NSmartProxy.ServerHost.dll action:uninstall
+```
