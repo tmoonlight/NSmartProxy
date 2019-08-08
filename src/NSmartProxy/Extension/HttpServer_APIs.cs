@@ -19,6 +19,7 @@ namespace NSmartProxy.Extension
     /// </summary>
     partial class HttpServer
     {
+        public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
 
         #region  dashboard
         [Secure]
@@ -200,7 +201,7 @@ window.location.href='main.html';
                 userpwd = RandomHelper.NextString(20);
                 user = new User
                 {
-                    userId = NSmartDbOperator.SUPER_VARIABLE_INDEX_ID,  //索引id
+                    userId = SUPER_VARIABLE_INDEX_ID,  //索引id
                     userName = username,
                     userPwd = EncryptHelper.SHA256(userpwd),
                     regTime = DateTime.Now.ToString(),
@@ -255,7 +256,7 @@ window.location.href='main.html';
             }
             var user = new User
             {
-                userId = NSmartDbOperator.SUPER_VARIABLE_INDEX_ID,  //索引id
+                userId = SUPER_VARIABLE_INDEX_ID,  //索引id
                 userName = userName,
                 userPwd = EncryptHelper.SHA256(userpwd),
                 regTime = DateTime.Now.ToString(),

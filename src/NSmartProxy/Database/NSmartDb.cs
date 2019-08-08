@@ -11,8 +11,8 @@ namespace NSmartProxy.Database
     /// </summary>
     public class NSmartDbOperator : IDbOperator
     {
-        public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
 
+        public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
         private SequenceFile seqf;
         private HashFile hashf;
         private string hashfFile;

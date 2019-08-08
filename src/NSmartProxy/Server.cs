@@ -45,7 +45,7 @@ namespace NSmartProxy
     //+------------------------+   +--------------+
     public class Server
     {
-        public const string USER_DB_PATH = "./nsmart_user";
+        public const string USER_DB_PATH = "./nsmart_user.db";
         public const string SECURE_KEY_FILE_PATH = "./nsmart_sec_key";
 
         protected ClientConnectionManager ConnectionManager = null;
@@ -96,7 +96,7 @@ namespace NSmartProxy
 
         public async Task Start()
         {
-            DbOp = new NSmartDbOperator(USER_DB_PATH, USER_DB_PATH + "_index");//加载数据库
+            DbOp = new LiteDbOperator(USER_DB_PATH);//加载数据库
             //从配置文件加载服务端配置
             InitSecureKey();
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;

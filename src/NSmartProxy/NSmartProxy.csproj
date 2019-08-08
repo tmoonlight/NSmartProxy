@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="litedb" Version="4.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NSmartProxy.Data\NSmartProxy.Data.csproj" />
     <ProjectReference Include="..\NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj" />
   </ItemGroup>
