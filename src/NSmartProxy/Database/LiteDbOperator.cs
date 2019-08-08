@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,8 @@ namespace NSmartProxy.Database
         private bool isClosed = true;//默认未开启状态
 
         private LiteCollection<KV> liteCollection;
+
+        ConcurrentDictionary<string, string> keyCache = new ConcurrentDictionary<string, string>();//缓存机制，防止重复大量查数据库
         //rvate 
 
         public LiteDbOperator(String file)
@@ -58,6 +61,7 @@ namespace NSmartProxy.Database
 
         public void Update(long key, string value)
         {
+            keyCache.TryRemove(key.ToString(), out _);
             liteCollection.Update(new KV(key.ToString(), value));
         }
 
@@ -68,12 +72,25 @@ namespace NSmartProxy.Database
 
         public string Get(long key)
         {
-            return liteCollection.FindById(new BsonValue(key)).Value;
+            return Get(key.ToString());
         }
 
         public string Get(string key)
         {
-            return liteCollection.FindById(key).Value;
+            if (keyCache.ContainsKey(key))
+            {
+                return keyCache[key];
+            }
+            else
+            {
+                var obj = liteCollection.FindById(key);
+                if (obj != null)
+                {
+                    keyCache.TryAdd(key, obj.Value);
+                    return obj.Value;
+                }
+            }
+            return null;
         }
 
         public void Delete(int index)
@@ -85,6 +102,7 @@ namespace NSmartProxy.Database
         public void DeleteHash(string key)
         {
             liteCollection.Delete(new BsonValue(key));
+            keyCache.TryRemove(key, out _);
         }
 
         public long GetLength()
@@ -111,12 +129,25 @@ namespace NSmartProxy.Database
 
         public bool Exist(string key)
         {
-            return liteCollection.Exists(kv => kv.Key == key);
+            if (keyCache.ContainsKey(key))
+            {
+                return true;
+            }
+            else
+            {
+                var obj = liteCollection.FindById(key);
+                if (obj != null)
+                {
+                    keyCache.TryAdd(key, obj.Value);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public bool Exist(long key)
         {
-            return liteCollection.Exists(kv => kv.Key == key.ToString());
+            return Exist(key.ToString());
         }
 
         private Random rand = new Random();
