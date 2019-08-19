@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using LiteDB;
@@ -113,6 +114,7 @@ namespace NSmartProxy.Database
             }
             catch (NullReferenceException ex)
             {
+                _ = ex;
                 return 0;
             }
         }

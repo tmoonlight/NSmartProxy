@@ -274,6 +274,7 @@ namespace NSmartProxy
                 //获取clientid
                 //关闭本次连接
                 ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ClientId);
+                return;
             }
 
             tunnel.ClientServerClient = s2pClient;
