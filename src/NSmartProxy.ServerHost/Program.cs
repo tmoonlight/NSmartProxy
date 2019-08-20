@@ -3,6 +3,7 @@ using PeterKottas.DotNetCore.WindowsService;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NSmartProxy.ServerHost
 {
@@ -30,13 +31,13 @@ namespace NSmartProxy.ServerHost
                     serviceConfig.OnStart((service, extraParams) =>
                     {
                         Console.WriteLine("Service {0} started", name);
-                        service.Start();
+                        Task.Run(() => service.Start());
                     });
 
                     serviceConfig.OnStop(service =>
                     {
                         Console.WriteLine("Service {0} stopped", name);
-                        service.Stop();
+                        Task.Run(() => service.Stop());
                     });
 
                     serviceConfig.OnError(e =>
