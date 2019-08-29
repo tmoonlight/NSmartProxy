@@ -99,6 +99,16 @@ namespace NSmartProxy.Database
             hashf.Put(keyBytesbytes, valBytes);
         }
 
+        public void UpdateByName(string userName, string newUserName, string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateByName(string userName, string value)
+        {
+            throw new NotImplementedException();
+        }
+
         public List<string> Select(int startIndex, int length)
         {
             List<string> strs = new List<string>(length);

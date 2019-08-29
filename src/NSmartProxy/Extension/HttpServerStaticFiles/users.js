@@ -9,11 +9,29 @@
     });
 
 })();
-
+var isEdit = "0";
+var m_oldUsername = "";
 function addUser() {
     $("#inputPassword").val("");
     $("#inputUserName").val("");
+    //$("#inputUserName").attr("disabled", "");
     $("#divAddUser").collapse('toggle');
+    //$("#btnAddUser").unbind("click").bind("click", function () { addUser_submit(); });
+    document.getElementById("btnAddUser").onclick = function() { addUser_submit(); };
+    isEdit = "0";
+}
+
+function editUser(oldUserName, isAdmin) {
+    //TODO 待修改，需要赋值，并且mask密码,取消adduser认证
+    $("#inputPassword").val("XXXXXXXX");
+    $("#inputUserName").val(oldUserName);
+    //$("#inputUserName").attr("disabled", "disabled"); 
+    $("#divAddUser").collapse('show');
+    document.getElementById("btnAddUser").onclick = function () { editUser_submit(oldUserName); };
+    //$("#btnAddUser").unbind("click").bind("click", function () { editUser_submit(oldUserName); });
+    $("#cbxIsAdmin").prop("checked", isAdmin == "1");
+    isEdit = "1";
+    m_oldUsername = oldUserName;
 }
 
 function addUser_submit() {
@@ -43,6 +61,38 @@ function addUser_submit() {
     }
 }
 
+function editUser_submit(oldUserName) {
+    var newUserName = $("#inputUserName").val();
+    //if (newUserName == oldUserName) {
+    //    newUserName += "***";
+    //}
+    //var validator = $('#divAddUser').data('bootstrapValidator');
+    //validator.validate();
+    //alert(validator.isValid());
+    //if (validator.isValid()) {
+        $.get(basepath +
+            "UpdateUser?oldusername=" + oldUserName +
+            "&newusername=" +
+            newUserName +
+            "&userpwd=" +
+            $("#inputPassword").val() +
+            "&isadmin=" +
+            ($("#cbxIsAdmin").prop("checked") ? 1 : 0),
+            function (res) {
+                if (res.State == 0) {
+                    alert("编辑失败：" + res.Msg);
+                    return;
+                }
+                alert('编辑成功');
+                $("#divAddUser").collapse('hide');
+                selectUsers();
+                $("#inputPassword").val("");
+                $("#inputUserName").val("");
+            }
+        );
+    //}
+}
+
 function delUser() {
 
     var ids = [];
@@ -55,7 +105,7 @@ function delUser() {
     if (!confirm('是否删除')) {
         return;
     }
-  
+
     $.get(basepath + "RemoveUser?id=" + ids.join(',') + '&usernames=' + userNames.join(','), function (res) {
         if (res.State == 0) {
             alert("操作失败：" + res.Msg);
@@ -108,7 +158,7 @@ function selectUsers() {
 
             htmlStr += "</td>" +
                 "<td class='td-ports'>" + user.boundPorts + "</td>" +
-              
+
                 "</tr>";
             //alert(user.isBanned == "true");
             i++;
@@ -130,9 +180,9 @@ function dropDownButtonHtml(user, userIndex) {
     } else {
         html += "<a class=\"dropdown-item\" href=\"javascript:banOneUser('" + user.userId + "')\">断开用户</a>";
     }
-
+    //user.username user.
     html += "<div class=\"dropdown-divider\"></div>" +
-        //"<a class=\"dropdown-item\" href=\"\">重命名用户</a>" +
+        "<a class=\"dropdown-item\" href=\"javascript:editUser('" + user.userName + "','" + user.isAdmin + "',)\">编辑用户</a>" +
         "<a class=\"dropdown-item\" href=\"javascript:delOneUser('" + userIndex + "','" + user.userName + "')\">删除用户</a>" +
         "</div></div>";
     return html;
@@ -180,7 +230,16 @@ function initValidate() {
                         delay: 2000,
                         url: basepath + 'ValidateUserName',
                         type: "GET",
-                        message: 'This user already exists.'
+                        message: 'This user already exists.',
+                        data: function (validator) {
+                            return {
+                                p1: isEdit,//is edit
+                                p2: m_oldUsername//old user
+                                //p2: $("#inputUserName").val(),//new user
+
+
+                            };
+                        }
                     }
 
                 }
@@ -203,7 +262,7 @@ function initValidate() {
 
 function banUsers() {
     var addToBanlist = "0";
-    
+
     var ids = [];
     // var userNames = [];
     $('input[name="cbxUserIds"]:checked').each(function () {//遍历每一个名字为interest的复选框，其中选中的执行函数    
@@ -230,7 +289,7 @@ function banOneUser(userId) {
     if (confirm('是否同时将用户加入黑名单？')) {
         addToBanlist = "1";
     }
-   
+
     $.get(basepath + "BanUsers?clientIdStr=" + userId + "&addToBanlist=" + addToBanlist, function (res) {
         if (res.State == 0) {
             alert("操作失败：" + res.Msg);
@@ -261,7 +320,7 @@ function unBanUsers() {
 }
 
 function unBanOneUser(userId) {
-    
+
     $.get(basepath + "UnBanUsers?clientIdStr=" + userId, function (res) {
         if (res.State == 0) {
             alert("操作失败：" + res.Msg);

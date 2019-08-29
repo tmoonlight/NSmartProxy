@@ -66,6 +66,22 @@ namespace NSmartProxy.Database
             liteCollection.Update(new KV(key.ToString(), value));
         }
 
+        public void UpdateByName(string userName, string newUserName, string value)
+        {
+            //存在修改索引的操作，所以删除后增加
+            keyCache.TryRemove(userName, out _);
+            //liteCollection.
+            //liteCollection.Update(userName,new KV(newUserName, value));
+            liteCollection.Delete(userName);
+            liteCollection.Insert(new KV(newUserName, value));
+        }
+
+        //public void UpdateByName(string userName, string value)
+        //{
+        //    keyCache.TryRemove(userName, out _);
+        //    liteCollection.Update(new KV(userName, value));
+        //}
+
         public List<string> Select(int startIndex, int length)
         {
             return liteCollection.FindAll().Select(kv => kv.Value).ToList();

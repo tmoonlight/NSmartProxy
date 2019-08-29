@@ -267,6 +267,46 @@ window.location.href='main.html';
             Dbop.Insert(userName, user.ToJsonString());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="userpwd"></param>
+        /// <param name="isAdmin">1代表是 0代表否</param>
+        [API]
+        [Secure]
+        public void UpdateUser(string oldUserName, string newUserName, string userPwd, string isAdmin)
+        {
+
+            if (!Dbop.Exist(oldUserName))
+            {
+                throw new Exception($"error: user {oldUserName} not exist.");
+            }
+            if (newUserName != oldUserName && Dbop.Exist(newUserName))
+            {
+                throw new Exception($"error: user {newUserName} exist.");
+            }
+            //var user = new User
+            //{
+            //    userId = SUPER_VARIABLE_INDEX_ID,  //索引id
+            //    userName = userName,
+            //    userPwd = EncryptHelper.SHA256(userpwd),
+            //    regTime = DateTime.Now.ToString(),
+            //    isAdmin = isAdmin
+            //};
+            User user = Dbop.Get(oldUserName)?.ToObject<User>();
+            user.isAdmin = isAdmin;
+            user.userName = newUserName;
+            if (userPwd != "XXXXXXXX")
+            {
+                user.userPwd = EncryptHelper.SHA256(userPwd);
+            }
+
+            //if (isAdmin == true) user.
+            //1.增加用户
+            Dbop.UpdateByName(oldUserName, newUserName, user.ToJsonString());
+        }
+
 
 
         [API]
@@ -328,9 +368,15 @@ window.location.href='main.html';
 
         [ValidateAPI]
         [Secure]
-        public bool ValidateUserName(string username)
+        public bool ValidateUserName(string isEdit, string oldUsername, string newUserName)
         {
-            return !Dbop.Exist(username);
+            if (isEdit == "1" && oldUsername == newUserName)
+            {
+                return true;
+            }
+
+            return !Dbop.Exist(newUserName);
+
         }
 
         #endregion
