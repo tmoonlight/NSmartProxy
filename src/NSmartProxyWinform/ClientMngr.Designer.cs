@@ -69,7 +69,11 @@ namespace NSmartProxyWinform
             this.btnRegWinSrv = new System.Windows.Forms.Button();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.btnLogin = new System.Windows.Forms.Button();
+            this.cbxProtocol = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.tbxPort = new NSmartProxyWinform.Util.TextBoxEx();
+            this.label8 = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -252,6 +256,10 @@ namespace NSmartProxyWinform
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.textBox1);
+            this.groupBox2.Controls.Add(this.label3);
+            this.groupBox2.Controls.Add(this.cbxProtocol);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.tbxTargetServerAddr);
             this.groupBox2.Controls.Add(this.label4);
@@ -268,7 +276,7 @@ namespace NSmartProxyWinform
             // 
             // label7
             // 
-            this.label7.Location = new System.Drawing.Point(17, 110);
+            this.label7.Location = new System.Drawing.Point(14, 159);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(163, 60);
             this.label7.TabIndex = 6;
@@ -277,7 +285,7 @@ namespace NSmartProxyWinform
             // tbxTargetServerAddr
             // 
             this.tbxTargetServerAddr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxTargetServerAddr.Location = new System.Drawing.Point(102, 20);
+            this.tbxTargetServerAddr.Location = new System.Drawing.Point(102, 50);
             this.tbxTargetServerAddr.Name = "tbxTargetServerAddr";
             this.tbxTargetServerAddr.Size = new System.Drawing.Size(82, 21);
             this.tbxTargetServerAddr.TabIndex = 3;
@@ -287,7 +295,7 @@ namespace NSmartProxyWinform
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 23);
+            this.label4.Location = new System.Drawing.Point(7, 53);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 12);
             this.label4.TabIndex = 0;
@@ -298,7 +306,7 @@ namespace NSmartProxyWinform
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(7, 50);
+            this.label5.Location = new System.Drawing.Point(7, 80);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(53, 12);
             this.label5.TabIndex = 1;
@@ -308,7 +316,7 @@ namespace NSmartProxyWinform
             // tbxTargetServerPort
             // 
             this.tbxTargetServerPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 47);
+            this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 77);
             this.tbxTargetServerPort.MaxLength = 5;
             this.tbxTargetServerPort.Name = "tbxTargetServerPort";
             this.tbxTargetServerPort.Size = new System.Drawing.Size(82, 21);
@@ -320,7 +328,7 @@ namespace NSmartProxyWinform
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 77);
+            this.label6.Location = new System.Drawing.Point(7, 107);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(95, 12);
             this.label6.TabIndex = 2;
@@ -460,10 +468,33 @@ namespace NSmartProxyWinform
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
+            // cbxProtocol
+            // 
+            this.cbxProtocol.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxProtocol.FormattingEnabled = true;
+            this.cbxProtocol.Items.AddRange(new object[] {
+            "TCP",
+            "HTTP"});
+            this.cbxProtocol.Location = new System.Drawing.Point(102, 21);
+            this.cbxProtocol.Name = "cbxProtocol";
+            this.cbxProtocol.Size = new System.Drawing.Size(82, 20);
+            this.cbxProtocol.TabIndex = 7;
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 25);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(53, 12);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "连接协议";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // tbxPort
             // 
             this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxPort.Location = new System.Drawing.Point(102, 74);
+            this.tbxPort.Location = new System.Drawing.Point(102, 104);
             this.tbxPort.MaxLength = 5;
             this.tbxPort.Name = "tbxPort";
             this.tbxPort.PlaceHolderStr = "<随机>";
@@ -471,6 +502,26 @@ namespace NSmartProxyWinform
             this.tbxPort.TabIndex = 5;
             this.tbxPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
             this.tbxPort.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            // 
+            // label8
+            // 
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(7, 134);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(53, 12);
+            this.label8.TabIndex = 9;
+            this.label8.Text = "主机域名";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox1.Location = new System.Drawing.Point(102, 131);
+            this.textBox1.MaxLength = 5;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(82, 21);
+            this.textBox1.TabIndex = 10;
             // 
             // ClientMngr
             // 
@@ -546,6 +597,10 @@ namespace NSmartProxyWinform
         private System.Windows.Forms.Button btnUnRegWinSrv;
         private System.Windows.Forms.Button btnTest;
         private TextBoxEx tbxPort;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox cbxProtocol;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }
 

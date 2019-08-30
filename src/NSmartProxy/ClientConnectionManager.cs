@@ -130,6 +130,18 @@ namespace NSmartProxy
         private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
 
+        public async Task<TcpClient> GetHTTPClient(int consumerPort)
+        {
+            var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
+            var appId = ServerContext.PortAppMap[consumerPort].AppId;
+
+            //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
+            TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
+            if (client == null) return null;
+            ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
+            return client;
+        }
+
         public async Task<TcpClient> GetClient(int consumerPort)
         {
             var clientId = ServerContext.PortAppMap[consumerPort].ClientId;

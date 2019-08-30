@@ -19,6 +19,8 @@ namespace NSmartProxy
         public BufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
         public List<TcpClient> ReverseClients;  //反向连接的socket
+        public int AppProtocol; //协议0 tcp 1 http
+        public string Host;//主机头
 
         private bool _closed = false;
 

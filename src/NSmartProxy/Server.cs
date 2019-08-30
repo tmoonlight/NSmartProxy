@@ -266,6 +266,9 @@ namespace NSmartProxy
             ServerContext.PortAppMap[consumerPort].Tunnels.Add(tunnel);
             //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
             ServerContext.ConnectCount += 1;
+
+            //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
+
             //II.弹出先前已经准备好的socket
             TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
             if (s2pClient == null)
