@@ -335,7 +335,7 @@ namespace NSmartProxy.Client
                 await NetworkUtil.ConnectAndSend(
                         config.ProviderAddress,
                     config.ConfigPort,
-                        Protocol.CloseClient,
+                        ServerProtocol.CloseClient,
                         StringUtil.IntTo2Bytes(this.ConnectionManager.ClientID),
                         true)
                     .ConfigureAwait(false);

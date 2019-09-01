@@ -12,7 +12,7 @@ namespace NSmartProxy.Authorize
     public class NSPServerContext
     {
         public NSPClientCollection Clients;
-        public Dictionary<int, NSPApp> PortAppMap;//端口和app的映射关系
+        public Dictionary<int, NSPApp> PortAppMap;//“地址:端口”和app的映射关系
         public NSPServerConfig ServerConfig;
         public HashSet<string> TokenCaches; //服务端会话池，登录后的会话都在这里，每天需要做定时清理
         public long TotalReceivedBytes; //TODO 统计进出数据 下行

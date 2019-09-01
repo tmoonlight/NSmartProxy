@@ -1,6 +1,6 @@
 ﻿namespace NSmartProxy.Data
 {
-    public enum Protocol : byte
+    public enum ServerProtocol : byte
     {
         Heartbeat = 0x01,
         ClientNewAppRequest = 0x02,

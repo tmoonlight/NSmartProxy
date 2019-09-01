@@ -201,7 +201,7 @@ namespace NSmartProxy
         }
 
 
-        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
+        public static async Task<TcpClient> ConnectAndSend(string addess, int port, ServerProtocol protocol, byte[] data, bool isClose = false)
         {
             TcpClient configClient = new TcpClient();
             bool isConnected = false;

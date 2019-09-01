@@ -119,8 +119,8 @@ namespace NSmartProxy.Client
 
             //请求0 协议名
             byte requestByte0;
-            if (isReconn) requestByte0 = (byte)Protocol.Reconnect;//重连则发送重连协议
-            else requestByte0 = (byte)Protocol.ClientNewAppRequest;
+            if (isReconn) requestByte0 = (byte)ServerProtocol.Reconnect;//重连则发送重连协议
+            else requestByte0 = (byte)ServerProtocol.ClientNewAppRequest;
 
             await configStream.WriteAsync(new byte[] { requestByte0 }, 0, 1);
 
@@ -135,13 +135,18 @@ namespace NSmartProxy.Client
             await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
 
             //请求2 分配端口
-            byte[] requestBytes2 = new byte[config.Clients.Count * 2];
+            //httpsupport: 增加host支持
+            int oneEndpointLength = 2 + 1 + 1024;
+            byte[] requestBytes2 = new byte[config.Clients.Count * (oneEndpointLength)];
             int i = 0;
             foreach (var client in config.Clients)
             {
                 byte[] portBytes = StringUtil.IntTo2Bytes(client.ConsumerPort);
-                requestBytes2[2 * i] = portBytes[0];
-                requestBytes2[2 * i + 1] = portBytes[1];
+                int offSetPos = oneEndpointLength * i;
+                requestBytes2[offSetPos] = portBytes[0];
+                requestBytes2[offSetPos + 1] = portBytes[1];
+                requestBytes2[offSetPos + 2] = (byte)client.Protocol;
+                Encoding.ASCII.GetBytes(client.EndPoint, 0, client.EndPoint.Length, portBytes, offSetPos + 3);
                 i++;
             }
             await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
@@ -149,6 +154,7 @@ namespace NSmartProxy.Client
             //读端口配置，此处数组的长度会限制使用的节点数（targetserver）
             //如果您的机器够给力，可以调高此值
             byte[] serverConfig = new byte[256];
+            
             //TODO 任何read都应该设置超时
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0)
@@ -334,7 +340,7 @@ namespace NSmartProxy.Client
                     try
                     {
                         client = await NetworkUtil.ConnectAndSend(config.ProviderAddress,
-                            config.ConfigPort, Protocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
+                            config.ConfigPort, ServerProtocol.Heartbeat, StringUtil.IntTo2Bytes(this.ClientID));
                     }
                     catch (Exception ex)
                     {

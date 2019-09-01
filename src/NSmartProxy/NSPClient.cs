@@ -10,11 +10,11 @@ namespace NSmartProxy
         public int ClientID;
         public DateTime LastUpdateTime;
         public TcpClient ConfigClient;      //配置用的socket
-        public Dictionary<int, NSPApp> AppMap; //Appid->app
+        public Dictionary<int, Dictionary<string,NSPApp>> AppMap; //Appid->app
 
         public NSPClient()
         {
-            AppMap = new Dictionary<int, NSPApp>();
+            AppMap = new Dictionary<int, Dictionary<string, NSPApp>>();
         }
 
         /// <summary>
@@ -36,6 +36,22 @@ namespace NSmartProxy
 
             return app.AppId;
         }
+
+        /// <summary>
+        /// 绑定主机头host到某个端口上，同一端口可以多次绑定
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        //public int BindHost(string host, int port)
+        //{
+        //    if (AppMap[port].HttpApps.Count == 0)
+        //    {
+        //        AppMap.
+        //    }
+
+        //    AppMap[port].HttpApps.
+        //}
 
         public NSPApp GetApp(int appId)
         {

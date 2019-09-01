@@ -80,8 +80,8 @@ namespace NSmartProxy
             try
             {
                 var result = await incomeClient.AuthorizeAsync();
-                if(result ==null ) return;//主动关闭
-                
+                if (result == null) return;//主动关闭
+
                 if (!result.IsSuccess)
                 {
                     Server.Logger.Debug("SecurityTcpClient校验失败：" + incomeClient.ErrorMessage);
@@ -209,14 +209,17 @@ namespace NSmartProxy
 
             //注册客户端
             ServerContext.Clients.RegisterNewClient(clientModel.ClientId);
+            int oneEndpointLength = 2 + 1 + 1024;
             lock (_lockObject2)
             {
                 //注册app
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
-                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
+                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[oneEndpointLength * i], consumerPortBytes[oneEndpointLength * i + 1]);
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
+                    Protocol protocol = (Protocol)consumerPortBytes[3];
+                    string host = Encoding.ASCII.GetString(consumerPortBytes, 3, 1024);
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = Global.StartArrangedPort;
                     int port = 0;
@@ -235,6 +238,13 @@ namespace NSmartProxy
                     app.ConsumePort = port;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
+                    //app.Host = host;
+                    //TODO 设置app的host和protocoltype
+                    if (protocol == Protocol.HTTP)
+                    {
+                        
+                    }
+
                     ServerContext.PortAppMap[port] = app;
 
                     clientModel.AppList.Add(new App

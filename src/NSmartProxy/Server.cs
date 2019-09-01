@@ -200,7 +200,8 @@ namespace NSmartProxy
         }
 
         /// <summary>
-        /// 有连接连上则开始侦听新的端口
+        /// 客户端连接时，会发送端口信息，此时服务端根据此信息
+        /// 开始侦听新的端口
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -208,10 +209,14 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapReverseConnected事件已触发");
             int port = 0;
+            Protocol protocol;
+            string host = "";
             foreach (var kv in ServerContext.PortAppMap)
             {
                 if (kv.Value.AppId == e.App.AppId &&
-                    kv.Value.ClientId == e.App.ClientId) port = kv.Key;
+                    kv.Value.ClientId == e.App.ClientId) port = kv.Value.ConsumePort;
+                protocol = kv.Value.AppProtocol;
+                break;
             }
             if (port == 0) throw new Exception("app未注册");
             //var ct = new CancellationToken();
@@ -227,6 +232,7 @@ namespace NSmartProxy
         /// <returns></returns>
         async Task ListenConsumeAsync(int consumerPort)
         {
+            //TODO 区分http请求
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
             try
@@ -252,7 +258,7 @@ namespace NSmartProxy
             }
             catch (ObjectDisposedException ode)
             {
-                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止"+ ode.ToString());
+                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止"+ ode);
             }
             catch (Exception ex)
             {
@@ -331,23 +337,23 @@ namespace NSmartProxy
                     return;
                 }
 
-                Protocol proto = (Protocol)protoRequestBytes[0];
+                ServerProtocol proto = (ServerProtocol)protoRequestBytes[0];
 #if DEBUG
                 //Server.Logger.Debug("appRequestBytes received.");
 #endif
 
                 switch (proto)
                 {
-                    case Protocol.ClientNewAppRequest:
+                    case ServerProtocol.ClientNewAppRequest:
                         await ProcessAppRequestProtocol(client);
                         break;
-                    case Protocol.Heartbeat:
+                    case ServerProtocol.Heartbeat:
                         await ProcessHeartbeatProtocol(client);
                         break;
-                    case Protocol.CloseClient:
+                    case ServerProtocol.CloseClient:
                         await ProcessCloseClientProtocol(client);
                         break;
-                    case Protocol.Reconnect:
+                    case ServerProtocol.Reconnect:
                         await ProcessAppRequestProtocol(client, true);
                         break;
                     default:
