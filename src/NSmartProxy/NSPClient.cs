@@ -12,11 +12,11 @@ namespace NSmartProxy
         public TcpClient ConfigClient;      //配置用的socket
 
 
-        public Dictionary<int, Dictionary<string,NSPApp>> AppMap; //Appid->app
+        public Dictionary<int, NSPApp> AppMap; //Appid->app
 
         public NSPClient()
         {
-            AppMap = new Dictionary<int, Dictionary<string, NSPApp>>();
+            AppMap = new Dictionary<int, NSPApp>();
         }
 
         /// <summary>

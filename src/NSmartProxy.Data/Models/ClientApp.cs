@@ -14,6 +14,6 @@
         public int ConsumerPort { get; set; }
 
         public Protocol Protocol { get; set; }
-        public string EndPoint { get; set; }
+        public string Host { get; set; }
     }
 }

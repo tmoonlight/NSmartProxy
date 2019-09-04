@@ -14,7 +14,7 @@ using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Authorize;
 using NSmartProxy.Data.Config;
-using NSmartProxy.Data.Entity;
+using NSmartProxy.Data.DBEntities;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
@@ -211,11 +211,12 @@ namespace NSmartProxy
             int port = 0;
             Protocol protocol;
             string host = "";
+            //TODO 如果有host 则分配到相同的group中
             foreach (var kv in ServerContext.PortAppMap)
             {
-                if (kv.Value.AppId == e.App.AppId &&
-                    kv.Value.ClientId == e.App.ClientId) port = kv.Value.ConsumePort;
-                protocol = kv.Value.AppProtocol;
+                if (kv.Value.ActivateApp.AppId == e.App.AppId &&
+                    kv.Value.ActivateApp.ClientId == e.App.ClientId) port = kv.Value.ActivateApp.ConsumePort;
+                protocol = kv.Value.ActivateApp.AppProtocol;
                 break;
             }
             if (port == 0) throw new Exception("app未注册");
@@ -241,11 +242,11 @@ namespace NSmartProxy
                 var nspApp = ServerContext.PortAppMap[consumerPort];
 
                 consumerlistener.Start(1000);
-                nspApp.Listener = consumerlistener;
-                nspApp.CancelListenSource = cts;
+                nspApp.ActivateApp.Listener = consumerlistener;
+                nspApp.ActivateApp.CancelListenSource = cts;
 
                 //临时编下号，以便在日志里区分不同隧道的连接
-                string clientApp = $"clientapp:{nspApp.ClientId}-{nspApp.AppId}";
+                string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
                 while (!ct.IsCancellationRequested)
                 {
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
@@ -258,7 +259,7 @@ namespace NSmartProxy
             }
             catch (ObjectDisposedException ode)
             {
-                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止"+ ode);
+                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止" + ode);
             }
             catch (Exception ex)
             {
@@ -269,7 +270,7 @@ namespace NSmartProxy
         private async Task ProcessConsumeRequestAsync(int consumerPort, string clientApp, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
-            ServerContext.PortAppMap[consumerPort].Tunnels.Add(tunnel);
+            ServerContext.PortAppMap[consumerPort].ActivateApp.Tunnels.Add(tunnel);
             //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
             ServerContext.ConnectCount += 1;
 
@@ -282,7 +283,7 @@ namespace NSmartProxy
                 Logger.Debug($"端口{consumerPort}获取反弹连接超时，关闭传输。");
                 //获取clientid
                 //关闭本次连接
-                ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ClientId);
+                ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ActivateApp.ClientId);
                 return;
             }
 
@@ -404,7 +405,7 @@ namespace NSmartProxy
                 CloseClient(client);
                 return;
             }
-           
+
             int clientID = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
             ServerContext.ClientConnectCount += 1;
             //2.更新最后更新时间
@@ -436,6 +437,8 @@ namespace NSmartProxy
             //var userClaims = StringUtil.ConvertStringToTokenClaims(clientIdFromToken);
             if (clientIdFromToken == 0)
             {
+                //TODO 2 服务端错误，校验失败
+                await nstream.WriteAsync(new byte[] { (byte)ServerStatus.AuthFailed });
                 client.Close();
                 return false;
             }
@@ -476,6 +479,8 @@ namespace NSmartProxy
             }
             catch (Exception ex)
             {
+                await nstream.WriteAsync(new byte[] {(byte) ServerStatus.UnknowndFailed});
+                //TODO 2 服务端错误：未知错误
                 Logger.Debug(ex.ToString());
             }
             finally

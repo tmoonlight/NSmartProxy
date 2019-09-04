@@ -149,15 +149,15 @@ namespace NSmartProxy.Client
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
-                    //显式登录
-                    if (CurrentLoginInfo != null)
+                    //显示使用用户名密码登陆
+                    if (CurrentLoginInfo != null && CurrentLoginInfo.UserName != string.Empty)
                     {
                         var loginResult = await Login();
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
                     }
                     else if (File.Exists(NspClientCachePath))
-                    { 
+                    {
                         //登录缓存
                         arrangedToken = File.ReadAllText(NspClientCachePath);
                         //这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录

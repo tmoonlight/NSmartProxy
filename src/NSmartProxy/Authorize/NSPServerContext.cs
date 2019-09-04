@@ -12,7 +12,7 @@ namespace NSmartProxy.Authorize
     public class NSPServerContext
     {
         public NSPClientCollection Clients;
-        public Dictionary<int, NSPApp> PortAppMap;//“地址:端口”和app的映射关系
+        public Dictionary<int, NSPAppGroup> PortAppMap;//“地址:端口”和app的映射关系
         public NSPServerConfig ServerConfig;
         public HashSet<string> TokenCaches; //服务端会话池，登录后的会话都在这里，每天需要做定时清理
         public long TotalReceivedBytes; //TODO 统计进出数据 下行
@@ -26,7 +26,7 @@ namespace NSmartProxy.Authorize
         {
             TokenCaches = new HashSet<string>();
             Clients = new NSPClientCollection();
-            PortAppMap = new Dictionary<int, NSPApp>();
+            PortAppMap = new Dictionary<int, NSPAppGroup>();
             //ServerConfig = new NSPServerConfig();
         }
 
@@ -77,8 +77,17 @@ namespace NSmartProxy.Authorize
                 {
                     int port = appKV.Value.ConsumePort;
                     //1.关闭，并移除AppMap中的App
-                    PortAppMap[port].Close();
-                    PortAppMap.Remove(port);
+                    if (!PortAppMap.ContainsKey(port))
+                    {
+                        Server.Logger.Debug($"clientid:{clientId}不包含port:{port}");
+                    }
+                    else
+                    {
+                        PortAppMap[port].CloseAll();
+                        PortAppMap.Remove(port);
+                    }
+
+                  
                     msg += appKV.Value.ConsumePort + " ";
                     //2.移除端口占用
                     NetworkUtil.ReleasePort(port);

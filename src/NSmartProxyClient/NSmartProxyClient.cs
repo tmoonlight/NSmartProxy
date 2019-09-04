@@ -16,6 +16,7 @@ using log4net.Config;
 using NSmartProxy.Data.Models;
 using Exception = System.Exception;
 using NSmartProxy.Shared;
+using Protocol = NSmartProxy.Data.Protocol;
 
 namespace NSmartProxy
 {
@@ -114,9 +115,9 @@ namespace NSmartProxy
 
             NSPClientConfig config = new NSPClientConfig();
             config.ProviderAddress = Configuration.GetSection("ProviderAddress").Value;
-           // config.ProviderPort = int.Parse(Configuration.GetSection("ProviderPort").Value);
-           // config.ProviderConfigPort = int.Parse(Configuration.GetSection("ProviderConfigPort").Value);
-           config.ProviderWebPort = int.Parse(Configuration.GetSection("ProviderWebPort").Value);
+            // config.ProviderPort = int.Parse(Configuration.GetSection("ProviderPort").Value);
+            // config.ProviderConfigPort = int.Parse(Configuration.GetSection("ProviderConfigPort").Value);
+            config.ProviderWebPort = int.Parse(Configuration.GetSection("ProviderWebPort").Value);
             var configClients = Configuration.GetSection("Clients").GetChildren();
             foreach (var cli in configClients)
             {
@@ -126,7 +127,10 @@ namespace NSmartProxy
                 {
                     IP = cli["IP"],
                     TargetServicePort = int.Parse(cli["TargetServicePort"]),
-                    ConsumerPort = confConsumerPort
+                    ConsumerPort = confConsumerPort,
+                    Host = cli["Host"],
+                    //(DbProviderType)Enum.Parse(typeof(DbProviderType), strDbType, true)
+                    Protocol = Enum.Parse<Protocol>((cli["Protocol"] ?? "TCP").ToUpper())
                 });
             }
             // Configuration.GetSection("1").

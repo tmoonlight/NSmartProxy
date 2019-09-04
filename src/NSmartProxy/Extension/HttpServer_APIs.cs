@@ -8,7 +8,7 @@ using System.Text;
 using NSmartProxy.Authorize;
 using NSmartProxy.Data;
 using NSmartProxy.Data.DTOs;
-using NSmartProxy.Data.Entity;
+using NSmartProxy.Data.DBEntities;
 using NSmartProxy.Database;
 using NSmartProxy.Shared;
 
@@ -393,13 +393,13 @@ window.location.href='main.html';
             {
                 json.Append("{ ");
                 json.Append(KV2Json("port", key)).C();
-                json.Append(KV2Json("clientId", value.ClientId)).C();
-                json.Append(KV2Json("appId", value.AppId)).C();
-                json.Append(KV2Json("blocksCount", value.TcpClientBlocks.Count)).C();
+                json.Append(KV2Json("clientId", value.ActivateApp.ClientId)).C();
+                json.Append(KV2Json("appId", value.ActivateApp.AppId)).C();
+                json.Append(KV2Json("blocksCount", value.ActivateApp.TcpClientBlocks.Count)).C();
                 //反向连接
                 json.Append(KV2Json("revconns"));
                 json.Append("[ ");
-                foreach (var reverseClient in value.ReverseClients)
+                foreach (var reverseClient in value.ActivateApp.ReverseClients)
                 {
                     json.Append("{ ");
                     if (reverseClient.Connected)
@@ -418,7 +418,7 @@ window.location.href='main.html';
                 //隧道状态
                 json.Append(KV2Json("tunnels"));
                 json.Append("[ ");
-                foreach (var tunnel in value.Tunnels)
+                foreach (var tunnel in value.ActivateApp.Tunnels)
                 {
                     json.Append("{ ");
                     if (tunnel.ClientServerClient != null)

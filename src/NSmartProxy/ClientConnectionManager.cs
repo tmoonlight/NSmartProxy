@@ -130,27 +130,27 @@ namespace NSmartProxy
         private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
 
-        public async Task<TcpClient> GetHTTPClient(int consumerPort)
-        {
-            var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
-            var appId = ServerContext.PortAppMap[consumerPort].AppId;
+        //public async Task<TcpClient> GetHTTPClient(int consumerPort)
+        //{
+        //    var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
+        //    var appId = ServerContext.PortAppMap[consumerPort].AppId;
 
-            //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
-            TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
-            if (client == null) return null;
-            ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
-            return client;
-        }
+        //    //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
+        //    TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
+        //    if (client == null) return null;
+        //    ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
+        //    return client;
+        //}
 
         public async Task<TcpClient> GetClient(int consumerPort)
         {
-            var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
-            var appId = ServerContext.PortAppMap[consumerPort].AppId;
+            var clientId = ServerContext.PortAppMap[consumerPort].ActivateApp.ClientId;
+            var appId = ServerContext.PortAppMap[consumerPort].ActivateApp.AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
             TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
             if (client == null) return null;
-            ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
+            ServerContext.PortAppMap[consumerPort].ActivateApp.ReverseClients.Add(client);
             return client;
         }
 
@@ -242,10 +242,10 @@ namespace NSmartProxy
                     //TODO 设置app的host和protocoltype
                     if (protocol == Protocol.HTTP)
                     {
-                        
+                        ServerContext.PortAppMap[port].Add(host, app);
                     }
 
-                    ServerContext.PortAppMap[port] = app;
+                    ServerContext.PortAppMap[port].ActivateApp = app;
 
                     clientModel.AppList.Add(new App
                     {

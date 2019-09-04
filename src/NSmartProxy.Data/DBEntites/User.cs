@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
 
-namespace NSmartProxy.Data.Entity
+namespace NSmartProxy.Data.DBEntities
 {
     public class User
     {

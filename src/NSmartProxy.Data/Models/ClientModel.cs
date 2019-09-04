@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace NSmartProxy.Data
 {
     /// <summary>
-    /// 客户端，包含一个客户端的信息
+    /// 客户端，包含一个客户端的信息,传输用
     /// </summary>
     public class ClientModel: ByteSerializeableObject
     {

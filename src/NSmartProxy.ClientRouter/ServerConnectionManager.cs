@@ -57,8 +57,8 @@ namespace NSmartProxy.Client
             }
             catch (Exception ex) //如果这里出错，则自动删除缓存
             {
-                ClearLoginCache();
-                Router.Logger.Debug("连接服务器失效，已清空登陆缓存");
+                //TODO 2 判断服务端返回错误类型，如果是校验错误，则清空缓存
+               
                 throw ex;
             }
 
@@ -80,7 +80,7 @@ namespace NSmartProxy.Client
         }
 
         /// <summary>
-        /// 从服务端读取配置
+        /// 从服务端读取配置，N问一答模式
         /// </summary>
         /// <returns></returns>
         private async Task<ClientModel> ReadConfigFromProvider()
@@ -146,7 +146,8 @@ namespace NSmartProxy.Client
                 requestBytes2[offSetPos] = portBytes[0];
                 requestBytes2[offSetPos + 1] = portBytes[1];
                 requestBytes2[offSetPos + 2] = (byte)client.Protocol;
-                Encoding.ASCII.GetBytes(client.EndPoint, 0, client.EndPoint.Length, portBytes, offSetPos + 3);
+                if (client.Host != null)
+                    Encoding.ASCII.GetBytes(client.Host, 0, client.Host.Length, requestBytes2, offSetPos + 3);
                 i++;
             }
             await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
@@ -154,13 +155,29 @@ namespace NSmartProxy.Client
             //读端口配置，此处数组的长度会限制使用的节点数（targetserver）
             //如果您的机器够给力，可以调高此值
             byte[] serverConfig = new byte[256];
-            
+
             //TODO 任何read都应该设置超时
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
             if (readBytesCount == 0)
                 Router.Logger.Debug("服务器关闭了本次连接");//TODO 切换服务端时因为token的问题导致服务端无法使用
             else if (readBytesCount == -1)
                 Router.Logger.Debug("连接超时");
+            else if (readBytesCount == 1)
+            {
+                ServerStatus status = (ServerStatus) serverConfig[0];
+                if (status == ServerStatus.AuthFailed)
+                {
+                    //处理服务器错误
+                    ClearLoginCache();
+                    Router.Logger.Debug("校验失效，已清空登陆缓存");
+                    throw new Exception("校验失败");
+                }
+                else
+                {
+                    Router.Logger.Debug("服务端未知异常");
+                    throw new Exception("服务端未知异常");
+                }
+            }
 
             return ClientModel.GetFromBytes(serverConfig, readBytesCount);
         }
