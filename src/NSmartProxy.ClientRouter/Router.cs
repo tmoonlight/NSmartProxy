@@ -225,8 +225,8 @@ namespace NSmartProxy.Client
                     foreach (var ap in clientModel.AppList)
                     {
                         var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
-                        var tunnelStr = ap.AppId.ToString() + ":  " + ClientConfig.ProviderAddress + ":" +
-                                        ap.Port.ToString() + "=>" +
+                        var tunnelStr = ap.AppId + ":  " + ClientConfig.ProviderAddress + ":" +
+                                        ap.Port + "=>" +
                                         cApp.IP + ":" + cApp.TargetServicePort;
                         Logger.Debug(tunnelStr);
                         tunnelstrs.Add(tunnelStr);

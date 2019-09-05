@@ -207,7 +207,7 @@ namespace NSmartProxy
         /// <param name="e"></param>
         private void ConnectionManager_AppAdded(object sender, AppChangedEventArgs e)
         {
-            Server.Logger.Debug("AppTcpClientMapReverseConnected事件已触发");
+            Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
             Protocol protocol;
             string host = "";
@@ -215,9 +215,13 @@ namespace NSmartProxy
             foreach (var kv in ServerContext.PortAppMap)
             {
                 if (kv.Value.ActivateApp.AppId == e.App.AppId &&
-                    kv.Value.ActivateApp.ClientId == e.App.ClientId) port = kv.Value.ActivateApp.ConsumePort;
-                protocol = kv.Value.ActivateApp.AppProtocol;
-                break;
+                    kv.Value.ActivateApp.ClientId == e.App.ClientId)
+                {
+                    port = kv.Value.ActivateApp.ConsumePort;
+                    protocol = kv.Value.ActivateApp.AppProtocol;
+                    break;
+                }
+
             }
             if (port == 0) throw new Exception("app未注册");
             //var ct = new CancellationToken();
@@ -460,7 +464,7 @@ namespace NSmartProxy
 
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];
-            byte[] consumerPortBytes = new byte[appCount * 2];
+            byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1024)];//TODO 2 暂时这么写，亟需修改
             int resultByte2 = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)
@@ -479,7 +483,7 @@ namespace NSmartProxy
             }
             catch (Exception ex)
             {
-                await nstream.WriteAsync(new byte[] {(byte) ServerStatus.UnknowndFailed});
+                await nstream.WriteAsync(new byte[] { (byte)ServerStatus.UnknowndFailed });
                 //TODO 2 服务端错误：未知错误
                 Logger.Debug(ex.ToString());
             }

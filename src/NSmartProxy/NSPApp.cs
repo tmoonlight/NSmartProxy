@@ -23,7 +23,7 @@ namespace NSmartProxy
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
         public List<TcpClient> ReverseClients;  //反向连接的socket
         public Protocol AppProtocol; //协议0 tcp 1 http
-        //public string Host;//主机头
+        public string Host;//主机头
         //public Dictionary<string, NSPApp> HttpApps;
 
         private bool _closed = false;

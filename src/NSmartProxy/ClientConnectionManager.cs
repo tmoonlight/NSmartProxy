@@ -25,7 +25,7 @@ namespace NSmartProxy
         /// <summary>
         /// 当app增加时触发
         /// </summary>
-        public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
+       // public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
 
         private NSPServerContext ServerContext;
@@ -216,36 +216,62 @@ namespace NSmartProxy
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
-                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[oneEndpointLength * i], consumerPortBytes[oneEndpointLength * i + 1]);
+                    int offset = oneEndpointLength * i;
+                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[offset], consumerPortBytes[offset + 1]);
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
-                    Protocol protocol = (Protocol)consumerPortBytes[3];
-                    string host = Encoding.ASCII.GetString(consumerPortBytes, 3, 1024);
+                    Protocol protocol = (Protocol)consumerPortBytes[offset + 2];
+                    string host = Encoding.ASCII.GetString(consumerPortBytes, offset + 3, 1024).TrimEnd('\0');
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = Global.StartArrangedPort;
                     int port = 0;
                     //如果端口是指定的并且是绑定的，不加任何检测
+                    bool hasListened = false;
                     if (IsBoundedByUser(clientId, startPort))
                     {
                         port = startPort;
                     }
                     else
                     {
-                        port = NetworkUtil.FindOneAvailableTCPPort(startPort);
+                        int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
+                        if (protocol == Protocol.TCP)
+                        {
+                            port = relocatedPort; //TODO 2 如果是共享端口协议，如果找不到端口则不进行侦听
+                        }
+                        else if (protocol == Protocol.HTTP)
+                        {
+                            //如果是共享端口协议，则查看映射列表中是否包含该端口，包含说明是正常的多映射，则不检测端口
+                            //if (!ServerContext.PortAppMap.ContainsKey(startPort))
+                            //{ port = NetworkUtil.FindOneAvailableTCPPort(startPort); }
+                            if (port != relocatedPort)
+                            {
+                                //http协议下如果portappmap已经有值，说明已经发起过侦听，接下来不必再侦听
+                                port = ServerContext.PortAppMap.ContainsKey(startPort) ? startPort : relocatedPort;
+                                hasListened = true;
+                            }
+                        }
                     }
                     NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];
                     app.ClientId = clientId;
                     app.AppId = arrangedAppid;
                     app.ConsumePort = port;
+                    app.AppProtocol = protocol;
+                    app.Host = host;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
                     //app.Host = host;
                     //TODO 设置app的host和protocoltype
+                    if (!ServerContext.PortAppMap.ContainsKey(port))
+                    {
+                        ServerContext.PortAppMap[port] = new NSPAppGroup();
+                    }
+
                     if (protocol == Protocol.HTTP)
                     {
                         ServerContext.PortAppMap[port].Add(host, app);
                     }
 
                     ServerContext.PortAppMap[port].ActivateApp = app;
+                    //ServerContext.PortAppMap[port] = nspAppGroup;
 
                     clientModel.AppList.Add(new App
                     {
@@ -255,7 +281,10 @@ namespace NSmartProxy
 
                     Logger.Info(port);
                     //配置时触发
-                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = app });
+                    if (!hasListened)
+                    {
+                        AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() {App = app});//触发listener侦听
+                    }
                 }
                 Logger.Debug(" <=端口已分配。");
             }
