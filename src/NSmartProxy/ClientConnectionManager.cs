@@ -142,25 +142,39 @@ namespace NSmartProxy
         //    return client;
         //}
 
-        public async Task<TcpClient> GetClient(int consumerPort)
+        public async Task<TcpClient> GetClient(int consumerPort, string host = null)
         {
-            var NSPApp = ServerContext.PortAppMap[consumerPort].ActivateApp;
-            if (NSPApp.AppProtocol == Protocol.HTTP)
+            NSPApp NSPApp = null;
+            if (host == null)
+            { NSPApp = ServerContext.PortAppMap[consumerPort].ActivateApp; }
+            else
             {
-                //NSPApp.
-
+                if (!ServerContext.PortAppMap[consumerPort].TryGetValue(host, out NSPApp))
+                {
+                    throw new KeyNotFoundException($"无法找到{consumerPort}的host:{host}");
+                }
             }
 
-            var clientId = NSPApp.ClientId;
-            var appId = NSPApp.AppId;
+            //if (NSPApp.AppProtocol == Protocol.HTTP)
+            //{
+            //    //NSPApp.
+
+            //}
+
+            //var clientId = NSPApp.ClientId;
+            //var appId = NSPApp.AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
             //TODO 2这里的弹出比较麻烦了
             TcpClient client = await NSPApp.PopClientAsync();
-            if (client == null) return null;
+            if (client == null)
+            {
+                throw new TimeoutException($"弹出{consumerPort}超时");
+            }
+
             //TODO 2 反向链接还写在这里？？
-            ServerContext.PortAppMap[consumerPort].ActivateApp.ReverseClients.Add(client);
-            
+            //ServerContext.PortAppMap[consumerPort].ActivateApp.ReverseClients.Add(client);
+            NSPApp.ReverseClients.Add(client);
             return client;
         }
 

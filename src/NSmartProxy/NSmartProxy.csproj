@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

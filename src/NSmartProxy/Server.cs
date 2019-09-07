@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -274,28 +275,59 @@ namespace NSmartProxy
         private async Task ProcessConsumeRequestAsync(int consumerPort, string clientApp, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
-            ServerContext.PortAppMap[consumerPort].ActivateApp.Tunnels.Add(tunnel);
-            //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
-            ServerContext.ConnectCount += 1;
-
-            //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
-
-            //II.弹出先前已经准备好的socket
-            TcpClient s2pClient = await ConnectionManager.GetClient(consumerPort);
-            if (s2pClient == null)
+            var nspApp = ServerContext.PortAppMap[consumerPort];
+            TcpClient s2pClient = null;
+            byte[] restBytes = null;
+            int restBytesLength = 0;
+            //byte[] ToStaticBytes;
+            try
             {
-                Logger.Debug($"端口{consumerPort}获取反弹连接超时，关闭传输。");
+                if (nspApp.ProtocolInGroup == Protocol.HTTP)
+                {
+                    var tp = await ReadHostName(consumerClient);
+                    string host = tp.Item1;
+                    restBytes = tp.Item2; //预发送bytes，因为这部分用来抓host消费掉了
+                    restBytesLength = tp.Item3;
+                    s2pClient = await ConnectionManager.GetClient(consumerPort, host);
+                    //if (s2pClient == null) //TODO 2 关注！不要同时使用一种返回结果 如client为null
+                    //{
+                      
+                    //}
+                }
+                else
+                {
+                    s2pClient = await ConnectionManager.GetClient(consumerPort);
+                }
+            }
+            catch (TimeoutException ex)
+            {
+                Logger.Debug($"端口{consumerPort}获取反弹连接超时，关闭传输。=>" + ex.Message);
                 //获取clientid
                 //关闭本次连接
                 ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ActivateApp.ClientId);
                 return;
             }
+            catch (KeyNotFoundException ex)
+            {
+                Server.Logger.Debug("未绑定此host：=>" +ex.Message);
+                consumerClient.Close();
+                return;
+            }
 
+            //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
+            ServerContext.ConnectCount += 1;
+
+            //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
+            //if()
+            //II.弹出先前已经准备好的socket
             tunnel.ClientServerClient = s2pClient;
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
-            _ = s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+            await s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+            //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
+            if (restBytes != null)
+                _ = s2pClient.GetStream().WriteAsync(restBytes, 0, restBytesLength, ct);
 
             await TcpTransferAsync(consumerClient, s2pClient, clientApp, ct);
         }
@@ -564,6 +596,7 @@ namespace NSmartProxy
         //3端互相传输数据
         async Task TcpTransferAsync(TcpClient consumerClient, TcpClient providerClient,
             string clientApp,
+
             CancellationToken ct)
         {
             try
@@ -656,6 +689,50 @@ namespace NSmartProxy
 
         #endregion
 
+        private async Task<Tuple<string, byte[], int>> ReadHostName(TcpClient consumerClient)
+        {
+            //const int BUFFER_SIZE = 1024 * 1024 * 2;
+            ////提取host方法
+            //byte[] hostStr = new byte[]{1};
+            //byte[] endLineStr = new byte[]{2};
+            //byte[] reveivedData = null;
+
+            //int readbyte = await consumerClient.GetStream().ReadAsync(reveivedData);
+            //StringUtil.SearchBytesFromBytes(reveivedData, hostStr);
+
+            //需要进一步截包 TODO 2 待优化1.内存优化 2.查询优化
+            const int BUFFER_SIZE = 1024 * 1024 * 2;
+            var length = 0;
+            var data = string.Empty;
+            var bytes = new byte[BUFFER_SIZE];
+
+            do
+            {//item2:data item1:host
+                length = await consumerClient.GetStream().ReadAsync(bytes, 0, BUFFER_SIZE);
+                data += Encoding.UTF8.GetString(bytes, 0, length);
+            } while (length > 0 && !data.Contains("\r\n\r\n"));
+            Regex reg = new Regex("\r\nhost: (.*?)\r\n");
+
+            return new Tuple<string, byte[], int>(
+                reg.Match(data.ToLower()).Groups[1].Value,
+                bytes,
+                length
+                );
+        }
+
+        //private string GetRequestData(Stream stream)
+        //{
+        //    const int BUFFER_SIZE = 1024 * 1024 * 2;
+        //    var length = 0;
+        //    var data = string.Empty;
+        //    do
+        //    {
+        //        length = stream.Read(bytes, 0, BUFFER_SIZE);
+        //        data += Encoding.UTF8.GetString(bytes, 0, length);
+        //    } while (length > 0 && !data.Contains("\r\n\r\n"));
+
+        //    return data;
+        //}
 
     }
 }

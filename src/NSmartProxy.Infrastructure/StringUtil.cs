@@ -155,5 +155,42 @@ namespace NSmartProxy
             return retVal;
         }
 
+
+        /// <summary>
+        /// 在一个byte数组中查找另外一个byte数组的位置
+        /// </summary>
+        /// <param name="haystack"></param>
+        /// <param name="needle"></param>
+        /// <returns></returns>
+        public static int SearchBytesFromBytes(byte[] haystack, byte[] needle)
+        {
+            for (int i = 0; i <= haystack.Length - needle.Length; i++)
+            {
+                if (Match(haystack, needle, i))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public static bool Match(byte[] haystack, byte[] needle, int start)
+        {
+            if (needle.Length + start > haystack.Length)
+            {
+                return false;
+            }
+            else
+            {
+                for (int i = 0; i < needle.Length; i++)
+                {
+                    if (needle[i] != haystack[i + start])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
     }
 }
