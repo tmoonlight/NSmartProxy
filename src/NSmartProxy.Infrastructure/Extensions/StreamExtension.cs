@@ -1,5 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using NSmartProxy.Shared;
 
@@ -37,6 +41,26 @@ namespace NSmartProxy.Infrastructure
         public static async Task<int> ReadAsyncEx(this NetworkStream stream, byte[] buffer)
         {
             return await stream.ReadAsync(buffer,0,buffer.Length,Global.DefaultConnectTimeout);
+        }
+
+
+        public static Stream ProcessSSL(this Stream clientStream,X509Certificate cert)
+        {
+            try
+            {
+                SslStream sslStream = new SslStream(clientStream);
+                sslStream.AuthenticateAsServer(cert, false, SslProtocols.Tls, true);
+                sslStream.ReadTimeout = 10000;
+                sslStream.WriteTimeout = 10000;
+                return sslStream;
+            }
+            catch (Exception ex)
+            {
+                clientStream.Close();
+                throw ex;
+            }
+
+            //return null;
         }
     }
 }

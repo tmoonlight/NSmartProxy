@@ -49,5 +49,8 @@ namespace Tests
                 return sr.Tail(lastLines);
             }
         }
+
+        
+
     }
 }

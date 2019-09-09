@@ -607,7 +607,24 @@ window.location.href='main.html';
 
         #endregion
 
+        #region ca
+        [API]
+        [Secure]
+        public string GetAllCA()
+        {
+            return "CA";
+        }
 
+
+        [API]
+        [Secure]
+        public string GenerateCA(string name)
+        {
+            CAGen.GenerateCA(name);
+            return "success";
+        }
+
+        #endregion
 
 
 

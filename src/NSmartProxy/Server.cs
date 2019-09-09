@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -73,8 +74,6 @@ namespace NSmartProxy
             return this;
         }
 
-
-
         public Server SetAnonymousLogin(bool isSupportAnonymous)
         {
             ServerContext.SupportAnonymousLogin = isSupportAnonymous;
@@ -88,12 +87,7 @@ namespace NSmartProxy
             return this;
         }
 
-        //必须设置远程端口才可以通信 //TODO 合并到配置里
-        //public Server SetWebPort(int port)
-        //{
-        //    WebManagementPort = port;
-        //    return this;
-        //}
+        public static X509Certificate2 TestCert;
 
         public async Task Start()
         {
@@ -122,6 +116,10 @@ namespace NSmartProxy
             //3.开启心跳检测线程 
             _ = ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
+            //TODO 2 XX测试SSL
+            Logger.Debug("SSL CA Generating...");
+            TestCert = CAGen.GenerateCA("testcert");
+            Logger.Debug("SSL CA Generated.");
             //4.开启配置服务(常开)
             try
             {
@@ -256,8 +254,6 @@ namespace NSmartProxy
                 {
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
-                    //Task.Factory.StartNew(consumerlistener.AcceptTcpClientAsync())
-
                     var consumerClient = await consumerlistener.AcceptTcpClientAsync();
                     _ = ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
                 }
@@ -277,22 +273,23 @@ namespace NSmartProxy
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
             var nspApp = ServerContext.PortAppMap[consumerPort];
             TcpClient s2pClient = null;
+            Stream consumerStream = null;//; = consumerClient.GetStream().ProcessSSL(TestCert);
+            Stream providerStream = null;// = s2pClient.GetStream();
             byte[] restBytes = null;
-            int restBytesLength = 0;
-            //byte[] ToStaticBytes;
+            //int restBytesLength = 0;
             try
             {
+                consumerStream = consumerClient.GetStream().ProcessSSL(TestCert);//TODO 2 测试证书
                 if (nspApp.ProtocolInGroup == Protocol.HTTP)
                 {
-                    var tp = await ReadHostName(consumerClient);
+                    var tp = await ReadHostName(consumerStream);
+                    if (tp == null)
+                    { Server.Logger.Debug("未在请求中找到主机名"); return; }
+
                     string host = tp.Item1;
-                    restBytes = tp.Item2; //预发送bytes，因为这部分用来抓host消费掉了
-                    restBytesLength = tp.Item3;
+                    restBytes = Encoding.UTF8.GetBytes(tp.Item2); //预发送bytes，因为这部分用来抓host消费掉了
+                    //restBytesLength = tp.Item3;
                     s2pClient = await ConnectionManager.GetClient(consumerPort, host);
-                    //if (s2pClient == null) //TODO 2 关注！不要同时使用一种返回结果 如client为null
-                    //{
-                      
-                    //}
                 }
                 else
                 {
@@ -309,7 +306,7 @@ namespace NSmartProxy
             }
             catch (KeyNotFoundException ex)
             {
-                Server.Logger.Debug("未绑定此host：=>" +ex.Message);
+                Server.Logger.Debug("未绑定此host：=>" + ex.Message);
                 consumerClient.Close();
                 return;
             }
@@ -321,15 +318,27 @@ namespace NSmartProxy
             //if()
             //II.弹出先前已经准备好的socket
             tunnel.ClientServerClient = s2pClient;
+            CancellationTokenSource transfering = new CancellationTokenSource();
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
-            await s2pClient.GetStream().WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+
+            providerStream = s2pClient.GetStream();
+            await providerStream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
             //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
             if (restBytes != null)
-                _ = s2pClient.GetStream().WriteAsync(restBytes, 0, restBytesLength, ct);
+                await providerStream.WriteAsync(restBytes, 0, restBytes.Length, transfering.Token);
 
-            await TcpTransferAsync(consumerClient, s2pClient, clientApp, ct);
+            try
+            {
+                await TcpTransferAsync(consumerStream, providerStream, clientApp, transfering.Token);
+            }
+            finally
+            {
+                consumerClient.Close();
+                s2pClient.Close();
+                transfering.Cancel();
+            }
         }
 
         #region 配置连接相关
@@ -594,7 +603,7 @@ namespace NSmartProxy
 
         #region datatransfer
         //3端互相传输数据
-        async Task TcpTransferAsync(TcpClient consumerClient, TcpClient providerClient,
+        async Task TcpTransferAsync(Stream consumerStream, Stream providerStream,
             string clientApp,
 
             CancellationToken ct)
@@ -603,20 +612,18 @@ namespace NSmartProxy
             {
                 Server.Logger.Debug($"New client ({clientApp}) connected");
 
-                CancellationTokenSource transfering = new CancellationTokenSource();
+                //CancellationTokenSource transfering = new CancellationTokenSource();
 
-                var providerStream = providerClient.GetStream();
-                var consumerStream = consumerClient.GetStream();
-                Task taskC2PLooping = ToStaticTransfer(transfering.Token, consumerStream, providerStream, clientApp);
-                Task taskP2CLooping = StreamTransfer(transfering.Token, providerStream, consumerStream, clientApp);
+                //var providerStream = providerClient.GetStream();//.ProcessSSL("test");
+                //var consumerStream = consumerClient.GetStream();
+                Task taskC2PLooping = ToStaticTransfer(ct, consumerStream, providerStream, clientApp);
+                Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, clientApp);
 
                 //任何一端传输中断或者故障，则关闭所有连接
                 var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
                 //comletedTask.
                 Logger.Debug($"Transferring ({clientApp}) STOPPED");
-                consumerClient.Close();
-                providerClient.Close();
-                transfering.Cancel();
+
             }
             catch (Exception e)
             {
@@ -626,7 +633,7 @@ namespace NSmartProxy
 
         }
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
+        private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, string clientApp)
         {
             using (fromStream)
             {
@@ -651,7 +658,7 @@ namespace NSmartProxy
             //Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
-        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string clientApp)
+        private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, string clientApp)
         {
             using (fromStream)
             {
@@ -689,7 +696,8 @@ namespace NSmartProxy
 
         #endregion
 
-        private async Task<Tuple<string, byte[], int>> ReadHostName(TcpClient consumerClient)
+        #region http
+        private async Task<Tuple<string, string>> ReadHostName(Stream consumerStream)
         {
             //const int BUFFER_SIZE = 1024 * 1024 * 2;
             ////提取host方法
@@ -705,18 +713,20 @@ namespace NSmartProxy
             var length = 0;
             var data = string.Empty;
             var bytes = new byte[BUFFER_SIZE];
-
+            
             do
             {//item2:data item1:host
-                length = await consumerClient.GetStream().ReadAsync(bytes, 0, BUFFER_SIZE);
+                length = await consumerStream.ReadAsync(bytes, 0, BUFFER_SIZE);
                 data += Encoding.UTF8.GetString(bytes, 0, length);
             } while (length > 0 && !data.Contains("\r\n\r\n"));
+
+            if (length == 0) return null;
             Regex reg = new Regex("\r\nhost: (.*?)\r\n");
 
-            return new Tuple<string, byte[], int>(
-                reg.Match(data.ToLower()).Groups[1].Value,
-                bytes,
-                length
+            return new Tuple<string, string>(
+                reg.Match(data.ToLower()).Groups[1].Value,//需要进一步优化，使用list<byte[]>
+                data
+
                 );
         }
 
@@ -733,6 +743,7 @@ namespace NSmartProxy
 
         //    return data;
         //}
+        #endregion
 
     }
 }
