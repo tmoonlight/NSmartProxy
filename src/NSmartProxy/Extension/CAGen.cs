@@ -15,6 +15,8 @@ namespace NSmartProxy.Extension
             sanBuilder.AddIpAddress(IPAddress.Loopback);
             sanBuilder.AddIpAddress(IPAddress.IPv6Loopback);
             sanBuilder.AddDnsName("localhost");
+            sanBuilder.AddDnsName("test.kd.com");
+            sanBuilder.AddDnsName("cloud.kd.com");
             sanBuilder.AddDnsName(Environment.MachineName);
 
             X500DistinguishedName distinguishedName = new X500DistinguishedName($"CN={CertificateName}");
@@ -35,8 +37,8 @@ namespace NSmartProxy.Extension
 
                 var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(3650)));
                 certificate.FriendlyName = CertificateName;
-
-                return new X509Certificate2(certificate.Export(X509ContentType.Pfx, "WeNeedASaf3rPassword"), "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
+                return certificate;
+                // return new X509Certificate2(certificate.Export(X509ContentType.Pfx, "WeNeedASaf3rPassword"), "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
             }
         }
     }
