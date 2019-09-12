@@ -30,6 +30,15 @@ namespace NSmartProxy.Extension
     }
 
     /// <summary>
+    /// 代表上传文件接口，第一个函数必须是File
+    /// </summary>
+    public class FileUploadAttribute : Attribute
+    {
+
+    }
+
+
+    /// <summary>
     /// 代表接口需要校验权限
     /// </summary>
     public class SecureAttribute : Attribute

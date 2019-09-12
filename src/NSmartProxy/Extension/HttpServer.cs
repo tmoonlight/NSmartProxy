@@ -224,6 +224,7 @@ namespace NSmartProxy.Extension
                         }
                         else if (method.GetCustomAttribute<FileAPIAttribute>() != null)
                         {
+                            //文件下载
                             response.ContentType = "application/octet-stream";
                             if (!(method.Invoke(this, parameters) is FileDTO fileDto))
                             {
@@ -236,6 +237,23 @@ namespace NSmartProxy.Extension
                             {
                                 await fileDto.FileStream.CopyToAsync(response.OutputStream);
                             }
+                        }
+                        else if (method.GetCustomAttribute<FileUploadAttribute>() != null)
+                        {
+                            //文件上传
+                            response.ContentType = "application/json";
+                            if (request.HttpMethod.ToUpper() == "POST")
+                            {
+                                List<object> paraList = new List<object>();
+                                var fileName = SaveFile(request.ContentEncoding, request.ContentType, request.InputStream);
+                                paraList.Add(new FileInfo($"./{fileName}"));
+                                if (parameters != null)
+                                    paraList.AddRange(parameters);
+                                jsonObj = method.Invoke(this, paraList.ToArray());
+                            }
+
+                            await response.OutputStream.WriteAsync(HtmlUtil.GetContent("{\"success\":true}"));
+                            //request.
                         }
                     }
                     catch (Exception ex)
@@ -281,6 +299,114 @@ namespace NSmartProxy.Extension
             }
 
         }
+
+        #region 文件读取
+        private String GetBoundary(String ctype)
+        {
+            return "--" + ctype.Split(';')[1].Split('=')[1];
+        }
+
+        private string SaveFile(Encoding enc, String boundary, Stream input)
+        {
+            Byte[] boundaryBytes = enc.GetBytes(boundary);
+            Int32 boundaryLen = boundaryBytes.Length;
+            string fileName = Guid.NewGuid().ToString("N") + ".temp";
+            using (FileStream output = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+            {
+                Byte[] buffer = new Byte[1024];
+                Int32 len = input.Read(buffer, 0, 1024);
+                Int32 startPos = -1;
+
+                // Find start boundary
+                while (true)
+                {
+                    if (len == 0)
+                    {
+                        throw new Exception("Start Boundaray Not Found");
+                    }
+
+                    startPos = IndexOf(buffer, len, boundaryBytes);
+                    if (startPos >= 0)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Array.Copy(buffer, len - boundaryLen, buffer, 0, boundaryLen);
+                        len = input.Read(buffer, boundaryLen, 1024 - boundaryLen);
+                    }
+                }
+
+                // Skip four lines (Boundary, Content-Disposition, Content-Type, and a blank)
+                for (Int32 i = 0; i < 4; i++)
+                {
+                    while (true)
+                    {
+                        if (len == 0)
+                        {
+                            throw new Exception("Preamble not Found.");
+                        }
+
+                        startPos = Array.IndexOf(buffer, enc.GetBytes("\n")[0], startPos);
+                        if (startPos >= 0)
+                        {
+                            startPos++;
+                            break;
+                        }
+                        else
+                        {
+                            len = input.Read(buffer, 0, 1024);
+                        }
+                    }
+                }
+
+                Array.Copy(buffer, startPos, buffer, 0, len - startPos);
+                len = len - startPos;
+
+                while (true)
+                {
+                    Int32 endPos = IndexOf(buffer, len, boundaryBytes);
+                    if (endPos >= 0)
+                    {
+                        if (endPos > 0) output.Write(buffer, 0, endPos - 2);
+                        break;
+                    }
+                    else if (len <= boundaryLen)
+                    {
+                        throw new Exception("End Boundaray Not Found");
+                    }
+                    else
+                    {
+                        output.Write(buffer, 0, len - boundaryLen);
+                        //每次放置后40个字节到首部，读取接下来984个字节，在此基础上进行byte查找，绝妙！
+                        Array.Copy(buffer, len - boundaryLen, buffer, 0, boundaryLen);
+                        len = input.Read(buffer, boundaryLen, 1024 - boundaryLen) + boundaryLen;
+                    }
+                }
+            }
+
+            return fileName;
+        }
+
+        private Int32 IndexOf(Byte[] buffer, Int32 len, Byte[] boundaryBytes)
+        {
+            for (Int32 i = 0; i <= len - boundaryBytes.Length; i++)
+            {
+                Boolean match = true;
+                for (Int32 j = 0; j < boundaryBytes.Length && match; j++)
+                {
+                    match = buffer[i + j] == boundaryBytes[j];
+                }
+
+                if (match)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+        #endregion
 
         #endregion
 

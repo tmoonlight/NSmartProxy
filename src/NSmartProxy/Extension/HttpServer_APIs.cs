@@ -624,6 +624,21 @@ window.location.href='main.html';
             return "success";
         }
 
+
+        [FileUpload]
+        [Secure]
+        public string UploadCA(FileInfo fileInfo)
+        {
+            string baseLogPath = "./ca";
+            DirectoryInfo dir = new DirectoryInfo(baseLogPath);
+            if (!dir.Exists)
+            {
+                dir.Create();
+            }
+
+            return "success";
+        }
+
         #endregion
 
 
