@@ -87,7 +87,7 @@ namespace NSmartProxy
             return this;
         }
 
-        public static X509Certificate2 TestCert;
+        //public static X509Certificate2 TestCert;
 
         public async Task Start()
         {
@@ -116,9 +116,9 @@ namespace NSmartProxy
             //3.开启心跳检测线程 
             _ = ProcessHeartbeatsCheck(Global.HeartbeatCheckInterval, ctsConsumer);
 
-            //TODO 2 XX测试SSL
+            //3.5 加载SSL证书
             Logger.Debug("SSL CA Generating...");
-            TestCert = CAGen.GenerateCA("testcert");
+            ServerContext.InitCertificates();
             Logger.Debug("SSL CA Generated.");
             //4.开启配置服务(常开)
             try
@@ -279,10 +279,13 @@ namespace NSmartProxy
             //int restBytesLength = 0;
             try
             {
-                consumerStream = consumerClient.GetStream().ProcessSSL(TestCert);//TODO 2 测试证书
-                if (nspApp.ProtocolInGroup == Protocol.HTTP)
+                
+                if (nspApp.ProtocolInGroup == Protocol.HTTP|| nspApp.ProtocolInGroup == Protocol.HTTPS)
                 {
+                    var cert = ServerContext.PortCertMap[consumerPort.ToString()];
+                    consumerStream = consumerClient.GetStream().ProcessSSL(cert);
                     var tp = await ReadHostName(consumerStream);
+
                     if (tp == null)
                     { Server.Logger.Debug("未在请求中找到主机名"); return; }
 

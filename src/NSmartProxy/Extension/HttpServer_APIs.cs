@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NSmartProxy.Authorize;
 using NSmartProxy.Data;
@@ -612,29 +613,48 @@ window.location.href='main.html';
         [Secure]
         public string GetAllCA()
         {
+            List<Object> caList = new List<object>();
+            foreach (var (port,cert) in ServerContext.PortCertMap)
+            {
+                
+            }
             return "CA";
         }
 
 
         [API]
         [Secure]
-        public string GenerateCA(string name)
+        public string GenerateCA(string port,string hosts)
         {
-            CAGen.GenerateCA(name);
+            var ca = CAGen.GenerateCA(RandomHelper.NextString(10, false),true,hosts);
+            var export = ca.Export(X509ContentType.Pfx);
+            string baseLogPath = "./ca";
+            string targetPath = baseLogPath + "/" + port + ".pfx";
+            DirectoryInfo dir = new DirectoryInfo(baseLogPath);
+            if (!dir.Exists)
+            {
+                dir.Create();
+            }
+
+            // File.Move(fileInfo.FullName, baseLogPath + "/" + port + ".pfx");
+            File.WriteAllBytes(targetPath, export);
             return "success";
         }
 
 
         [FileUpload]
         [Secure]
-        public string UploadCA(FileInfo fileInfo)
+        public string UploadCA(FileInfo fileInfo, int port)
         {
             string baseLogPath = "./ca";
+            string targetPath = baseLogPath + "/" + port + ".pfx";
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
                 dir.Create();
             }
+
+            File.Move(fileInfo.FullName, targetPath);
 
             return "success";
         }

@@ -3,7 +3,8 @@
     public enum Protocol : byte
     {
         TCP = 0x00,
-        HTTP = 0x01
+        HTTP = 0x01,
+        HTTPS = 0x02
     }
 
     public class ClientApp

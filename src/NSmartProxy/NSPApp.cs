@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -15,6 +16,7 @@ namespace NSmartProxy
     public class NSPApp
     {
         public int AppId;
+        public string Description;//app名字，用来标识app
         public int ClientId;
         public int ConsumePort;
         public TcpListener Listener;
@@ -24,7 +26,7 @@ namespace NSmartProxy
         public List<TcpClient> ReverseClients;  //反向连接的socket
         public Protocol AppProtocol; //协议0 tcp 1 http
         public string Host;//主机头
-        //public Dictionary<string, NSPApp> HttpApps;
+        //public X509Certificate2 Certificate;//证书
 
         private bool _closed = false;
 

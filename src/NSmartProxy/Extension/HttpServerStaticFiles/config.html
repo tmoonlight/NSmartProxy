@@ -1,11 +1,97 @@
 ﻿<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h3">配置</h1>
+    <h1 class="h3">证书管理</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary"> <span data-feather="refresh-ccw"></span>
-                刷新配置</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <span data-feather="plus"></span>
+                添加证书
+            </button>
         </div>
-       
+
+    </div>
+</div>
+
+<div class="mb-2 " id="divAddCert">
+    <form class="bv-form" id="frmAddUser">
+        <div class="form-group">
+            <label for="inputUserName">证书名</label>
+            <input type="text" class="form-control" data-bv-field="inputUserName" name="inputUserName" id="inputUserName" placeholder="UserName">
+            <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
+        </div>
+        <div class="form-group">
+            <label for="inputPassword">端口</label>
+            <input type="password" data-bv-field="inputPassword" name="inputPassword" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+        
+        <div class="form-group">
+            <label>证书上传</label>
+           <br/>
+                <input type="file"  id="fileUpload">
+                
+           
+
+        </div>
+        <!--<div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="exampleCheck1">
+            <label class="form-check-label" for="exampleCheck1">Check me out</label>
+        </div>-->
+        <div class="custom-control custom-switch mb-4">
+            <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
+            <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
+        </div>
+        <button type="button" id="btnAddUser" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-md-4 pb-1">
+        <div class="card">
+
+            <div class="card-body">
+
+
+                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:12</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Pfx证书</h6>
+                <p class="card-text">创建时间：2019-01-01 12:00:00<br/>
+                    绑定域名：www.tmoonlight.com<br/> 
+                    有效期限：2016<br/> </p>
+           
+                <!--<a href="#" class="card-link">Card link</a>-->
+                <a href="#" class="card-link">删除证书</a>
+            </div>
+
+        </div> 
+
+    </div>
+    
+    <div class="col-md-4 pb-1">
+        <div class="card">
+
+            <div class="card-body">
+
+
+                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:12</h5>
+                <h6 class="card-subtitle mb-2 text-muted">绑定端口:12</h6>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <!--<a href="#" class="card-link">Card link</a>-->
+                <a href="#" class="card-link">删除证书</a>
+            </div>
+
+        </div> 
+
+    </div>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3">其他配置</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <span data-feather="refresh-ccw"></span>
+                刷新配置
+            </button>
+        </div>
+
     </div>
 </div>
 <!--<div class="custom-control custom-switch">
@@ -17,7 +103,8 @@
     <label class="custom-control-label" for="customSwitch2">全量日志跟踪</label>
 </div>-->
 <div class="custom-control custom-switch" onclick="toggleConfig(this)">
-    <input type="checkbox" class="custom-control-input" id="configAllowAnonymousUser" change ="toggleConfig(this)">
+    <input type="checkbox" class="custom-control-input" id="configAllowAnonymousUser" change="toggleConfig(this)">
     <label class="custom-control-label" for="configAllowAnonymousUser">匿名登录</label>
 
 </div>
+

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Data.Config;
@@ -19,7 +20,7 @@ namespace NSmartProxy.Authorize
         public long TotalSentBytes;//上行
         public long ConnectCount;//连接次数
         public long ClientConnectCount; //客户端连接次数
-
+        public Dictionary<string, X509Certificate> PortCertMap;//host->证书字典
         private bool supportAnonymousLogin = true;
 
         public NSPServerContext()
@@ -27,6 +28,7 @@ namespace NSmartProxy.Authorize
             TokenCaches = new HashSet<string>();
             Clients = new NSPClientCollection();
             PortAppMap = new Dictionary<int, NSPAppGroup>();
+            PortCertMap = new Dictionary<string, X509Certificate>();
             //ServerConfig = new NSPServerConfig();
         }
 
@@ -87,7 +89,7 @@ namespace NSmartProxy.Authorize
                         PortAppMap.Remove(port);
                     }
 
-                  
+
                     msg += appKV.Value.ConsumePort + " ";
                     //2.移除端口占用
                     NetworkUtil.ReleasePort(port);
@@ -108,6 +110,26 @@ namespace NSmartProxy.Authorize
             {
                 Server.Logger.Debug($"无此id: {clientId},可能已关闭过");
             }
+        }
+
+        /// <summary>
+        /// 通过配置初始化证书到证书缓存中
+        /// </summary>
+        public void InitCertificates()
+        {
+            foreach (var (port,path) in ServerConfig.CABoundConfig)
+            {
+                //从文件里加载证书
+                PortCertMap[port] = X509Certificate.CreateFromCertFile(path);
+            }
+            //foreach (var client in Clients)
+            //{
+            //    foreach (var (k, v) in client.AppMap)
+            //    {
+            //        v.Certificate
+            //    }
+
+            //}
         }
     }
 }

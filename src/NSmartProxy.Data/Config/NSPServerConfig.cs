@@ -11,6 +11,8 @@ namespace NSmartProxy.Data.Config
         public int WebAPIPort = 12309;    //远端管理端口
 
         //[]
-        public ServerBoundConfig BoundConfig = new ServerBoundConfig();
+        public ServerBoundConfig BoundConfig = new ServerBoundConfig();//绑定列表
+        //public List<CABoundConfig> CABoundConfigList = new List<CABoundConfig>();//host->证书路径
+        public Dictionary<string,string> CABoundConfig = new Dictionary<string, string>();//端口->证书路径，为了方便扩展这里使用字符串类型
     }
 }
