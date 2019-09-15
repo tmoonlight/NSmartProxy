@@ -9,7 +9,7 @@ namespace NSmartProxy.Extension
 {
     public class CAGen
     {
-        public static X509Certificate2 GenerateCA(string CertificateName, bool isAchieve = false, string hosts = null)
+        public static X509Certificate2 GenerateCA(string CertificateName, bool isAchieve = true, string hosts = null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
             sanBuilder.AddIpAddress(IPAddress.Loopback);

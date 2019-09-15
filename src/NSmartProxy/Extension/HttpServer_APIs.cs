@@ -614,9 +614,9 @@ window.location.href='main.html';
         public string GetAllCA()
         {
             List<Object> caList = new List<object>();
-            foreach (var (port,cert) in ServerContext.PortCertMap)
+            foreach (var (port, cert) in ServerContext.PortCertMap)
             {
-                
+
             }
             return "CA";
         }
@@ -624,12 +624,13 @@ window.location.href='main.html';
 
         [API]
         [Secure]
-        public string GenerateCA(string port,string hosts)
+        public string GenerateCA(string hosts)
         {
-            var ca = CAGen.GenerateCA(RandomHelper.NextString(10, false),true,hosts);
+            var caName = RandomHelper.NextString(10, false);
+            var ca = CAGen.GenerateCA(caName, false, hosts);
             var export = ca.Export(X509ContentType.Pfx);
             string baseLogPath = "./ca";
-            string targetPath = baseLogPath + "/" + port + ".pfx";
+            string targetPath = baseLogPath + "/_" + caName + ".pfx";
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
@@ -638,16 +639,34 @@ window.location.href='main.html';
 
             // File.Move(fileInfo.FullName, baseLogPath + "/" + port + ".pfx");
             File.WriteAllBytes(targetPath, export);
-            return "success";
+            return caName;
         }
 
 
+        //[FileUpload]
+        //[Secure]
+        //public string UploadCA(FileInfo fileInfo, int port)
+        //{
+        //    string baseLogPath = "./ca";
+        //    string targetPath = baseLogPath + "/" + port + ".pfx";
+        //    DirectoryInfo dir = new DirectoryInfo(baseLogPath);
+        //    if (!dir.Exists)
+        //    {
+        //        dir.Create();
+        //    }
+
+        //    File.Move(fileInfo.FullName, targetPath);
+
+        //    return "success";
+        //}
+
         [FileUpload]
         [Secure]
-        public string UploadCA(FileInfo fileInfo, int port)
+        public string UploadTempFile(FileInfo fileInfo)
         {
-            string baseLogPath = "./ca";
-            string targetPath = baseLogPath + "/" + port + ".pfx";
+            string baseLogPath = "./temp";
+            string targetPath = baseLogPath + "/" + fileInfo.Name;
+            ///string targetPath = baseLogPath + "/" + port + ".pfx";
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
@@ -656,7 +675,13 @@ window.location.href='main.html';
 
             File.Move(fileInfo.FullName, targetPath);
 
-            return "success";
+            return Path.GetFileName(targetPath);
+        }
+
+
+        public string addCABound(string port, string filename)
+        {
+            return "";
         }
 
         #endregion

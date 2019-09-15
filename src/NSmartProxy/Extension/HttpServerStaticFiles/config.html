@@ -12,34 +12,38 @@
 </div>
 
 <div class="mb-2 " id="divAddCert">
-    <form class="bv-form" id="frmAddUser">
+    <form class="bv-form" id="frmCAConfig" enctype="multipart/form-data" method="post">
+       
         <div class="form-group">
-            <label for="inputUserName">证书名</label>
-            <input type="text" class="form-control" data-bv-field="inputUserName" name="inputUserName" id="inputUserName" placeholder="UserName">
-            <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
-        </div>
-        <div class="form-group">
-            <label for="inputPassword">端口</label>
-            <input type="password" data-bv-field="inputPassword" name="inputPassword" class="form-control" id="inputPassword" placeholder="Password">
+            <label for="inputPort">端口</label>
+            <input type="number" data-bv-field="inputPort" min="0" max="65535" name="inputPort" class="form-control" id="inputPort" placeholder="请输入0~65535之间的整数">
         </div>
         
         <div class="form-group">
             <label>证书上传</label>
-           <br/>
-                <input type="file"  id="fileUpload">
-                
-           
+            <br />
+            <input type="hidden" id="hidCAFilename"/>
+            <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
+            <input type="file" id="fileToUpload" onchange="fileSelected();">
+            
+            <div style="display: inline"><span id="fileSize"></span> <span id="progressNumber"></span></div>
+            <div id="fileInfo" style="display: none;">
+                <span id="fileName"></span>
+                <button type="button" style="color: red;" id="btnAddUser" onclick="delCABound();">删除文件</button>
+            </div>
+
+            <!--<button type="button" onclick="uploadFile();">testbtn</button>-->
 
         </div>
         <!--<div class="form-group form-check">
             <input type="checkbox" class="form-check-input" id="exampleCheck1">
             <label class="form-check-label" for="exampleCheck1">Check me out</label>
         </div>-->
-        <div class="custom-control custom-switch mb-4">
+        <!--<div class="custom-control custom-switch mb-4">
             <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
             <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
-        </div>
-        <button type="button" id="btnAddUser" class="btn btn-primary">Submit</button>
+        </div>-->
+        <button type="button" id="btnAddCA" class="btn btn-primary">提交</button>
     </form>
 </div>
 

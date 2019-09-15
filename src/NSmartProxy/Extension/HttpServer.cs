@@ -199,18 +199,21 @@ namespace NSmartProxy.Extension
 
                         if (method.GetCustomAttribute<APIAttribute>() != null)
                         {
+                            //返回json，类似WebAPI
                             response.ContentType = "application/json";
                             jsonObj = method.Invoke(this, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                         }
                         else if (method.GetCustomAttribute<FormAPIAttribute>() != null)
                         {
+                            //返回表单页面
                             response.ContentType = "text/html";
                             jsonObj = method.Invoke(this, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.ToString()));
                         }
                         else if (method.GetCustomAttribute<ValidateAPIAttribute>() != null)
                         {
+                            //验证模式
                             response.ContentType = "application/json";
                             bool validateResult = (bool)method.Invoke(this, parameters);
                             if (validateResult == true)
@@ -250,9 +253,14 @@ namespace NSmartProxy.Extension
                                 if (parameters != null)
                                     paraList.AddRange(parameters);
                                 jsonObj = method.Invoke(this, paraList.ToArray());
+                                await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
+                            }
+                            else
+                            {
+                                await response.OutputStream.WriteAsync(HtmlUtil.GetContent(HttpResult<object>.NullSuccessResult.ToJsonString()));
                             }
 
-                            await response.OutputStream.WriteAsync(HtmlUtil.GetContent("{\"success\":true}"));
+
                             //request.
                         }
                     }
@@ -306,9 +314,10 @@ namespace NSmartProxy.Extension
             return "--" + ctype.Split(';')[1].Split('=')[1];
         }
 
-        private string SaveFile(Encoding enc, String boundary, Stream input)
+        private string SaveFile(Encoding enc, String contentType, Stream input)
         {
-            Byte[] boundaryBytes = enc.GetBytes(boundary);
+
+            Byte[] boundaryBytes = enc.GetBytes(GetBoundary(contentType));
             Int32 boundaryLen = boundaryBytes.Length;
             string fileName = Guid.NewGuid().ToString("N") + ".temp";
             using (FileStream output = new FileStream(fileName, FileMode.Create, FileAccess.Write))
