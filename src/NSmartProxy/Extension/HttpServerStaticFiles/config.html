@@ -13,23 +13,31 @@
 
 <div class="mb-2 " id="divAddCert">
     <form class="bv-form" id="frmCAConfig" enctype="multipart/form-data" method="post">
-       
+
         <div class="form-group">
             <label for="inputPort">端口</label>
             <input type="number" data-bv-field="inputPort" min="0" max="65535" name="inputPort" class="form-control" id="inputPort" placeholder="请输入0~65535之间的整数">
         </div>
-        
+
         <div class="form-group">
             <label>证书上传</label>
             <br />
-            <input type="hidden" id="hidCAFilename"/>
-            <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
-            <input type="file" id="fileToUpload" onchange="fileSelected();">
-            
-            <div style="display: inline"><span id="fileSize"></span> <span id="progressNumber"></span></div>
+            <input type="hidden" id="hidCAFilename" />
+            <div id="fileBottoms">
+                <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
+                <input type="file" id="fileToUpload" onchange="fileSelected();">
+            </div>
+
             <div id="fileInfo" style="display: none;">
                 <span id="fileName"></span>
                 <button type="button" style="color: red;" id="btnAddUser" onclick="delCABound();">删除文件</button>
+            </div>
+            <div id="divLoading" style="display: none">
+                <img src="loading-s.gif" />
+                <div style="display: inline">
+                    <span id="fileSize"></span>
+                    <span id="progressNumber"></span>
+                </div>
             </div>
 
             <!--<button type="button" onclick="uploadFile();">testbtn</button>-->
@@ -56,18 +64,20 @@
 
                 <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:12</h5>
                 <h6 class="card-subtitle mb-2 text-muted">Pfx证书</h6>
-                <p class="card-text">创建时间：2019-01-01 12:00:00<br/>
-                    绑定域名：www.tmoonlight.com<br/> 
-                    有效期限：2016<br/> </p>
-           
+                <p class="card-text">
+                    创建时间：2019-01-01 12:00:00<br />
+                    绑定域名：www.tmoonlight.com<br />
+                    有效期限：2016<br />
+                </p>
+
                 <!--<a href="#" class="card-link">Card link</a>-->
                 <a href="#" class="card-link">删除证书</a>
             </div>
 
-        </div> 
+        </div>
 
     </div>
-    
+
     <div class="col-md-4 pb-1">
         <div class="card">
 
@@ -81,7 +91,7 @@
                 <a href="#" class="card-link">删除证书</a>
             </div>
 
-        </div> 
+        </div>
 
     </div>
 </div>

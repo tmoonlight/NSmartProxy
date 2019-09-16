@@ -53,6 +53,7 @@ function uploadFile() {
     xhr.addEventListener("abort", uploadCanceled, false);
     xhr.open("POST", basepath + "/UploadTempFile");//修改成自己的接口 xhr.send(fd);
     xhr.send(fd);
+    $("#divLoading").show();
 }
 function uploadProgress(evt) {
     if (evt.lengthComputable) {
@@ -69,7 +70,13 @@ function uploadComplete(evt) {
     if (result.State == 1) {
         //显示文件名
         $("#fileInfo").show();
-        $("#fileToUpload").hide();
+        $("#fileName").html("<a href=#>文件已上传</a>");
+        $("#fileBottoms").hide();
+        $("#divLoading").hide();
+        $("#fileToUpload").val("");
+        $("#fileSize").html("");
+        $("#progressNumber").html("");
+        //$("#fileName").html(result.data);
     }
 }
 function uploadFailed(evt) {
@@ -80,8 +87,10 @@ function uploadCanceled(evt) {
 }
 
 function delCABound() {
+    $("#fileToUpload").val("");
     $("#fileInfo").hide();
-    $("#fileToUpload").show();
+    $("#fileBottoms").show();
+    $("#divLoading").hide();
 }
 
 function addCABound(port, filename) {
@@ -91,12 +100,13 @@ function addCABound(port, filename) {
 function genCA() {
     var hosts = prompt("请输入绑定域名，多个域名请用逗号分隔。\n(eg.: *.tmoonlight.com,cloud.kd.com)");
     if (hosts && hosts.trim() != "") {
-
+        $("#divLoading").show();
         $.get(basepath + "GenerateCA?hosts=" + hosts,
             function (res) {
+                $("#divLoading").hide();
                 $("#fileInfo").show();
-                $("#fileToUpload").hide();
-                $("#fileInfo").val("证书已生成");
+                $("#fileBottoms").hide();
+                $("#fileName").html("<a href=#>证书已生成</a>");
                 $("#hidCAFilename").val(res.data);
             });
     }

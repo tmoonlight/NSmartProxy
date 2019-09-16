@@ -639,7 +639,7 @@ window.location.href='main.html';
 
             // File.Move(fileInfo.FullName, baseLogPath + "/" + port + ".pfx");
             File.WriteAllBytes(targetPath, export);
-            return caName;
+            return targetPath;
         }
 
 
