@@ -2,7 +2,7 @@
     <h1 class="h3">证书管理</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group mr-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openCABound()">
                 <span data-feather="plus"></span>
                 添加证书
             </button>
@@ -22,7 +22,7 @@
         <div class="form-group">
             <label>证书上传</label>
             <br />
-            <input type="text" id="hidCAFilename" />
+            <input type="text" id="hidCAFilename" style="display: none"/>
             <div id="fileBottoms">
                 <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
                 <input type="file" id="fileToUpload" onchange="fileSelected();">
@@ -59,7 +59,7 @@
                     绑定域名：{Hosts}<br />
                     有效期限：{ToTime}<br />
                 </p>
-                <a href="#" class="card-link">删除证书</a>
+                <a href="javascript:delCABound('{port}')" class="card-link">删除证书</a>
             </div>
         </div>
     </div>

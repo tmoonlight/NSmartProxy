@@ -86,11 +86,22 @@ function uploadCanceled(evt) {
     alert("客户端中断了上传。\n（The upload has been canceled by the user or the browser dropped the connection.）");
 }
 
-function delCABound() {
-    $("#fileToUpload").val("");
-    $("#fileInfo").hide();
-    $("#fileBottoms").show();
-    $("#divLoading").hide();
+function delCABound(port) {
+    $.get(basepath + "DelCABound?port=" + port, function (res) {
+        getAllCA();
+    });
+}
+
+function delCAFile() {
+    var filename = $("#hidCAFilename").val();
+    $.get(basepath + "DelCAFile?filename=" + filename, function (res) {
+        getAllCA();
+        $("#fileToUpload").val("");
+        $("#fileInfo").hide();
+        $("#fileBottoms").show();
+        $("#divLoading").hide();
+    });
+   
 }
 
 function addCABound() {
@@ -108,8 +119,12 @@ function addCABound() {
     }
     $.get(basepath + "AddCABound?port=" + port + "&filename=" + filename,
         function (res) {
-            alert(res.Data);
-
+            getAllCA();
+            if (res.Data != "") {
+                alert("证书绑定成功");
+            } else {
+                alert(res.Data);
+            }
         });
 }
 
@@ -136,7 +151,7 @@ function getAllCA() {
             var certListHtml = "";
             var data = res.Data;
             for (var i = 0; i < data.length; i++) {
-                var htmlItem = html.replace("{Port}", data[i].Port)
+                var htmlItem = html.replace("{Port}", data[i].Port).replace("{Port}", data[i].Port)
                     .replace("{CreateTime}", data[i].CreateTime)
                     .replace("{Hosts}", data[i].Hosts)
                     .replace("{ToTime}", data[i].ToTime);
@@ -144,6 +159,11 @@ function getAllCA() {
 
             }
             $("#divCertList").html(certListHtml);
+            $("#divAddCert").collapse('hide');
         });
 
+}
+
+function openCABound() {
+    $("#divAddCert").collapse('toggle');
 }

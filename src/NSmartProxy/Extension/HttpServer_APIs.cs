@@ -698,7 +698,7 @@ window.location.href='main.html';
             //     "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
             ServerContext.ServerConfig.CABoundConfig[port] = destPath;
             ServerContext.SaveConfigChanges();
-            return "success";
+            return "";
         }
 
         [API]
@@ -706,14 +706,20 @@ window.location.href='main.html';
         public string DelCAFile(string filename)
         {
             //if (!port.IsNum()) throw new Exception("port不是数字");
-            //filename = Path.GetFileName(filename);//安全起见取一下文件名
+            filename = Path.GetFileName(filename);
+            var filePath = "./ca/" + filename;//安全起见取一下文件名
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
             //string destPath = "./ca/" + filename;
             //File.Move("./temp/" + filename, destPath);
             //ServerContext.PortCertMap[port] = X509Certificate.CreateFromCertFile(destPath);
             //ServerContext.ServerConfig.CABoundConfig[port] = destPath;
             //删除文件，配置，以及内存中的绑定
+
             ServerContext.SaveConfigChanges();
-            return "success";
+            return "";
         }
 
         [API]
@@ -721,13 +727,16 @@ window.location.href='main.html';
         public string DelCABound(string port)
         {
             if (!port.IsNum()) throw new Exception("port不是数字");
-            //if (!port.IsNum()) throw new Exception("port不是数字");
-            //filename = Path.GetFileName(filename);//安全起见取一下文件名
-            //string destPath = "./ca/" + filename;
-            //File.Move("./temp/" + filename, destPath);
-            //ServerContext.PortCertMap[port] = X509Certificate.CreateFromCertFile(destPath);
-            //ServerContext.ServerConfig.CABoundConfig[port] = destPath;
+
             //删除文件，配置，以及内存中的绑定
+            var filename = Path.GetFileName(ServerContext.ServerConfig.CABoundConfig[port]);
+            var filePath = "./ca/" + filename;//安全起见取一下文件名
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            ServerContext.PortCertMap.Remove(port);
+            ServerContext.ServerConfig.CABoundConfig.Remove(port);
             ServerContext.SaveConfigChanges();
             return "success";
         }
