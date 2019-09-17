@@ -20,7 +20,7 @@ namespace NSmartProxy.NUnitTest
         [Test]
         public void TestCAGen()
         {
-           
+
             var ca = CAGen.GenerateCA("shao");
             var export = ca.Export(X509ContentType.Pfx);
             File.WriteAllBytes("c:\\test.pfx", export);

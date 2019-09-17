@@ -10,6 +10,7 @@ function getConfig(key, func) {
 $(document).ready(function () {
     getConfig("AllowAnonymousUser");
     $("#frmCAConfig").attr("action", basepath + "/UploadTempFile");
+    getAllCA();
 });
 
 function toggleConfig(obj) {
@@ -36,9 +37,7 @@ function fileSelected() {
             fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
         else
             fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
-        //document.getElementById('fileName').innerHTML = 'Name: ' + file.name;
         document.getElementById('fileSize').innerHTML = 'Size: ' + fileSize;
-        //document.getElementById('fileType').innerHTML = 'Type: ' + file.type;
     }
     uploadFile();
 
@@ -76,14 +75,15 @@ function uploadComplete(evt) {
         $("#fileToUpload").val("");
         $("#fileSize").html("");
         $("#progressNumber").html("");
+        $("#hidCAFilename").val(result.Data);
         //$("#fileName").html(result.data);
     }
 }
 function uploadFailed(evt) {
-    alert("There was an error attempting to upload the file.");
+    alert("上传失败\n（There was an error attempting to upload the file.）");
 }
 function uploadCanceled(evt) {
-    alert("The upload has been canceled by the user or the browser dropped the connection.");
+    alert("客户端中断了上传。\n（The upload has been canceled by the user or the browser dropped the connection.）");
 }
 
 function delCABound() {
@@ -93,8 +93,24 @@ function delCABound() {
     $("#divLoading").hide();
 }
 
-function addCABound(port, filename) {
+function addCABound() {
+    var port = $("#tbxPort").val();
+    var filename = $("#hidCAFilename").val();
+    var msg = "";
+    if (port == undefined || port == "")
+        msg += "端口无效\n";
+    if (filename == undefined || filename == "")
+        msg += "请上传或生成证书\n";
 
+    if (msg != "") {
+        alert(msg);
+        return;
+    }
+    $.get(basepath + "AddCABound?port=" + port + "&filename=" + filename,
+        function (res) {
+            alert(res.Data);
+
+        });
 }
 
 function genCA() {
@@ -107,7 +123,27 @@ function genCA() {
                 $("#fileInfo").show();
                 $("#fileBottoms").hide();
                 $("#fileName").html("<a href=#>证书已生成</a>");
-                $("#hidCAFilename").val(res.data);
+                $("#hidCAFilename").val(res.Data);
             });
     }
+}
+
+function getAllCA() {
+    var html = $("#divCertList").html();
+
+    $.get(basepath + "GetAllCA",
+        function (res) {
+            var certListHtml = "";
+            var data = res.Data;
+            for (var i = 0; i < data.length; i++) {
+                var htmlItem = html.replace("{Port}", data[i].Port)
+                    .replace("{CreateTime}", data[i].CreateTime)
+                    .replace("{Hosts}", data[i].Hosts)
+                    .replace("{ToTime}", data[i].ToTime);
+                certListHtml += htmlItem;
+
+            }
+            $("#divCertList").html(certListHtml);
+        });
+
 }

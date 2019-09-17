@@ -192,5 +192,20 @@ namespace NSmartProxy
                 return true;
             }
         }
+
+        /// <summary>
+        /// 判断字符串是否是无小数点纯数字
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool IsNum(this string str)
+        {
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] < '0' || str[i] > '9')
+                    return false;
+            }
+            return true;
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace NSmartProxy.Extension
 {
     public class CAGen
     {
-        public static X509Certificate2 GenerateCA(string CertificateName, bool isAchieve = true, string hosts = null)
+        public static X509Certificate2 GenerateCA(string CertificateName,string hosts = null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
             sanBuilder.AddIpAddress(IPAddress.Loopback);
@@ -45,15 +45,10 @@ namespace NSmartProxy.Extension
                 var certificate = request.CreateSelfSigned(new DateTimeOffset(DateTime.UtcNow.AddDays(-1)), new DateTimeOffset(DateTime.UtcNow.AddDays(3650)));
                 certificate.FriendlyName = CertificateName;
                 //return certificate;
-                if (isAchieve)
-                {
-                    return new X509Certificate2(certificate.Export(X509ContentType.Pfx, "WeNeedASaf3rPassword"),
-                        "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
-                }
-                else
-                {
-                    return certificate;
-                }
+
+                return new X509Certificate2(certificate.Export(X509ContentType.Pfx, "WeNeedASaf3rPassword"),
+                    "WeNeedASaf3rPassword", X509KeyStorageFlags.Exportable);
+
             }
         }
     }

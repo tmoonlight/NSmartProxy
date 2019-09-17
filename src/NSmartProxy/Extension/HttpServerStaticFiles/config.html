@@ -16,13 +16,13 @@
 
         <div class="form-group">
             <label for="inputPort">端口</label>
-            <input type="number" data-bv-field="inputPort" min="0" max="65535" name="inputPort" class="form-control" id="inputPort" placeholder="请输入0~65535之间的整数">
+            <input type="number" data-bv-field="inputPort" min="0" max="65535" name="tbxPort" class="form-control" id="tbxPort" placeholder="请输入0~65535之间的整数">
         </div>
 
         <div class="form-group">
             <label>证书上传</label>
             <br />
-            <input type="hidden" id="hidCAFilename" />
+            <input type="text" id="hidCAFilename" />
             <div id="fileBottoms">
                 <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
                 <input type="file" id="fileToUpload" onchange="fileSelected();">
@@ -39,60 +39,29 @@
                     <span id="progressNumber"></span>
                 </div>
             </div>
-
-            <!--<button type="button" onclick="uploadFile();">testbtn</button>-->
-
         </div>
-        <!--<div class="form-group form-check">
-            <input type="checkbox" class="form-check-input" id="exampleCheck1">
-            <label class="form-check-label" for="exampleCheck1">Check me out</label>
-        </div>-->
-        <!--<div class="custom-control custom-switch mb-4">
-            <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
-            <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
-        </div>-->
-        <button type="button" id="btnAddCA" class="btn btn-primary">提交</button>
+         
+        <button type="button" id="btnAddCA" onclick="addCABound();" class="btn btn-primary">提交</button>
     </form>
 </div>
 
-<div class="row">
+<div class="row" id="divCertList">
     <div class="col-md-4 pb-1">
         <div class="card">
 
             <div class="card-body">
 
 
-                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:12</h5>
+                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:{Port}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">Pfx证书</h6>
                 <p class="card-text">
-                    创建时间：2019-01-01 12:00:00<br />
-                    绑定域名：www.tmoonlight.com<br />
-                    有效期限：2016<br />
+                    创建时间：{CreateTime}<br />
+                    绑定域名：{Hosts}<br />
+                    有效期限：{ToTime}<br />
                 </p>
-
-                <!--<a href="#" class="card-link">Card link</a>-->
                 <a href="#" class="card-link">删除证书</a>
             </div>
-
         </div>
-
-    </div>
-
-    <div class="col-md-4 pb-1">
-        <div class="card">
-
-            <div class="card-body">
-
-
-                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:12</h5>
-                <h6 class="card-subtitle mb-2 text-muted">绑定端口:12</h6>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <!--<a href="#" class="card-link">Card link</a>-->
-                <a href="#" class="card-link">删除证书</a>
-            </div>
-
-        </div>
-
     </div>
 </div>
 
@@ -105,17 +74,8 @@
                 刷新配置
             </button>
         </div>
-
     </div>
 </div>
-<!--<div class="custom-control custom-switch">
-    <input type="checkbox" class="custom-control-input" id="customSwitch1">
-    <label class="custom-control-label" for="customSwitch1">开启web服务</label>
-</div>
-<div class="custom-control custom-switch">
-    <input type="checkbox" class="custom-control-input" id="customSwitch2">
-    <label class="custom-control-label" for="customSwitch2">全量日志跟踪</label>
-</div>-->
 <div class="custom-control custom-switch" onclick="toggleConfig(this)">
     <input type="checkbox" class="custom-control-input" id="configAllowAnonymousUser" change="toggleConfig(this)">
     <label class="custom-control-label" for="configAllowAnonymousUser">匿名登录</label>

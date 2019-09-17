@@ -611,14 +611,20 @@ window.location.href='main.html';
         #region ca
         [API]
         [Secure]
-        public string GetAllCA()
+        public List<CertDTO> GetAllCA()
         {
-            List<Object> caList = new List<object>();
+            List<CertDTO> caList = new List<CertDTO>();
             foreach (var (port, cert) in ServerContext.PortCertMap)
             {
-
+                caList.Add(new CertDTO()
+                {
+                    CreateTime = cert.GetEffectiveDateString(),
+                    Port = int.Parse(port),
+                    ToTime = cert.GetExpirationDateString(),
+                    Hosts = cert.Issuer
+                });
             }
-            return "CA";
+            return caList;
         }
 
 
@@ -627,10 +633,11 @@ window.location.href='main.html';
         public string GenerateCA(string hosts)
         {
             var caName = RandomHelper.NextString(10, false);
-            var ca = CAGen.GenerateCA(caName, false, hosts);
+            X509Certificate2 ca = CAGen.GenerateCA(caName, hosts);
             var export = ca.Export(X509ContentType.Pfx);
-            string baseLogPath = "./ca";
-            string targetPath = baseLogPath + "/_" + caName + ".pfx";
+            string baseLogPath = "./temp";
+            string fileName = "_" + caName + ".pfx";
+            string targetPath = baseLogPath + "/" + fileName;
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
@@ -639,7 +646,7 @@ window.location.href='main.html';
 
             // File.Move(fileInfo.FullName, baseLogPath + "/" + port + ".pfx");
             File.WriteAllBytes(targetPath, export);
-            return targetPath;
+            return fileName;
         }
 
 
@@ -678,10 +685,51 @@ window.location.href='main.html';
             return Path.GetFileName(targetPath);
         }
 
-
-        public string addCABound(string port, string filename)
+        [API]
+        [Secure]
+        public string AddCABound(string port, string filename)
         {
-            return "";
+            if (!port.IsNum()) throw new Exception("port不是数字");
+            filename = Path.GetFileName(filename);//安全起见取一下文件名
+            string destPath = "./ca/" + filename;
+            File.Move("./temp/" + filename, destPath);
+            ServerContext.PortCertMap[port] = X509Certificate2.CreateFromCertFile(destPath);
+            // ServerContext.PortCertMap[port] = new X509Certificate2,
+            //     "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
+            ServerContext.ServerConfig.CABoundConfig[port] = destPath;
+            ServerContext.SaveConfigChanges();
+            return "success";
+        }
+
+        [API]
+        [Secure]
+        public string DelCAFile(string filename)
+        {
+            //if (!port.IsNum()) throw new Exception("port不是数字");
+            //filename = Path.GetFileName(filename);//安全起见取一下文件名
+            //string destPath = "./ca/" + filename;
+            //File.Move("./temp/" + filename, destPath);
+            //ServerContext.PortCertMap[port] = X509Certificate.CreateFromCertFile(destPath);
+            //ServerContext.ServerConfig.CABoundConfig[port] = destPath;
+            //删除文件，配置，以及内存中的绑定
+            ServerContext.SaveConfigChanges();
+            return "success";
+        }
+
+        [API]
+        [Secure]
+        public string DelCABound(string port)
+        {
+            if (!port.IsNum()) throw new Exception("port不是数字");
+            //if (!port.IsNum()) throw new Exception("port不是数字");
+            //filename = Path.GetFileName(filename);//安全起见取一下文件名
+            //string destPath = "./ca/" + filename;
+            //File.Move("./temp/" + filename, destPath);
+            //ServerContext.PortCertMap[port] = X509Certificate.CreateFromCertFile(destPath);
+            //ServerContext.ServerConfig.CABoundConfig[port] = destPath;
+            //删除文件，配置，以及内存中的绑定
+            ServerContext.SaveConfigChanges();
+            return "success";
         }
 
         #endregion

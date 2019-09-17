@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Data.Config;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy.Authorize
 {
@@ -119,8 +121,15 @@ namespace NSmartProxy.Authorize
         {
             foreach (var (port,path) in ServerConfig.CABoundConfig)
             {
-                //从文件里加载证书
-                PortCertMap[port] = X509Certificate.CreateFromCertFile(path);
+                if (File.Exists(path))
+                {
+                    //从文件里加载证书
+                    PortCertMap[port] = X509Certificate2.CreateFromCertFile(path);
+                }
+                else
+                {
+                    Server.Logger.Debug($"未加载位于{port}的证书。");
+                }
             }
             //foreach (var client in Clients)
             //{
@@ -131,5 +140,16 @@ namespace NSmartProxy.Authorize
 
             //}
         }
+
+        public void SaveConfigChanges()
+        {
+            if (string.IsNullOrEmpty(ServerConfigPath))
+            {
+                throw new Exception("配置路径ServerConfigPath为空。");
+            }
+
+            ServerConfig.SaveChanges(ServerConfigPath);
+        }
+
     }
 }
