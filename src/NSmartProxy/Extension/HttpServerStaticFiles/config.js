@@ -95,13 +95,17 @@ function delCABound(port) {
 function delCAFile() {
     var filename = $("#hidCAFilename").val();
     $.get(basepath + "DelCAFile?filename=" + filename, function (res) {
-        getAllCA();
-        $("#fileToUpload").val("");
-        $("#fileInfo").hide();
-        $("#fileBottoms").show();
-        $("#divLoading").hide();
+        if (res.State == 1) {
+            getAllCA();
+            $("#fileToUpload").val("");
+            $("#fileInfo").hide();
+            $("#fileBottoms").show();
+            $("#divLoading").hide();
+        } else {
+            alert('操作失败');
+        }
     });
-   
+
 }
 
 function addCABound() {
@@ -120,11 +124,13 @@ function addCABound() {
     $.get(basepath + "AddCABound?port=" + port + "&filename=" + filename,
         function (res) {
             getAllCA();
-            if (res.Data != "") {
+            if (res.State == 1) {
                 alert("证书绑定成功");
+                $("#divAddCert").collapse("hide")
             } else {
-                alert(res.Data);
+                alert("服务端错误:" + res.Data);
             }
+
         });
 }
 
@@ -142,9 +148,9 @@ function genCA() {
             });
     }
 }
-
+var html = $("#divCertList").html();//第一次读取做为模板
 function getAllCA() {
-    var html = $("#divCertList").html();
+    //var html = $("#divCertList").html();
 
     $.get(basepath + "GetAllCA",
         function (res) {
@@ -154,6 +160,7 @@ function getAllCA() {
                 var htmlItem = html.replace("{Port}", data[i].Port).replace("{Port}", data[i].Port)
                     .replace("{CreateTime}", data[i].CreateTime)
                     .replace("{Hosts}", data[i].Hosts)
+                    .replace("{Ext}", data[i].Extensions)
                     .replace("{ToTime}", data[i].ToTime);
                 certListHtml += htmlItem;
 
@@ -166,4 +173,11 @@ function getAllCA() {
 
 function openCABound() {
     $("#divAddCert").collapse('toggle');
+}
+
+function clearCertForm() {
+    $("#fileToUpload").val("");
+    $("#fileInfo").hide();
+    $("#fileBottoms").show();
+    $("#divLoading").hide();
 }

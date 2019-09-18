@@ -209,7 +209,7 @@ namespace NSmartProxy
             Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
             Protocol protocol;
-            string host = "";
+            //string host = "";
             //TODO 如果有host 则分配到相同的group中
             foreach (var kv in ServerContext.PortAppMap)
             {

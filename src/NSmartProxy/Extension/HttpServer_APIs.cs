@@ -614,17 +614,33 @@ window.location.href='main.html';
         public List<CertDTO> GetAllCA()
         {
             List<CertDTO> caList = new List<CertDTO>();
+
             foreach (var (port, cert) in ServerContext.PortCertMap)
             {
+                var cert2 = new X509Certificate2(cert);
                 caList.Add(new CertDTO()
                 {
-                    CreateTime = cert.GetEffectiveDateString(),
+                    CreateTime = cert2.GetEffectiveDateString(),
                     Port = int.Parse(port),
-                    ToTime = cert.GetExpirationDateString(),
-                    Hosts = cert.Issuer
+                    ToTime = cert2.GetExpirationDateString(),
+                    Extensions = "证书名称：" + cert2.FriendlyName//FormatExtension(cert2.Extensions)性能太慢了
                 });
             }
             return caList;
+        }
+
+        private string FormatExtension(X509ExtensionCollection cert2Extensions)
+        {
+            StringBuilder extStr = new StringBuilder();
+            foreach (var ext in cert2Extensions)
+            {
+                extStr.Append(ext.Oid.FriendlyName + "：");
+                extStr.Append(ext.Format(true).Replace("\n\n", "<br />")
+                    .Replace("\n", "<br />") + "<br />");
+
+            }
+
+            return extStr.ToString();
         }
 
 

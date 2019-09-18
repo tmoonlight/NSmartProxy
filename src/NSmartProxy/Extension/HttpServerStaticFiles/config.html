@@ -11,7 +11,7 @@
     </div>
 </div>
 
-<div class="mb-2 " id="divAddCert">
+<div class="mb-2 collapse" id="divAddCert">
     <form class="bv-form" id="frmCAConfig" enctype="multipart/form-data" method="post">
 
         <div class="form-group">
@@ -46,7 +46,7 @@
 </div>
 
 <div class="row" id="divCertList">
-    <div class="col-md-4 pb-1">
+    <div class="col-md-4 pb-2">
         <div class="card">
 
             <div class="card-body">
@@ -56,10 +56,11 @@
                 <h6 class="card-subtitle mb-2 text-muted">Pfx证书</h6>
                 <p class="card-text">
                     创建时间：{CreateTime}<br />
-                    绑定域名：{Hosts}<br />
+                    <!--绑定域名：{Hosts}<br />-->
                     有效期限：{ToTime}<br />
+                    {Ext}
                 </p>
-                <a href="javascript:delCABound('{port}')" class="card-link">删除证书</a>
+                <a href="javascript:delCABound('{Port}')" class="card-link">删除证书</a>
             </div>
         </div>
     </div>

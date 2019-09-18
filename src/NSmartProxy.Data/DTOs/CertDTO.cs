@@ -13,5 +13,6 @@ namespace NSmartProxy.Data.DTOs
         public string CreateTime;
         public string ToTime;
         public string Hosts;
+        public string Extensions;
     }
 }

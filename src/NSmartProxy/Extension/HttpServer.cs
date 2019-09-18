@@ -266,6 +266,7 @@ namespace NSmartProxy.Extension
                     }
                     catch (Exception ex)
                     {
+                        if ((ex is TargetInvocationException) && ex.InnerException != null) ex = ex.InnerException;
                         Logger.Error(ex.Message, ex);
                         jsonObj = new Exception(ex.Message + "---" + ex.StackTrace);
                         response.ContentType = "application/json";
@@ -308,7 +309,7 @@ namespace NSmartProxy.Extension
 
         }
 
-       
+
 
         #region 文件读取
         private String GetBoundary(String ctype)
