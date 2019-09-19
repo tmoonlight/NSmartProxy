@@ -126,7 +126,8 @@ function addCABound() {
             getAllCA();
             if (res.State == 1) {
                 alert("证书绑定成功");
-                $("#divAddCert").collapse("hide")
+                clearCertForm();
+                $("#divAddCert").collapse("hide");
             } else {
                 alert("服务端错误:" + res.Data);
             }
@@ -176,6 +177,7 @@ function openCABound() {
 }
 
 function clearCertForm() {
+    $("#tbxPort").val("");
     $("#fileToUpload").val("");
     $("#fileInfo").hide();
     $("#fileBottoms").show();
