@@ -273,17 +273,19 @@ namespace NSmartProxy
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
             var nspApp = ServerContext.PortAppMap[consumerPort];
             TcpClient s2pClient = null;
-            Stream consumerStream = null;//; = consumerClient.GetStream().ProcessSSL(TestCert);
+            Stream consumerStream = consumerClient.GetStream();//; = consumerClient.GetStream().ProcessSSL(TestCert);
             Stream providerStream = null;// = s2pClient.GetStream();
             byte[] restBytes = null;
             //int restBytesLength = 0;
             try
             {
-                
-                if (nspApp.ProtocolInGroup == Protocol.HTTP|| nspApp.ProtocolInGroup == Protocol.HTTPS)
-                {
-                    var cert = ServerContext.PortCertMap[consumerPort.ToString()];
-                    consumerStream = consumerClient.GetStream().ProcessSSL(cert);
+
+                if (nspApp.ProtocolInGroup == Protocol.HTTP || nspApp.ProtocolInGroup == Protocol.HTTPS)
+                {//不论是http协议还是https协议，有证书就加密
+                    if (ServerContext.PortCertMap.TryGetValue(consumerPort.ToString(), out X509Certificate cert2))
+                    {
+                        consumerStream = consumerStream.ProcessSSL(cert2);
+                    }
                     var tp = await ReadHostName(consumerStream);
 
                     if (tp == null)
@@ -716,7 +718,7 @@ namespace NSmartProxy
             var length = 0;
             var data = string.Empty;
             var bytes = new byte[BUFFER_SIZE];
-            
+
             do
             {//item2:data item1:host
                 length = await consumerStream.ReadAsync(bytes, 0, BUFFER_SIZE);

@@ -706,13 +706,14 @@ window.location.href='main.html';
         public string AddCABound(string port, string filename)
         {
             if (!port.IsNum()) throw new Exception("port不是数字");
+            int portInt = int.Parse(port);
             filename = Path.GetFileName(filename);//安全起见取一下文件名
             string destPath = "./ca/" + filename;
             File.Move("./temp/" + filename, destPath);
-            ServerContext.PortCertMap[port] = X509Certificate2.CreateFromCertFile(destPath);
+            ServerContext.PortCertMap[portInt.ToString()] = X509Certificate2.CreateFromCertFile(destPath);
             // ServerContext.PortCertMap[port] = new X509Certificate2,
             //     "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
-            ServerContext.ServerConfig.CABoundConfig[port] = destPath;
+            ServerContext.ServerConfig.CABoundConfig[portInt.ToString()] = destPath;
             ServerContext.SaveConfigChanges();
             return "";
         }

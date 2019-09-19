@@ -96,7 +96,7 @@ function delCAFile() {
     var filename = $("#hidCAFilename").val();
     $.get(basepath + "DelCAFile?filename=" + filename, function (res) {
         if (res.State == 1) {
-            getAllCA();
+            //getAllCA();
             $("#fileToUpload").val("");
             $("#fileInfo").hide();
             $("#fileBottoms").show();

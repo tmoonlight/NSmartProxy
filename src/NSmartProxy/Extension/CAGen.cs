@@ -9,6 +9,12 @@ namespace NSmartProxy.Extension
 {
     public class CAGen
     {
+        /// <summary>
+        /// 生成CA，TODO 2 如何通过根证书生成接下来的证书
+        /// </summary>
+        /// <param name="CertificateName"></param>
+        /// <param name="hosts"></param>
+        /// <returns></returns>
         public static X509Certificate2 GenerateCA(string CertificateName,string hosts = null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();

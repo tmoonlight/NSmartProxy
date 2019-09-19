@@ -14,6 +14,7 @@ namespace NSmartProxy
     {
         public new void Add(string key, NSPApp value)
         {
+            key = key.Replace(" ", "");
             ActivateApp = value;
             ProtocolInGroup = value.AppProtocol;
             base.Add(key, value);
@@ -21,11 +22,11 @@ namespace NSmartProxy
 
         public new NSPApp this[string key]
         {
-            get => base[key];
+            get => base[key.Replace(" ", "")];
             set
             {
                 ActivateApp = value;
-                ProtocolInGroup = value.AppProtocol; base[key] = value;
+                ProtocolInGroup = value.AppProtocol; base[key.Replace(" ", "")] = value;
             }
         }
 
