@@ -130,7 +130,8 @@ namespace NSmartProxy
                     ConsumerPort = confConsumerPort,
                     Host = cli["Host"],
                     //(DbProviderType)Enum.Parse(typeof(DbProviderType), strDbType, true)
-                    Protocol = Enum.Parse<Protocol>((cli["Protocol"] ?? "TCP").ToUpper())
+                    Protocol = Enum.Parse<Protocol>((cli["Protocol"] ?? "TCP").ToUpper()),
+                    Description = cli["Description"]
                 });
             }
             // Configuration.GetSection("1").

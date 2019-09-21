@@ -392,65 +392,86 @@ window.location.href='main.html';
             StringBuilder json = new StringBuilder("[ ");
             foreach (var (key, value) in ServerContext.PortAppMap)
             {
-                json.Append("{ ");
-                json.Append(KV2Json("port", key)).C();
-                json.Append(KV2Json("clientId", value.ActivateApp.ClientId)).C();
-                json.Append(KV2Json("appId", value.ActivateApp.AppId)).C();
-                json.Append(KV2Json("blocksCount", value.ActivateApp.TcpClientBlocks.Count)).C();
-                //反向连接
-                json.Append(KV2Json("revconns"));
-                json.Append("[ ");
-                foreach (var reverseClient in value.ActivateApp.ReverseClients)
-                {
-                    json.Append("{ ");
-                    if (reverseClient.Connected)
-                    {
-                        json.Append(KV2Json("lEndPoint", reverseClient.Client.LocalEndPoint.ToString())).C();
-                        json.Append(KV2Json("rEndPoint", reverseClient.Client.RemoteEndPoint.ToString()));
-                    }
 
-                    json.Append("}");
-                    json.C();
+                if (value.Count > 0)
+                {
+                    foreach (var (key2, value2) in value)
+                    {
+                        AddAppJsonItem(json, key, value2);
+                    }
+                }
+                else
+                {
+                    AddAppJsonItem(json, key, value.ActivateApp);
                 }
 
-                json.D();
-                json.Append("]").C();
 
-                //隧道状态
-                json.Append(KV2Json("tunnels"));
-                json.Append("[ ");
-                foreach (var tunnel in value.ActivateApp.Tunnels)
-                {
-                    json.Append("{ ");
-                    if (tunnel.ClientServerClient != null)
-                    {
-                        Socket sktClient = tunnel.ClientServerClient.Client;
-                        if (tunnel.ClientServerClient.Connected)
-
-                            json.Append(KV2Json("clientServerClient", $"{sktClient.LocalEndPoint}-{sktClient.RemoteEndPoint}"))
-                                .C();
-                    }
-                    if (tunnel.ConsumerClient != null)
-                    {
-                        Socket sktConsumer = tunnel.ConsumerClient.Client;
-                        if (tunnel.ConsumerClient.Connected)
-                            json.Append(KV2Json("consumerClient", $"{sktConsumer.LocalEndPoint}-{sktConsumer.RemoteEndPoint}"))
-                                .C();
-                    }
-
-                    json.D();
-                    json.Append("}");
-                    json.C();
-                }
-
-                json.D();
-                json.Append("]");
-                json.Append("}").C();
             }
 
             json.D();
             json.Append("]");
             return json.ToString();
+        }
+
+        private void AddAppJsonItem(StringBuilder json, int key, NSPApp value)
+        {
+            json.Append("{ ");
+            json.Append(KV2Json("port", key)).C();
+            json.Append(KV2Json("host", value.Host)).C();
+            json.Append(KV2Json("clientId", value.ClientId)).C();
+            json.Append(KV2Json("appId", value.AppId)).C();
+            json.Append(KV2Json("blocksCount", value.TcpClientBlocks.Count)).C();
+            json.Append(KV2Json("description", value.Description)).C();
+            json.Append(KV2Json("protocol", Enum.GetName(typeof(Protocol), value.AppProtocol))).C();
+            //反向连接
+            json.Append(KV2Json("revconns"));
+            json.Append("[ ");
+            foreach (var reverseClient in value.ReverseClients)
+            {
+                json.Append("{ ");
+                if (reverseClient.Connected)
+                {
+                    json.Append(KV2Json("lEndPoint", reverseClient.Client.LocalEndPoint.ToString())).C();
+                    json.Append(KV2Json("rEndPoint", reverseClient.Client.RemoteEndPoint.ToString()));
+                }
+
+                json.Append("}");
+                json.C();
+            }
+
+            json.D();
+            json.Append("]").C();
+
+            //隧道状态
+            json.Append(KV2Json("tunnels"));
+            json.Append("[ ");
+            foreach (var tunnel in value.Tunnels)
+            {
+                json.Append("{ ");
+                if (tunnel.ClientServerClient != null)
+                {
+                    Socket sktClient = tunnel.ClientServerClient.Client;
+                    if (tunnel.ClientServerClient.Connected)
+
+                        json.Append(KV2Json("clientServerClient", $"{sktClient.LocalEndPoint}-{sktClient.RemoteEndPoint}"))
+                            .C();
+                }
+                if (tunnel.ConsumerClient != null)
+                {
+                    Socket sktConsumer = tunnel.ConsumerClient.Client;
+                    if (tunnel.ConsumerClient.Connected)
+                        json.Append(KV2Json("consumerClient", $"{sktConsumer.LocalEndPoint}-{sktConsumer.RemoteEndPoint}"))
+                            .C();
+                }
+
+                json.D();
+                json.Append("}");
+                json.C();
+            }
+
+            json.D();
+            json.Append("]");
+            json.Append("}").C();
         }
 
         /// <summary>

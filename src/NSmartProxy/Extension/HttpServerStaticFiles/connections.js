@@ -66,11 +66,12 @@
             for (i in clientsInfo) {
                 var co = clientsInfo[i];
                 var statusHtml = "";
-                statusHtml = (co.blocksCount == "1") ? htmlGood: htmlBroken;
+                statusHtml = (co.blocksCount == "1") ? htmlGood : htmlBroken;
                 html += " <tr>" +
-                    " <td>" + co.port + "</td >" +
+                    " <td>" + co.port + "(" + co.protocol + "," + co.host + ")</td >" +
                     "<td>" + co.clientId + "</td>" +
                     "<td>" + co.appId + "</td>" +
+                    "<td>" + co.description + "</td>" +
                     "<td>" + statusHtml + "</td>" +
                     "<td>连接数：" + co.revconns.length + "，隧道数：" + co.tunnels.length + "</td>" +
                     "</tr>" +
@@ -80,16 +81,16 @@
                     var tunnel = co.tunnels[j];
                     if (tunnel.consumerClient == undefined) tunnel.consumerClient = "已断开";
                     if (tunnel.clientServerClient == undefined) tunnel.clientServerClient = "已断开";
-                    html += "外网:" + tunnel.consumerClient+"&nbsp;";
+                    html += "外网:" + tunnel.consumerClient + "&nbsp;";
                     html += "内网:" + tunnel.clientServerClient;
-                    html+="<br />"
+                    html += "<br />";
                 }
-                
-                   
-                html+="</td>" +
+
+
+                html += "</td>" +
                     "</tr>";
                 //alert(clientObj.);
-              //  clientObj.Cli
+                //  clientObj.Cli
             }
             $("#connections_tb_body").html(html);
             //updatedClientsInfo(clientsInfo);
@@ -98,7 +99,7 @@
     }
 
     $(document).ready(function () {
-        
+
         getClientsInfo();
     });
     $("#btnExpandAll").click(function () { expandAll(); });

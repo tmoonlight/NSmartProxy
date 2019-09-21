@@ -69,12 +69,17 @@ namespace NSmartProxyWinform
             if (clientRouter == null)
             {
                 var providerAddr = parentForm.tbxProviderAddr.Text;
+                var providerport = parentForm.tbxWebPort.Text;
                 if (string.IsNullOrEmpty(providerAddr))
                 {
                     MessageBox.Show(L("请先在主窗体设置“服务器地址”"));
                 }
+                if (string.IsNullOrEmpty(providerport))
+                {
+                    MessageBox.Show(L("请先在主窗体设置外网服务器的“端口”字段"));
+                }
 
-                baseEndPoint = $"{providerAddr}:{DEFAULT_WEB_PORT}";
+                baseEndPoint = $"{providerAddr}:{providerport}";
             }
             else
             {

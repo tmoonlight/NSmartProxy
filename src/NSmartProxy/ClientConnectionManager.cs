@@ -233,7 +233,7 @@ namespace NSmartProxy
 
             //注册客户端
             ServerContext.Clients.RegisterNewClient(clientModel.ClientId);
-            int oneEndpointLength = 2 + 1 + 1024;
+            int oneEndpointLength = 2 + 1 + 1024 + 96;
             lock (_lockObject2)
             {
                 //注册app
@@ -245,6 +245,7 @@ namespace NSmartProxy
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     Protocol protocol = (Protocol)consumerPortBytes[offset + 2];
                     string host = Encoding.ASCII.GetString(consumerPortBytes, offset + 3, 1024).TrimEnd('\0');
+                    string description = Encoding.UTF8.GetString(consumerPortBytes, offset + 3 + 1024, 96).TrimEnd('\0');
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = Global.StartArrangedPort;
                     int port = 0;
@@ -285,6 +286,7 @@ namespace NSmartProxy
                     app.ConsumePort = port;
                     app.AppProtocol = protocol;
                     app.Host = host;
+                    app.Description = description;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
                     //app.Host = host;

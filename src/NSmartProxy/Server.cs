@@ -510,7 +510,7 @@ namespace NSmartProxy
 
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];
-            byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1024)];//TODO 2 暂时这么写，亟需修改
+            byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
             int resultByte2 = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)

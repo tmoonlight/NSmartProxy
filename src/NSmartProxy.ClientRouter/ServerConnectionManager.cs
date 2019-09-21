@@ -58,7 +58,7 @@ namespace NSmartProxy.Client
             catch (Exception ex) //如果这里出错，则自动删除缓存
             {
                 //TODO 2 判断服务端返回错误类型，如果是校验错误，则清空缓存
-               
+
                 throw ex;
             }
 
@@ -131,23 +131,29 @@ namespace NSmartProxy.Client
                 Token = CurrentToken,
                 ClientId = this.ClientID,
                 ClientCount = config.Clients.Count//(obj => obj.AppId == 0) //appid为0的则是未分配的 <- 取消这条规则，总是重新分配
+                //Description = config.Description
             }.ToBytes();
             await configStream.WriteAsync(requestBytes, 0, requestBytes.Length);
 
             //请求2 分配端口
             //httpsupport: 增加host支持
-            int oneEndpointLength = 2 + 1 + 1024;
+            int oneEndpointLength = 2 + 1 + 1024 + 96;//TODO 2 临时写的，这段需要重构
             byte[] requestBytes2 = new byte[config.Clients.Count * (oneEndpointLength)];
             int i = 0;
             foreach (var client in config.Clients)
             {
                 byte[] portBytes = StringUtil.IntTo2Bytes(client.ConsumerPort);
                 int offSetPos = oneEndpointLength * i;
-                requestBytes2[offSetPos] = portBytes[0];
-                requestBytes2[offSetPos + 1] = portBytes[1];
-                requestBytes2[offSetPos + 2] = (byte)client.Protocol;
-                if (client.Host != null)
+                requestBytes2[offSetPos] = portBytes[0];        //端口
+                requestBytes2[offSetPos + 1] = portBytes[1];    //端口
+                requestBytes2[offSetPos + 2] = (byte)client.Protocol;//协议
+                if (client.Host != null)                        //主机名
                     Encoding.ASCII.GetBytes(client.Host, 0, client.Host.Length, requestBytes2, offSetPos + 3);
+                if (client.Description != null)
+                {
+                    Encoding.UTF8.GetBytes(client.Description, 0, client.Description.Length, requestBytes2, offSetPos + 3 + 1024);
+                }
+
                 i++;
             }
             await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
@@ -164,7 +170,7 @@ namespace NSmartProxy.Client
                 Router.Logger.Debug("连接超时");
             else if (readBytesCount == 1)
             {
-                ServerStatus status = (ServerStatus) serverConfig[0];
+                ServerStatus status = (ServerStatus)serverConfig[0];
                 if (status == ServerStatus.AuthFailed)
                 {
                     //处理服务器错误
