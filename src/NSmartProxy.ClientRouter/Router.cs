@@ -211,20 +211,21 @@ namespace NSmartProxy.Client
                 {
                     int counter = 0;
 
-                    //2.分配配置：appid为0时说明没有分配appid，所以需要分配一个
+                    //2.从服务端返回的appid上分配客户端的appid TODO 3 appid逻辑需要重新梳理
                     foreach (var app in appIdIpPortConfig)
                     {
-                        if (app.AppId == 0)
-                        {
-                            app.AppId = clientModel.AppList[counter].AppId;
-                            counter++;
-                        }
+                        //if (app.AppId == 0)
+                        //{
+                        app.AppId = clientModel.AppList[counter].AppId;
+                        counter++;
+                        //}
                     }
                     Logger.Debug("****************port list*************");
                     List<string> tunnelstrs = new List<string>();
                     foreach (var ap in clientModel.AppList)
                     {
                         var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
+                        //var cApp = appIdIpPortConfig[ap.AppId];
                         var tunnelStr = ap.AppId + ":  " + ClientConfig.ProviderAddress + ":" +
                                         ap.Port + "=>" +
                                         cApp.IP + ":" + cApp.TargetServicePort;
