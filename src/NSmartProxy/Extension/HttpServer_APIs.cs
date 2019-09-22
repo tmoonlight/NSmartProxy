@@ -728,8 +728,14 @@ window.location.href='main.html';
         {
             if (!port.IsNum()) throw new Exception("port不是数字");
             int portInt = int.Parse(port);
+            string baseCAPath = "./ca";
+            DirectoryInfo dir = new DirectoryInfo(baseCAPath);
+            if (!dir.Exists)
+            {
+                dir.Create();
+            }
             filename = Path.GetFileName(filename);//安全起见取一下文件名
-            string destPath = "./ca/" + filename;
+            string destPath = baseCAPath + "/" + filename;
             File.Move("./temp/" + filename, destPath);
             ServerContext.PortCertMap[portInt.ToString()] = X509Certificate2.CreateFromCertFile(destPath);
             // ServerContext.PortCertMap[port] = new X509Certificate2,
