@@ -245,7 +245,8 @@ namespace NSmartProxy
                 var nspApp = ServerContext.PortAppMap[consumerPort];
 
                 consumerlistener.Start(1000);
-                nspApp.ActivateApp.Listener = consumerlistener;
+                //nspApp.ActivateApp.Listener = consumerlistener;
+                nspApp.Listener = consumerlistener;
                 nspApp.ActivateApp.CancelListenSource = cts;
 
                 //临时编下号，以便在日志里区分不同隧道的连接

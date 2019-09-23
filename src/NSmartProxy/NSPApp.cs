@@ -11,7 +11,7 @@ using NSmartProxy.Shared;
 
 namespace NSmartProxy
 {
-    
+
 
     public class NSPApp
     {
@@ -19,7 +19,7 @@ namespace NSmartProxy
         public string Description;//app名字，用来标识app
         public int ClientId;
         public int ConsumePort;
-        public TcpListener Listener;
+        //public TcpListener Listener;
         public CancellationTokenSource CancelListenSource;
         public BufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
@@ -29,6 +29,7 @@ namespace NSmartProxy
         //public X509Certificate2 Certificate;//证书
 
         private bool _closed = false;
+        public bool IsClosed => _closed;
 
         public NSPApp()
         {
@@ -81,7 +82,7 @@ namespace NSmartProxy
                     });
                     //关闭循环和当前的侦听
                     CancelListenSource?.Cancel();
-                    Listener?.Stop();
+                    //Listener?.Stop();//TODO 3 逻辑错误！这个侦听可能还共享给了其他的app
                     //弹出TcpClientBlocks
                     while (TcpClientBlocks.Count > 0)
                     {

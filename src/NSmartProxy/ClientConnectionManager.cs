@@ -296,12 +296,12 @@ namespace NSmartProxy
                         ServerContext.PortAppMap[port] = new NSPAppGroup();
                     }
 
-                    if (protocol == Protocol.HTTP)
-                    {
-                        ServerContext.PortAppMap[port].Add(host, app);
-                    }
+                    //if (protocol == Protocol.HTTP)
+                    //{
+                    ServerContext.PortAppMap[port][host] = app;
+                    //}
 
-                    ServerContext.PortAppMap[port].ActivateApp = app;
+                    //ServerContext.PortAppMap[port].ActivateApp = app;
                     //ServerContext.PortAppMap[port] = nspAppGroup;
 
                     clientModel.AppList.Add(new App

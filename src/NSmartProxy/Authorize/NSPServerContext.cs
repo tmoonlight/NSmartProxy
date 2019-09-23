@@ -67,6 +67,7 @@ namespace NSmartProxy.Authorize
             }
         }
 
+        private object locker = new object();
         /// <summary>
         /// 上下文中删除特定客户端
         /// </summary>
@@ -77,31 +78,52 @@ namespace NSmartProxy.Authorize
             {
                 NSPClient client = Clients[clientId];
                 string msg = "";
-                foreach (var appKV in client.AppMap)
+                lock (locker)
                 {
-                    int port = appKV.Value.ConsumePort;
-                    //1.关闭，并移除AppMap中的App
-                    if (!PortAppMap.ContainsKey(port))
+                    foreach (var appKV in client.AppMap)
                     {
-                        Server.Logger.Debug($"clientid:{clientId}不包含port:{port}");
-                    }
-                    else
-                    {
-                        PortAppMap[port].CloseAll();
-                        PortAppMap.Remove(port);
-                    }
+                        int port = appKV.Value.ConsumePort;
+                        //1.关闭，并移除AppMap中的App
+                        if (!PortAppMap.ContainsKey(port))
+                        {
+                            Server.Logger.Debug($"clientid:{clientId}不包含port:{port}");
+                        }
+                        else
+                        {
+                            //TODO 3 关闭时会造成连锁反应
+                            //TODO 3 并且当nspgroup里的元素全都被关闭时，才remove掉这个节点
+                            //PortAppMap[port]
+                            //PortAppMap[port].CloseByHost();
+                            var nspAppGroup = PortAppMap[port];
+                            foreach (var (host, app) in nspAppGroup)
+                            {
+                                if (app.ClientId == clientId)
+                                {
+                                    app.Close();
+                                }
+                            }
+
+                            if (nspAppGroup.IsAllClosed())
+                            {
+                                Server.Logger.Info($"端口{port}所有app退出，侦听终止");
+                                //如果port内所有的app全都移除，才关闭listener
+                                nspAppGroup.Listener.Stop();
+                                PortAppMap.Remove(port);
+                            }
+                        }
 
 
-                    msg += appKV.Value.ConsumePort + " ";
-                    //2.移除端口占用
-                    NetworkUtil.ReleasePort(port);
+                        msg += appKV.Value.ConsumePort + " ";
+                        //2.移除端口占用
+                        NetworkUtil.ReleasePort(port);
+                    }
                 }
 
                 //3.移除client
                 try
                 {
-                    int closedClients = Clients.UnRegisterClient(client.ClientID);
-                    Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 {closedClients}个传输已终止。");
+                    Clients.UnRegisterClient(client.ClientID);
+                    Server.Logger.Info(msg + $"已移除， {client.ClientID} 中的 传输已终止。");
                 }
                 catch (Exception ex)
                 {
@@ -119,7 +141,7 @@ namespace NSmartProxy.Authorize
         /// </summary>
         public void InitCertificates()
         {
-            foreach (var (port,path) in ServerConfig.CABoundConfig)
+            foreach (var (port, path) in ServerConfig.CABoundConfig)
             {
                 if (File.Exists(path))
                 {

@@ -60,16 +60,16 @@ namespace NSmartProxy
             return AppMap[appId];
         }
 
-        public int Close()
-        {
-            //统计关闭的连接数
-            int ClosedConnectionCount = 0;
-            foreach (var AppKV in AppMap)
-            {
-                ClosedConnectionCount += AppKV.Value.Close();
-            }
+        //public int Close()
+        //{
+        //    //统计关闭的连接数
+        //    int ClosedConnectionCount = 0;
+        //    foreach (var AppKV in AppMap)
+        //    {
+        //        ClosedConnectionCount += AppKV.Value.Close();
+        //    }
 
-            return ClosedConnectionCount;
-        }
+        //    return ClosedConnectionCount;
+        //}
     }
 }
