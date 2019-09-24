@@ -178,7 +178,12 @@ namespace NSmartProxy.Client
                     Router.Logger.Debug("校验失效，已清空登陆缓存");
                     throw new Exception("校验失败");
                 }
-                else
+                else if (status == ServerStatus.UserBanned)
+                {
+                    Router.Logger.Debug("该用户被禁用");
+                    throw new Exception("该用户被禁用");
+                }
+                else 
                 {
                     Router.Logger.Debug("服务端未知异常");
                     throw new Exception("服务端未知异常");

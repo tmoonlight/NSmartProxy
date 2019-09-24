@@ -8,6 +8,7 @@ namespace NSmartProxy.Data
     {
         UnknowndFailed = 0x00,
         Success = 0x01,
-        AuthFailed = 0x03
+        AuthFailed = 0x03,
+        UserBanned = 0x04
     }
 }

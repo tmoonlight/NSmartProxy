@@ -493,6 +493,13 @@ namespace NSmartProxy
                 client.Close();
                 return false;
             }
+            else if (clientIdFromToken == -1)
+            {
+                //用户被禁用
+                await nstream.WriteAsync(new byte[] { (byte)ServerStatus.UserBanned });
+                client.Close();
+                return false;
+            }
 
             ServerContext.CloseAllSourceByClient(clientIdFromToken);
 
@@ -548,7 +555,7 @@ namespace NSmartProxy
 
         /// <summary>
         /// 通过token获取clientid
-        /// 返回0说明失败
+        /// 返回0说明失败,返回-1说明用户被禁
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
@@ -593,7 +600,7 @@ namespace NSmartProxy
                     if (ServerContext.ServerConfig.BoundConfig.UsersBanlist.Contains(userId))
                     {
                         Server.Logger.Debug("用户被禁用");
-                        return 0;
+                        return -1;
                     }
                     else
                     {

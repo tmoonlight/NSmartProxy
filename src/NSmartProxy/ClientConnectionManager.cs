@@ -145,7 +145,7 @@ namespace NSmartProxy
         public async Task<TcpClient> GetClient(int consumerPort, string host = null)
         {
             NSPApp NSPApp = null;
-            if (host == null)
+            if (host == null||string.IsNullOrEmpty(host.Trim())) //host为空则随便匹配一个
             { NSPApp = ServerContext.PortAppMap[consumerPort].ActivateApp; }
             else
             {
