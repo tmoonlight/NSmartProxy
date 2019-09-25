@@ -18,10 +18,12 @@ using System.Windows.Forms;
 using log4net.Appender;
 using log4net.Repository;
 using Newtonsoft.Json;
+using NSmartProxy.Client.Authorize;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
 using NSmartProxyWinform.Util;
 using NSmartProxy.ClientRouter.Dispatchers;
+using NSmartProxy.Data.Models;
 using static NSmartProxy.Infrastructure.I18N;
 
 namespace NSmartProxyWinform
@@ -60,15 +62,12 @@ namespace NSmartProxyWinform
             logger.BeforeWriteLog = (msg) => { ShowLogInfo(msg.ToString()); };
             //右下角小图标
             notifyIconNSPClient.Icon = Properties.Resources.servicestopped;
-            RefreshLoginState();
-
 
             //界面的一些细节初始化
             btnLogin.Location = new Point(12, btnLogin.Location.Y);
             btnOpenInExplorer.Hide();
 
-            //有登录缓存文件，则判断为“已登录”
-            if (File.Exists(Router.NspClientCachePath)) btnLogin.Text = " 已登录";
+
 
             this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
 
@@ -108,20 +107,25 @@ namespace NSmartProxyWinform
             Text = L("配置对话框");
         }
 
-        private void RefreshLoginState()
-        {
-            if (File.Exists(Router.NspClientCachePath))
-            {
-                btnLogin.Image = Properties.Resources.logined;
-            }
-            else
-            {
-                btnLogin.Image = Properties.Resources.unlogin;
-            }
-        }
+        //private void RefreshLoginState()
+        //{
+        //    string endpoint = tbxProviderAddr.Text + ":" + tbxWebPort;
+        //    ClientUserCacheItem cacheItem = UserCacheManager.GetUserCacheFromEndpoint(endpoint, Router.NspClientCachePath);
+        //    if (cacheItem != null)
+        //    {//TODO 3 显示出用户名
+        //        btnLogin.Image = Properties.Resources.logined;
+        //    }
+        //    else
+        //    {
+        //        btnLogin.Image = Properties.Resources.unlogin;
+        //    }
+        //}
 
         private void btnStart_Click(object sender, EventArgs e)
         {
+            RefreshLoginBtnState();
+            //RefreshLoginState();
+           
             if (ValidateConfig() && SaveFormDataToConfigFile())
             {
                 StartOrStop();
@@ -642,8 +646,6 @@ namespace NSmartProxyWinform
             config = new NSPClientConfig();
             //1.刷新配置
             config.ProviderAddress = tbxProviderAddr.Text;
-            //config.ProviderConfigPort = int.Parse(tbxConfigPort.Text);
-            //config.ProviderPort = int.Parse(tbxReversePort.Text);
             config.ProviderWebPort = int.Parse(tbxWebPort.Text);
             //解决热心网友提出的bug：空值时无法保存。
 
@@ -665,12 +667,6 @@ namespace NSmartProxyWinform
                 try
                 {
 
-                    //config.Clients.Add(new ClientApp
-                    //{
-                    //    ConsumerPort = Convert.ToInt32(strParts[1]),
-                    //    IP = strParts[2].Trim(),
-                    //    TargetServicePort = Convert.ToInt32(strParts[3])
-                    //});
                     config.Clients.Add((ClientApp)item.Tag);
                 }
                 catch
@@ -689,6 +685,30 @@ namespace NSmartProxyWinform
             RegisterHotKey();
             RefreshWinServiceState();
             BindDDL();
+            RefreshLoginBtnState();
+        }
+
+        private void RefreshLoginBtnState()
+        {
+            //TODO 3 有登录缓存文件，则判断为“已登录”，需要修改
+            var userCacheItem = UserCacheManager.GetUserCacheFromEndpoint(GetEndPoint(), Router.NspClientCachePath);
+            if (userCacheItem != null)
+            {
+                btnLogin.Image = Properties.Resources.logined;
+                btnLogin.Text = " ";
+                if (userCacheItem.UserName == "")
+                {
+                    btnLogin.Text += "匿名登录";
+                }
+                else
+                {
+                    btnLogin.Text += userCacheItem.UserName;
+                }
+            }
+            else
+            {
+                btnLogin.Image = Properties.Resources.unlogin;
+            }
         }
 
         private void BindDDL()
@@ -770,8 +790,19 @@ namespace NSmartProxyWinform
             Login frmLogin = new Login(clientRouter, this);
             frmLogin.StartPosition = FormStartPosition.CenterScreen;
             frmLogin.ShowDialog();
-            if (frmLogin.Success) btnLogin.Text = L("已登录");
+            if (frmLogin.Success)
+            {
+                if (frmLogin.Username.Trim() == "")
+                {
+                    btnLogin.Text = "匿名登录";
+                }
+                else
+                {
+                    btnLogin.Text = frmLogin.Username;
+                }
+            }
         }
+
 
         //日志
         private void tabPage2_Enter(object sender, EventArgs e)
@@ -875,6 +906,11 @@ namespace NSmartProxyWinform
             btnTest.Enabled = true;
         }
 
+        public string GetEndPoint()
+        {
+            return tbxProviderAddr.Text + ":" +
+                   tbxWebPort.Text; //ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
+        }
 
     }
 }

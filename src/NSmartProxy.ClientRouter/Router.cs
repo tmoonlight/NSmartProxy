@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using NSmartProxy.Shared;
 using System.IO;
 using System.Reflection;
+using NSmartProxy.Client.Authorize;
 using NSmartProxy.ClientRouter.Dispatchers;
 using NSmartProxy.Data.Models;
 
@@ -45,13 +46,15 @@ namespace NSmartProxy.Client
     {
         private static string nspClientCachePath = null;
 
-        public static string NSMART_CLIENT_CACHE_FILE = "cli_cache_v2.cache";
-        CancellationTokenSource ONE_LIVE_TOKEN_SRC;
-        CancellationTokenSource CANCEL_TOKEN_SRC;
-        CancellationTokenSource TRANSFERING_TOKEN_SRC;
-        CancellationTokenSource HEARTBEAT_TOKEN_SRC;
-        TaskCompletionSource<object> _waiter;
-        NSPDispatcher ClientDispatcher;
+        public static string NSMART_CLIENT_CACHE_FILE = "cli_cache_v3.cache";
+
+        private CancellationTokenSource ONE_LIVE_TOKEN_SRC;
+        private CancellationTokenSource CANCEL_TOKEN_SRC;
+        private CancellationTokenSource TRANSFERING_TOKEN_SRC;
+        private CancellationTokenSource HEARTBEAT_TOKEN_SRC;
+        private TaskCompletionSource<object> _waiter;
+        private NSPDispatcher ClientDispatcher;
+        private UserCacheManager userCacheManager;
 
         public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
@@ -71,9 +74,11 @@ namespace NSmartProxy.Client
             {
                 if (nspClientCachePath == null)
                 {
-                    string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
-                    string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
-                    NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
+                    //string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
+                    //string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
+                    //NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
+                    NspClientCachePath = System.Environment.CurrentDirectory + "\\" + NSMART_CLIENT_CACHE_FILE;
+                    
                 }
 
                 return nspClientCachePath;
@@ -149,17 +154,18 @@ namespace NSmartProxy.Client
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
-                    //显示使用用户名密码登陆
+                    var clientUserCacheItem = UserCacheManager.GetUserCacheFromEndpoint(GetEndPoint(), NspClientCachePath);
+                    //显式使用用户名密码登录
                     if (CurrentLoginInfo != null && CurrentLoginInfo.UserName != string.Empty)
                     {
                         var loginResult = await Login();
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
                     }
-                    else if (File.Exists(NspClientCachePath))
+                    else if (clientUserCacheItem != null)
                     {
                         //登录缓存
-                        arrangedToken = File.ReadAllText(NspClientCachePath);
+                        arrangedToken = clientUserCacheItem.Token;
                         //这个token的合法性无法保证,如果服务端删除了用户，而这里缓存还存在，会导致无法登录
                         //服务端校验token失效之后会主动关闭连接
                         CurrentLoginInfo = null;
@@ -174,7 +180,10 @@ namespace NSmartProxy.Client
                         arrangedToken = loginResult.Item1;
                         clientId = loginResult.Item2;
                         //保存缓存到磁盘
-                        File.WriteAllText(NspClientCachePath, arrangedToken);
+
+                        //File.WriteAllText(NspClientCachePath, arrangedToken);
+                        UserCacheManager.UpdateUser(arrangedToken, "",
+                            GetEndPoint(),NspClientCachePath);
                     }
                 }
                 catch (Exception ex)//出错 重连
@@ -295,7 +304,9 @@ namespace NSmartProxy.Client
                 arrangedToken = data.Token;
                 Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
                 clientId = int.Parse(data.Userid);
-                File.WriteAllText(NspClientCachePath, arrangedToken);
+                //File.WriteAllText(NspClientCachePath, arrangedToken);
+                var endPoint = ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
+                UserCacheManager.UpdateUser(arrangedToken, CurrentLoginInfo.UserName, endPoint, NspClientCachePath);
             }
             else
             {
@@ -479,6 +490,10 @@ namespace NSmartProxy.Client
             TcpClient tc = new TcpClient();
             tc.Connect("127.0.0.1", port);
             tc.Client.Send(new byte[] { 0x00 });
+        }
+        public string GetEndPoint()
+        {
+            return ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
 
     }

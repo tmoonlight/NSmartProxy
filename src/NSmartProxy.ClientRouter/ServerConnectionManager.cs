@@ -12,6 +12,7 @@ using NSmartProxy.Infrastructure;
 using NSmartProxy.Shared;
 using NSmartProxy.Authorize;
 using System.IO;
+using NSmartProxy.Client.Authorize;
 
 namespace NSmartProxy.Client
 {
@@ -173,9 +174,9 @@ namespace NSmartProxy.Client
                 ServerStatus status = (ServerStatus)serverConfig[0];
                 if (status == ServerStatus.AuthFailed)
                 {
-                    //处理服务器错误
+                    //验证失败，则删除当前服务器的缓存token
                     ClearLoginCache();
-                    Router.Logger.Debug("校验失效，已清空登陆缓存");
+                    Router.Logger.Debug("校验失效，已清空登录缓存");
                     throw new Exception("校验失败");
                 }
                 else if (status == ServerStatus.UserBanned)
@@ -183,7 +184,7 @@ namespace NSmartProxy.Client
                     Router.Logger.Debug("该用户被禁用");
                     throw new Exception("该用户被禁用");
                 }
-                else 
+                else
                 {
                     Router.Logger.Debug("服务端未知异常");
                     throw new Exception("服务端未知异常");
@@ -430,9 +431,18 @@ namespace NSmartProxy.Client
 
         }
 
+        //TODO 3 清除特定的登录缓存
         public void ClearLoginCache()
         {
-            File.Delete(Router.NspClientCachePath);
+            //File.Delete(Router.NspClientCachePath);
+            var clientUserCache = UserCacheManager.GetClientUserCache(Router.NspClientCachePath);
+            clientUserCache.Remove(GetEndPoint());
+            UserCacheManager.SaveChanges(Router.NspClientCachePath, clientUserCache);
+        }
+
+        public string GetEndPoint()
+        {
+            return ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
 
 
