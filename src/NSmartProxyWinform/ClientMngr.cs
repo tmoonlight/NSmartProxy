@@ -125,7 +125,7 @@ namespace NSmartProxyWinform
         {
             RefreshLoginBtnState();
             //RefreshLoginState();
-           
+
             if (ValidateConfig() && SaveFormDataToConfigFile())
             {
                 StartOrStop();
@@ -758,6 +758,10 @@ namespace NSmartProxyWinform
 
         protected override void WndProc(ref Message m)
         {
+            const int WM_SYSCOMMAND = 0x112;
+            const int SC_CLOSE = 0xF060;
+            const int SC_MINIMIZE = 0xF020;
+            const int SC_MAXIMIZE = 0xF030;
             const int WM_HOTKEY = 0x0312;
             //按快捷键    
             switch (m.Msg)
@@ -781,12 +785,29 @@ namespace NSmartProxyWinform
 
                     }
                     break;
+                case WM_SYSCOMMAND: //防止最小化跑到右下角
+                    if (m.WParam.ToInt32() == SC_MINIMIZE)
+                    {
+                        this.Visible = false;
+                        return;
+                    }
+                    break;
             }
             base.WndProc(ref m);
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
+            if (tbxProviderAddr.Text.Trim() == "" || tbxWebPort.Text.Trim() == "")
+            {
+                string msg = L("请将外网服务器地址和端口填写完整");
+                MessageBox.Show(msg);
+                errorProvider1.SetError(tbxProviderAddr, msg);
+                errorProvider1.SetError(tbxWebPort, msg);
+                return;
+
+            }
+
             Login frmLogin = new Login(clientRouter, this);
             frmLogin.StartPosition = FormStartPosition.CenterScreen;
             frmLogin.ShowDialog();
