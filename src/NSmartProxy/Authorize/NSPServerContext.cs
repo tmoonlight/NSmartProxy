@@ -107,6 +107,7 @@ namespace NSmartProxy.Authorize
                             {
                                 Server.Logger.Info($"端口{port}所有app退出，侦听终止");
                                 //如果port内所有的app全都移除，才关闭listener
+                                nspAppGroup.Listener.Server.Close();
                                 nspAppGroup.Listener.Stop();
                                 PortAppMap.Remove(port);
                             }
