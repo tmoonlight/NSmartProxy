@@ -296,10 +296,12 @@ namespace NSmartProxy
                     restBytes = Encoding.UTF8.GetBytes(tp.Item2); //预发送bytes，因为这部分用来抓host消费掉了
                     //restBytesLength = tp.Item3;
                     s2pClient = await ConnectionManager.GetClient(consumerPort, host);
+                    nspApp[host].Tunnels.Add(tunnel);//bug修改：建立隧道
                 }
                 else
                 {
                     s2pClient = await ConnectionManager.GetClient(consumerPort);
+                    nspApp.ActivateApp.Tunnels.Add(tunnel);//bug修改：建立隧道
                 }
             }
             catch (TimeoutException ex)
