@@ -74,10 +74,11 @@ namespace NSmartProxy.Client
             {
                 if (nspClientCachePath == null)
                 {
-                    //string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
-                    //string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
-                    //NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
-                    NspClientCachePath = System.Environment.CurrentDirectory + "\\" + NSMART_CLIENT_CACHE_FILE;
+                    //代表nsmartproxy.clientrouter.dll所在的路径
+                    string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
+                    string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
+                    NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
+                    //NspClientCachePath = System.Environment.CurrentDirectory + "\\" + NSMART_CLIENT_CACHE_FILE;
                     
                 }
 

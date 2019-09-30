@@ -220,6 +220,7 @@
     <PostBuildEvent>md DLLs
 move *.dll DLLs
 del *.xml
-del *.pdb</PostBuildEvent>
+del *.pdb
+move .\DLLs\NSmartProxy.ClientRouter.dll .\</PostBuildEvent>
   </PropertyGroup>
 </Project>
