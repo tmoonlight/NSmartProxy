@@ -71,15 +71,34 @@ namespace NSmartProxy
         {
             if (!_closed)
             {
-                int ClosedCount = 0;
+                int closedCount = 0;
                 try
                 {
-                    Tunnels.ForEach((t) =>
+                    foreach (var t in Tunnels)
                     {
-                        t.ClientServerClient?.Close();
-                        t.ConsumerClient?.Close();
-                        ClosedCount++;
-                    });
+                        //TODO 3调试用
+                        //Console.WriteLine("XXX");
+                        ////Console.WriteLine(t.ConsumerClient?.Client.LocalEndPoint);
+                        //Console.WriteLine("XXX");
+                        if (t.ClientServerClient != null && t.ClientServerClient.Connected)
+                        {
+                            t.ClientServerClient.Close();
+                        }
+
+
+                        if (t.ConsumerClient != null && t.ConsumerClient.Connected)
+                        {
+                            //关闭会直接出timewat
+                            t.ConsumerClient.LingerState.Enabled = true;
+                            t.ConsumerClient.LingerState.LingerTime = 0;
+                            t.ConsumerClient.NoDelay = true;
+                            //t.ConsumerClient.Client.Shutdown(SocketShutdown.Both);
+                            t.ConsumerClient.Close();
+                        }
+
+                        closedCount++;
+                    }
+
                     //关闭循环和当前的侦听
                     CancelListenSource?.Cancel();
                     //Listener?.Stop();//TODO 3 逻辑错误！这个侦听可能还共享给了其他的app
@@ -89,7 +108,7 @@ namespace NSmartProxy
                         TcpClientBlocks.Receive().Close();
                     }
                     _closed = true;
-                    return ClosedCount;
+                    return closedCount;
                 }
                 catch (Exception ex)
                 {

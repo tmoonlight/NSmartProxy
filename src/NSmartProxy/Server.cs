@@ -208,7 +208,7 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
-            Protocol protocol;
+            //Protocol protocol;
             //string host = "";
             //TODO 如果有host 则分配到相同的group中
             foreach (var kv in ServerContext.PortAppMap)
@@ -217,7 +217,7 @@ namespace NSmartProxy
                     kv.Value.ActivateApp.ClientId == e.App.ClientId)
                 {
                     port = kv.Value.ActivateApp.ConsumePort;
-                    protocol = kv.Value.ActivateApp.AppProtocol;
+                    //protocol = kv.Value.ActivateApp.AppProtocol;
                     break;
                 }
 
@@ -261,7 +261,11 @@ namespace NSmartProxy
             }
             catch (ObjectDisposedException ode)
             {
-                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止" + ode);
+                _ = ode;
+                Logger.Debug($"外网端口{consumerPort}侦听时被外部终止");
+//#if DEBUG
+//                Logger.Debug("详细信息：" + ode);
+//#endif
             }
             catch (Exception ex)
             {
@@ -350,6 +354,17 @@ namespace NSmartProxy
             }
             finally
             {
+                //if (consumerClient.Client.Connected)
+                //{
+                //    consumerClient.Client.LingerState = new LingerOption(false, 0);
+                //}
+
+                //if (s2pClient.Client.Connected)
+                //{
+                //    s2pClient.Client.LingerState = new LingerOption(false, 0);
+                //}
+
+
                 consumerClient.Close();
                 s2pClient.Close();
                 transfering.Cancel();
