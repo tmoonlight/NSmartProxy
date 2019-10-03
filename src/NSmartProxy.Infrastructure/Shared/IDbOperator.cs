@@ -18,5 +18,6 @@ namespace NSmartProxy.Database
         long GetLength();
         void Close();
         bool Exist(string key);
+        int GetCount();
     }
 }

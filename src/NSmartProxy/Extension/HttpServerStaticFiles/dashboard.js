@@ -36,12 +36,20 @@
 
 
     function updatedServerStatus(data) {
-      
+
         myChart2.data.datasets[0].data[0] = data.totalReceivedBytes;
         myChart2.data.datasets[0].data[1] = data.totalSentBytes;
         //myChart.data.datasets[0].data[2] = co;
         myChart2.update();
-        myChart2.lab
+    }
+
+    function updatedUserStatus(data) {
+
+        myChart3.data.datasets[0].data[0] = data.onlineUsersCount;
+        myChart3.data.datasets[0].data[1] = data.offlineUsersCount;
+        myChart3.data.datasets[0].data[2] = data.banUsersCount;
+        //myChart.data.datasets[0].data[2] = co;
+        myChart3.update();
     }
 
     function getClientsInfo() {
@@ -58,8 +66,17 @@
         $.get(apiUrl,
             function (res) {
                 var data = res.Data;
-               //var serverStatus = $.parseJSON(data);
                 updatedServerStatus(data);
+            }
+        );
+    }
+
+    function getUserStatus() {
+        var apiUrl = basepath + "GetUserStatus";
+        $.get(apiUrl,
+            function (res) {
+                var data = res.Data;
+                updatedUserStatus(data);
             }
         );
     }
@@ -97,6 +114,7 @@
     getLogFileTable(10);
     getClientsInfo();
     getServerStatus();
+    getUserStatus();
 
     var myChart2 = new Chart(ctx2,
         {
@@ -124,13 +142,13 @@
         {
             type: 'doughnut',
             data: {
-                labels: ['活跃用户', '离线用户'/*, 'Yellow', 'Green', 'Purple', 'Orange'*/],
+                labels: ['活跃用户', '离线用户', '黑名单用户'],
                 datasets: [
                     {
                         label: '活跃用户',
-                        data: [12, 19],
+                        data: [0, 0],
                         backgroundColor: [
-                            "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(255, 205, 86)"
+                            "rgb(75, 192, 192)", "rgb(255, 99, 132)", "rgb(201, 203, 207)"
                         ]
                     }
                 ]
@@ -143,27 +161,13 @@
             }
 
         });
-
-    //$("#myChart").click(
-    //    function (evt) {
-    //        var url = "连接管理";
-    //        //alert(url);
-    //    }
-    //);
-
-    //$("#myChart2").click(
-    //    function (evt) {
-    //        var url = " ";
-    //        //alert(url);
-    //    }
-    //);
-
-    //$("#myChart3").click(
-    //    function (evt) {
-    //        var url = "用户管理";
-    //        //alert(url);
-    //    }
-    //);
+    //red: 'rgb(255, 99, 132)',
+    //    orange: 'rgb(255, 159, 64)',
+    //    yellow: 'rgb(255, 205, 86)',
+    //    green: 'rgb(75, 192, 192)',
+    //    blue: 'rgb(54, 162, 235)',
+    //    purple: 'rgb(153, 102, 255)',
+    //    grey: 'rgb(201, 203, 207)'
     //定时更新数据
     if (window.intevalId) {
         window.clearInterval(window.intevalId);
@@ -173,16 +177,7 @@
         getClientsInfo();
         getServerStatus();
         getLogFileTable(10);
-        //myChart2.data.datasets.pop();
-        //更新数据
-        //myChart2.data.datasets[0].data[1] += 3;
-        //myChart2.data.datasets[1] = 10;
-        //myChart2.data.datasets.push({
-        //label: label,
-        // backgroundColor: color,
-        //  data: [12, 19]
-        //});
-        //myChart2.update();
+        getUserStatus();
     }, 5000
     );
 }());

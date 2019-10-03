@@ -81,6 +81,10 @@ namespace NSmartProxy.Database
         //    keyCache.TryRemove(userName, out _);
         //    liteCollection.Update(new KV(userName, value));
         //}
+        public int GetCount()
+        {
+            return liteCollection.Count();
+        }
 
         public List<string> Select(int startIndex, int length)
         {

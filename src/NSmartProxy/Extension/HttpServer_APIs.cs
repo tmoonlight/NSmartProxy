@@ -36,6 +36,25 @@ namespace NSmartProxy.Extension
             return dto;
         }
 
+        [Secure]
+        [API]
+        public UserStatusDTO GetUserStatus()
+        {
+            //Dbop.Close();
+            int totalCount = Dbop.GetCount();
+            var banCount = ServerContext.ServerConfig.BoundConfig.UsersBanlist.Count;
+            var onlineCount = ServerContext.Clients.Count();
+            var restCount = totalCount - banCount - onlineCount;
+
+            UserStatusDTO dto = new UserStatusDTO
+            {
+                onlineUsersCount = onlineCount,
+                offlineUsersCount = restCount,
+                banUsersCount = banCount
+            };
+            return dto;
+        }
+
         #endregion
 
         #region log
@@ -686,31 +705,12 @@ window.location.href='main.html';
             return fileName;
         }
 
-
-        //[FileUpload]
-        //[Secure]
-        //public string UploadCA(FileInfo fileInfo, int port)
-        //{
-        //    string baseLogPath = "./ca";
-        //    string targetPath = baseLogPath + "/" + port + ".pfx";
-        //    DirectoryInfo dir = new DirectoryInfo(baseLogPath);
-        //    if (!dir.Exists)
-        //    {
-        //        dir.Create();
-        //    }
-
-        //    File.Move(fileInfo.FullName, targetPath);
-
-        //    return "success";
-        //}
-
         [FileUpload]
         [Secure]
         public string UploadTempFile(FileInfo fileInfo)
         {
             string baseLogPath = "./temp";
             string targetPath = baseLogPath + "/" + fileInfo.Name;
-            ///string targetPath = baseLogPath + "/" + port + ".pfx";
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {

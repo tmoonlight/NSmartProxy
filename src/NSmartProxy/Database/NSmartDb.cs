@@ -160,6 +160,11 @@ namespace NSmartProxy.Database
             return hashf.Exist(String2Bytes(key));
         }
 
+        public int GetCount()
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Exist(long key)
         {
             return hashf.Exist(BitConverter.GetBytes(key));

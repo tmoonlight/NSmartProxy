@@ -354,17 +354,6 @@ namespace NSmartProxy
             }
             finally
             {
-                //if (consumerClient.Client.Connected)
-                //{
-                //    consumerClient.Client.LingerState = new LingerOption(false, 0);
-                //}
-
-                //if (s2pClient.Client.Connected)
-                //{
-                //    s2pClient.Client.LingerState = new LingerOption(false, 0);
-                //}
-
-
                 consumerClient.Close();
                 s2pClient.Close();
                 transfering.Cancel();
@@ -714,21 +703,19 @@ namespace NSmartProxy
                 {
                     if (ioe is IOException) { return; } //Suppress this exception.
                     throw;
-                    //Server.Logger.Info(ioe.Message);
                 }
-
-
             }
-            //Server.Logger.Debug($"{clientApp}对客户端传输关闭。");
         }
 
         private void CloseClient(TcpClient client)
         {
-            Logger.Debug("invalid request,Closing client:" + client.Client.RemoteEndPoint.ToString());
-            client.Close();
-            Logger.Debug("Closed client:" + client.Client.RemoteEndPoint.ToString());
+            if (client.Connected)
+            {
+                Logger.Debug("invalid request,Closing client:" + client.Client.RemoteEndPoint.ToString());
+                client.Close();
+                Logger.Debug("Closed client:" + client.Client.RemoteEndPoint.ToString());
+            }
         }
-
 
 
         #endregion
