@@ -337,11 +337,11 @@ window.location.href='main.html';
             {
                 var arr = userIndex.Split(',');
                 var userNameArr = userNames.Split(',');
-                for (var i = arr.Length - 1; i > -1; i--)
-                {
-                    Dbop.Delete(int.Parse(arr[i]));
-                    Dbop.DeleteHash(userNameArr[i]);
-                }
+                //for (var i = arr.Length - 1; i > -1; i--)
+                //{
+                //    Dbop.Delete(int.Parse(arr[i]));
+                //    Dbop.DeleteHash(userNameArr[i]);
+                //}
 
                 //删除用户绑定
                 lock (userLocker)
@@ -352,6 +352,14 @@ window.location.href='main.html';
                 //刷新绑定列表
                 ServerContext.UpdatePortMap();
                 ServerContext.ServerConfig.SaveChanges(ServerContext.ServerConfigPath);
+                for (var i = arr.Length - 1; i > -1; i--)
+                {
+                    var userId = int.Parse(arr[i]);
+                    var userDto = Dbop.Get(userNameArr[i]).ToObject<UserDTO>();
+                    Dbop.Delete(userId);//litedb不起作用
+                    Dbop.DeleteHash(userNameArr[i]);
+                    ServerContext.CloseAllSourceByClient(int.Parse(userDto.userId));
+                }
             }
             catch (Exception ex)
             {
