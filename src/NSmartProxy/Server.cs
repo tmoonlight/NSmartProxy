@@ -263,9 +263,9 @@ namespace NSmartProxy
             {
                 _ = ode;
                 Logger.Debug($"外网端口{consumerPort}侦听时被外部终止");
-//#if DEBUG
-//                Logger.Debug("详细信息：" + ode);
-//#endif
+                //#if DEBUG
+                //                Logger.Debug("详细信息：" + ode);
+                //#endif
             }
             catch (Exception ex)
             {
@@ -342,12 +342,15 @@ namespace NSmartProxy
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
 
+            //TODO 4 增加一个udp转发的选项
             providerStream = s2pClient.GetStream();
-            await providerStream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
+            await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
             //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
             if (restBytes != null)
                 await providerStream.WriteAsync(restBytes, 0, restBytes.Length, transfering.Token);
 
+            //TODO 4 TCP则打通隧道进行转发，UDP直接转发
+            // if tcp
             try
             {
                 await TcpTransferAsync(consumerStream, providerStream, clientApp, transfering.Token);

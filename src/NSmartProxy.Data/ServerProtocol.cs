@@ -7,4 +7,10 @@
         Reconnect = 0x03,
         CloseClient = 0x04
     }
+
+    public enum ControlMethod : byte
+    {
+        TCPTransfer = 0x01,
+        UDPTransfer= 0x02,
+    }
 }

@@ -371,7 +371,7 @@ namespace NSmartProxy.Client
                 //消费端长连接，需要在server端保活
                 try
                 {
-                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);
+                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);//双端标记S0001
                     if (readByteCount == 0)
                     {
                         //抛出错误以便上层重启客户端。
@@ -379,6 +379,8 @@ namespace NSmartProxy.Client
                         return;
 
                     }
+                    //TODO 4 如果是UDP则直接转发，之后返回上层
+                    var controlMethod = (ControlMethod)buffer[0];
                 }
                 catch (Exception ex)
                 {
@@ -409,7 +411,7 @@ namespace NSmartProxy.Client
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
 
                 //向服务端发起一次长连接，没有接收任何外来连接请求时，
-                //该方法会在write处会阻塞。
+                //该方法会在write处会阻塞???。
                 await ConnectionManager.ConnectAppToServer(appId);
                 Router.Logger.Debug("已建立反向连接:" + appId);
                 // item1:app编号，item2:ip地址，item3:目标服务端口
