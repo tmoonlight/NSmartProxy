@@ -333,10 +333,8 @@ namespace NSmartProxyWinform
         private void StartClientRouter(NSPClientConfig config, Action<ClientStatus, List<string>> loaded)
         {
             clientRouter = new Router(logger);
-            //TaskScheduler.UnobservedTaskException +=
-            //    (_, ev) => logger.Error(ev.Exception.Message, ev.Exception);
             //read config from config file.
-            SetConfig(clientRouter, config);// clientRouter.SetConifiguration();
+            SetConfig(clientRouter, config);
             clientRouter.StatusChanged = loaded;
             var tsk = clientRouter.Start();
             tsk.ConfigureAwait(false);//异步会导致无法抛出错误,同步又会导致锁死，必须再invoke一次？
@@ -617,9 +615,7 @@ namespace NSmartProxyWinform
         {
             NSPClientConfig conf = ConfigHelper.ReadAllConfig<NSPClientConfig>(Program.CONFIG_FILE_PATH);
             tbxProviderAddr.Text = conf.ProviderAddress;
-            //tbxConfigPort.Text = conf.ProviderConfigPort.ToString();
             tbxWebPort.Text = conf.ProviderWebPort.ToString();
-            //if(tbxReversePort.Text == "" ? tbxReversePort.Text = "0";
 
             listBox1.Items.Clear();
             foreach (var confClient in conf.Clients)

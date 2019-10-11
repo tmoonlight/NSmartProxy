@@ -105,7 +105,7 @@ namespace NSmartProxy.ServerHost
                 try
                 {
                     watch.Start();
-                    srv//.SetWebPort(int.Parse(Configuration.GetSection("WebAPIPort").Value))
+                    srv
                        .SetConfiguration(serverConfig)
                        .SetAnonymousLogin(true)
                        .SetServerConfigPath(CONFIG_FILE_PATH)

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
+using Snappy.Sharp;
 
 namespace NSmartProxy
 {
@@ -206,6 +207,46 @@ namespace NSmartProxy
                     return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// 使用snappy算法解压缩
+        /// </summary>
+        /// <param name="compressed"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public static byte[] DecompressInSnappy(byte[] compressed,int offset ,int length)
+        {
+            SnappyDecompressor sd = new SnappyDecompressor();
+            return sd.Decompress(compressed, offset, length);
+        }
+
+        /// <summary>
+        /// 使用snappy算法压缩
+        /// </summary>
+        /// <param name="uncompressed"></param>
+        /// <param name="offset"></param>
+        /// <param name="uncompressedLength"></param>
+        /// <returns></returns>
+        public static CompressedBytes CompressInSnappy(byte[] uncompressed, int offset, int uncompressedLength)
+        {
+            SnappyCompressor sc = new SnappyCompressor();
+
+            //var bytes = Encoding.ASCII.GetBytes("HelloWor134ertegsdfgsfdgsdfgsdfgsfdgsdfgsdfgsdfgsdfgdsfgsdfgdsfgdfgdsfgld");
+            byte[] outBytes = new byte[sc.MaxCompressedLength(uncompressed.Length)];
+
+            int actualLength = sc.Compress(uncompressed, 0, uncompressedLength, outBytes);
+            return new CompressedBytes() { ContentBytes = outBytes, Length = actualLength };
+        }
+
+        /// <summary>
+        /// 压缩专用对象
+        /// </summary>
+        public class CompressedBytes
+        {
+            public int Length;
+            public byte[] ContentBytes;
         }
     }
 }

@@ -250,13 +250,14 @@ namespace NSmartProxy
                 nspApp.ActivateApp.CancelListenSource = cts;
 
                 //临时编下号，以便在日志里区分不同隧道的连接
-                string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
+                //string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
+
                 while (!ct.IsCancellationRequested)
                 {
                     Logger.Debug("listening serviceClient....Port:" + consumerPort);
                     //I.主要对外侦听循环
                     var consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    _ = ProcessConsumeRequestAsync(consumerPort, clientApp, consumerClient, ct);
+                    _ = ProcessConsumeRequestAsync(consumerPort, consumerClient, ct);
                 }
             }
             catch (ObjectDisposedException ode)
@@ -273,19 +274,21 @@ namespace NSmartProxy
             }
         }
 
-        private async Task ProcessConsumeRequestAsync(int consumerPort, string clientApp, TcpClient consumerClient, CancellationToken ct)
+        private async Task ProcessConsumeRequestAsync(int consumerPort, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
-            var nspApp = ServerContext.PortAppMap[consumerPort];
+            var nspAppGroup = ServerContext.PortAppMap[consumerPort];
+            NSPApp nspApp = null;
             TcpClient s2pClient = null;
             Stream consumerStream = consumerClient.GetStream();//; = consumerClient.GetStream().ProcessSSL(TestCert);
             Stream providerStream = null;// = s2pClient.GetStream();
             byte[] restBytes = null;
+
             //int restBytesLength = 0;
             try
             {
 
-                if (nspApp.ProtocolInGroup == Protocol.HTTP || nspApp.ProtocolInGroup == Protocol.HTTPS)
+                if (nspAppGroup.ProtocolInGroup == Protocol.HTTP || nspAppGroup.ProtocolInGroup == Protocol.HTTPS)
                 {//不论是http协议还是https协议，有证书就加密
                     if (ServerContext.PortCertMap.TryGetValue(consumerPort.ToString(), out X509Certificate cert2))
                     {
@@ -300,19 +303,22 @@ namespace NSmartProxy
                     restBytes = Encoding.UTF8.GetBytes(tp.Item2); //预发送bytes，因为这部分用来抓host消费掉了
                     //restBytesLength = tp.Item3;
                     s2pClient = await ConnectionManager.GetClient(consumerPort, host);
-                    if (nspApp.ContainsKey(host))
+                    if (nspAppGroup.ContainsKey(host))
                     {
-                        nspApp[host].Tunnels.Add(tunnel); //bug修改：建立隧道
+                        nspAppGroup[host].Tunnels.Add(tunnel); //bug修改：建立隧道
                     }
                     else
                     {
                         Server.Logger.Debug($"不存在host为“{host}”的主机名，但访问端依然以此主机名访问。");
                     }
+
+                    nspApp = nspAppGroup[host];
                 }
                 else
                 {
                     s2pClient = await ConnectionManager.GetClient(consumerPort);
-                    nspApp.ActivateApp.Tunnels.Add(tunnel);//bug修改：建立隧道
+                    nspAppGroup.ActivateApp.Tunnels.Add(tunnel);//bug修改：建立隧道
+                    nspApp = nspAppGroup.ActivateApp;
                 }
             }
             catch (TimeoutException ex)
@@ -353,7 +359,7 @@ namespace NSmartProxy
             // if tcp
             try
             {
-                await TcpTransferAsync(consumerStream, providerStream, clientApp, transfering.Token);
+                await TcpTransferAsync(consumerStream, providerStream, nspApp, transfering.Token);
             }
             finally
             {
@@ -633,25 +639,24 @@ namespace NSmartProxy
         #region datatransfer
         //3端互相传输数据
         async Task TcpTransferAsync(Stream consumerStream, Stream providerStream,
-            string clientApp,
-
+            NSPApp nspApp,
             CancellationToken ct)
         {
             try
             {
-                Server.Logger.Debug($"New client ({clientApp}) connected");
+                Server.Logger.Debug($"New client ({nspApp.ClientId}-{nspApp.AppId}) connected");
 
                 //CancellationTokenSource transfering = new CancellationTokenSource();
 
                 //var providerStream = providerClient.GetStream();//.ProcessSSL("test");
                 //var consumerStream = consumerClient.GetStream();
-                Task taskC2PLooping = ToStaticTransfer(ct, consumerStream, providerStream, clientApp);
-                Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, clientApp);
+                Task taskC2PLooping = ToStaticTransfer(ct, consumerStream, providerStream, nspApp);
+                Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, nspApp);
 
                 //任何一端传输中断或者故障，则关闭所有连接
                 var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
                 //comletedTask.
-                Logger.Debug($"Transferring ({clientApp}) STOPPED");
+                Logger.Debug($"Transferring ({nspApp.ClientId}-{nspApp.AppId}) STOPPED");
 
             }
             catch (Exception e)
@@ -662,17 +667,23 @@ namespace NSmartProxy
 
         }
 
-        private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, string clientApp)
+        private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
             using (fromStream)
             {
                 byte[] buffer = new byte[81920];
-                int bytesRead;
                 try
                 {
+                    int bytesRead;
                     while ((bytesRead =
                                await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
+                        if (nspApp.IsCompressed)
+                        {
+                            buffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                            bytesRead = buffer.Length;
+                        }
+
                         await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                         ServerContext.TotalSentBytes += bytesRead; //上行
                     }
@@ -687,17 +698,24 @@ namespace NSmartProxy
             //Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
-        private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, string clientApp)
+        private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
             using (fromStream)
             {
                 byte[] buffer = new byte[81920];
-                int bytesRead;
                 try
                 {
+                    int bytesRead;
                     while ((bytesRead =
                                await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
+                        if (nspApp.IsCompressed)
+                        {
+                            var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
+                            buffer = compressInSnappy.ContentBytes;
+                            bytesRead = compressInSnappy.Length;
+                        }
+
                         await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                         ServerContext.TotalReceivedBytes += bytesRead; //下行
                     }

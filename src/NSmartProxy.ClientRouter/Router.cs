@@ -408,7 +408,9 @@ namespace NSmartProxy.Client
                 //每移除一个链接则发起一个新的链接
                 Router.Logger.Debug(appId + "接收到连接请求");
                 //根据clientid_appid发送到固定的端口
+                //TODO 4 这里有性能隐患，考虑后期改成哈希表
                 ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
+
 
                 //向服务端发起一次长连接，没有接收任何外来连接请求时，
                 //该方法会在write处会阻塞???。
@@ -428,7 +430,7 @@ namespace NSmartProxy.Client
 
                 NetworkStream targetServerStream = toTargetServer.GetStream();
                 //targetServerStream.Write(buffer, 0, readByteCount);
-                _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString);
+                _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString, item);
                 //already close connection
             }
             catch (Exception ex)
@@ -443,14 +445,15 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream, TcpClient providerClient, TcpClient toTargetServer, string epString)
+        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream,
+            TcpClient providerClient, TcpClient toTargetServer, string epString, ClientApp item)
         {
             try
             {
                 Router.Logger.Debug("Looping start.");
                 //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, epString);
-                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString);
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, epString, item);
+                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString, item);
 
                 //close connnection,whether client or server stopped transferring.
                 var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
@@ -467,11 +470,17 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string epString)
+        private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
+            string epString, ClientApp item)
         {
             using (fromStream)
             {
-                await fromStream.CopyToAsync(toStream, 4096, ct);
+                if (item.IsCompress)
+                {
+                    //TODO 4 如果是压缩，则从服务端拿到的数据需要解压缩
+                }
+
+                await fromStream.CopyToAsync(toStream, 81920, ct);
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
 
@@ -479,11 +488,16 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream, string epString)
+        private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
+            string epString, ClientApp item)
         {
             using (fromStream)
             {
-                await fromStream.CopyToAsync(toStream, 4096, ct);
+                if (item.IsCompress)
+                {
+                    //TODO 4 如果是压缩，则把信息压缩发送给服务端
+                }
+                await fromStream.CopyToAsync(toStream, 81920, ct);
             }
             Router.Logger.Debug($"{epString}反向链接传输关闭。");
         }

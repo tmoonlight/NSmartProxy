@@ -30,6 +30,7 @@ namespace NSmartProxy
 
         private bool _closed = false;
         public bool IsClosed => _closed;
+        public bool IsCompressed = false;//代表是否使用snappy压缩
 
         public NSPApp()
         {

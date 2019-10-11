@@ -14,8 +14,6 @@ namespace NSmartProxy.ServerHost
             //wait
             ServiceRunner<ServerHost>.Run(config =>
             {
-                //var fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
-
                 var name = Global.NSPServerServiceName;
                 config.SetDisplayName(Global.NSPServerServiceName);
                 config.SetName(Global.NSPServerDisplayName);
@@ -42,7 +40,6 @@ namespace NSmartProxy.ServerHost
 
                     serviceConfig.OnError(e =>
                     {
-                        // File.AppendAllText(fileName, $"Exception: {e.ToString()}\n");
                         Console.WriteLine("Service {0} errored with exception : {1}", name, e.Message);
                     });
                 });

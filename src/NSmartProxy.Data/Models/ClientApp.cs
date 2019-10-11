@@ -13,6 +13,7 @@
         public string IP { get; set; }
         public int TargetServicePort { get; set; }
         public int ConsumerPort { get; set; }
+        public bool IsCompress { get; set; }
 
         public Protocol Protocol { get; set; }
         public string Host { get; set; }
