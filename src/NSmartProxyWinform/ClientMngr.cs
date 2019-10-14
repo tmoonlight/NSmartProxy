@@ -755,9 +755,9 @@ namespace NSmartProxyWinform
         protected override void WndProc(ref Message m)
         {
             const int WM_SYSCOMMAND = 0x112;
-            const int SC_CLOSE = 0xF060;
+            //const int SC_CLOSE = 0xF060;
             const int SC_MINIMIZE = 0xF020;
-            const int SC_MAXIMIZE = 0xF030;
+            //const int SC_MAXIMIZE = 0xF030;
             const int WM_HOTKEY = 0x0312;
             //按快捷键    
             switch (m.Msg)

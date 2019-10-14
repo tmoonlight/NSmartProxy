@@ -7,8 +7,8 @@ namespace NSmartProxy.Client.Authorize
     public class UserCacheManager
     {
         //private Router router;
-        private ClientUserCache clientUserCache;
-        private string cachePath;
+        //private ClientUserCache clientUserCache;
+        //private string cachePath;
 
         //public ClientUserCacheItem GetCurrentUserCache()
         //{

@@ -54,7 +54,7 @@ namespace NSmartProxy.Client
         private CancellationTokenSource HEARTBEAT_TOKEN_SRC;
         private TaskCompletionSource<object> _waiter;
         private NSPDispatcher ClientDispatcher;
-        private UserCacheManager userCacheManager;
+        //private UserCacheManager userCacheManager;
 
         public ServerConnectionManager ConnectionManager;
         public bool IsStarted = false;
