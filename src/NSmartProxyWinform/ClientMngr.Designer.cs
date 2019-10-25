@@ -1,4 +1,6 @@
-﻿namespace NSmartProxyWinform
+﻿using NSmartProxyWinform.Util;
+
+namespace NSmartProxyWinform
 {
     partial class ClientMngr
     {
@@ -29,6 +31,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("2017studio.imwork.net:20001 => 127.0.0.1:80", 1);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClientMngr));
             this.btnStart = new System.Windows.Forms.Button();
             this.btnOpenInExplorer = new System.Windows.Forms.Button();
@@ -48,35 +51,46 @@
             this.btnDuplicate = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cbxProtocol = new System.Windows.Forms.ComboBox();
             this.label7 = new System.Windows.Forms.Label();
             this.tbxTargetServerAddr = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.tbxPort = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.tbxTargetServerPort = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnTest = new System.Windows.Forms.Button();
             this.tbxProviderAddr = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.tbxConfigPort = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.tbxReversePort = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.tbxWebPort = new System.Windows.Forms.TextBox();
+            this.listBox1 = new System.Windows.Forms.ListView();
             this.tabServerConfig = new System.Windows.Forms.TabControl();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.btnUnRegWinSrv = new System.Windows.Forms.Button();
+            this.btnRegWinSrv = new System.Windows.Forms.Button();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+            this.btnLogin = new System.Windows.Forms.Button();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.tbxDescription = new NSmartProxyWinform.Util.TextBoxEx();
+            this.tbxHost = new NSmartProxyWinform.Util.TextBoxEx();
+            this.tbxPort = new NSmartProxyWinform.Util.TextBoxEx();
             this.cmsRightMenu.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabServerConfig.SuspendLayout();
+            this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(247, 398);
+            this.btnStart.Location = new System.Drawing.Point(255, 455);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 0;
@@ -87,7 +101,7 @@
             // 
             // btnOpenInExplorer
             // 
-            this.btnOpenInExplorer.Location = new System.Drawing.Point(12, 398);
+            this.btnOpenInExplorer.Location = new System.Drawing.Point(20, 455);
             this.btnOpenInExplorer.Name = "btnOpenInExplorer";
             this.btnOpenInExplorer.Size = new System.Drawing.Size(113, 23);
             this.btnOpenInExplorer.TabIndex = 3;
@@ -142,7 +156,7 @@
             // 
             // btnExit
             // 
-            this.btnExit.Location = new System.Drawing.Point(466, 398);
+            this.btnExit.Location = new System.Drawing.Point(474, 455);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 23);
             this.btnExit.TabIndex = 4;
@@ -156,10 +170,11 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(525, 354);
+            this.tabPage2.Size = new System.Drawing.Size(525, 411);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "日志";
             this.tabPage2.UseVisualStyleBackColor = true;
+            this.tabPage2.Enter += new System.EventHandler(this.tabPage2_Enter);
             // 
             // tbxLog
             // 
@@ -170,7 +185,8 @@
             this.tbxLog.Multiline = true;
             this.tbxLog.Name = "tbxLog";
             this.tbxLog.ReadOnly = true;
-            this.tbxLog.Size = new System.Drawing.Size(519, 348);
+            this.tbxLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tbxLog.Size = new System.Drawing.Size(519, 405);
             this.tbxLog.TabIndex = 1;
             // 
             // tabPage1
@@ -186,14 +202,15 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(525, 354);
+            this.tabPage1.Size = new System.Drawing.Size(525, 411);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "应用";
             this.tabPage1.UseVisualStyleBackColor = true;
+            this.tabPage1.Enter += new System.EventHandler(this.tabPage1_Enter);
             // 
             // btnSaveConfig
             // 
-            this.btnSaveConfig.Location = new System.Drawing.Point(114, 316);
+            this.btnSaveConfig.Location = new System.Drawing.Point(114, 374);
             this.btnSaveConfig.Name = "btnSaveConfig";
             this.btnSaveConfig.Size = new System.Drawing.Size(75, 23);
             this.btnSaveConfig.TabIndex = 14;
@@ -203,7 +220,7 @@
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(21, 315);
+            this.btnRefresh.Location = new System.Drawing.Point(21, 373);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(75, 23);
             this.btnRefresh.TabIndex = 13;
@@ -213,7 +230,7 @@
             // 
             // btnAddClient
             // 
-            this.btnAddClient.Location = new System.Drawing.Point(21, 286);
+            this.btnAddClient.Location = new System.Drawing.Point(21, 344);
             this.btnAddClient.Name = "btnAddClient";
             this.btnAddClient.Size = new System.Drawing.Size(75, 23);
             this.btnAddClient.TabIndex = 11;
@@ -223,7 +240,7 @@
             // 
             // btnDuplicate
             // 
-            this.btnDuplicate.Location = new System.Drawing.Point(206, 286);
+            this.btnDuplicate.Location = new System.Drawing.Point(206, 344);
             this.btnDuplicate.Name = "btnDuplicate";
             this.btnDuplicate.Size = new System.Drawing.Size(75, 23);
             this.btnDuplicate.TabIndex = 10;
@@ -233,7 +250,7 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(114, 286);
+            this.btnDelete.Location = new System.Drawing.Point(114, 344);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 9;
@@ -243,6 +260,12 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.tbxDescription);
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.tbxHost);
+            this.groupBox2.Controls.Add(this.label3);
+            this.groupBox2.Controls.Add(this.cbxProtocol);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.tbxTargetServerAddr);
             this.groupBox2.Controls.Add(this.label4);
@@ -252,14 +275,60 @@
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Location = new System.Drawing.Point(329, 77);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(190, 232);
+            this.groupBox2.Size = new System.Drawing.Size(190, 328);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "节点配置";
             // 
+            // label9
+            // 
+            this.label9.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(7, 161);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(95, 12);
+            this.label9.TabIndex = 11;
+            this.label9.Text = "节点描述(*可选)";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label8
+            // 
+            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(7, 134);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(95, 12);
+            this.label8.TabIndex = 9;
+            this.label8.Text = "主机域名(*可选)";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 25);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(53, 12);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "连接协议";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cbxProtocol
+            // 
+            this.cbxProtocol.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxProtocol.FormattingEnabled = true;
+            this.cbxProtocol.Items.AddRange(new object[] {
+            "TCP",
+            "HTTP"});
+            this.cbxProtocol.Location = new System.Drawing.Point(102, 21);
+            this.cbxProtocol.Name = "cbxProtocol";
+            this.cbxProtocol.Size = new System.Drawing.Size(82, 20);
+            this.cbxProtocol.TabIndex = 7;
+            this.cbxProtocol.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            // 
             // label7
             // 
-            this.label7.Location = new System.Drawing.Point(17, 110);
+            this.label7.Location = new System.Drawing.Point(14, 219);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(163, 60);
             this.label7.TabIndex = 6;
@@ -268,7 +337,7 @@
             // tbxTargetServerAddr
             // 
             this.tbxTargetServerAddr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxTargetServerAddr.Location = new System.Drawing.Point(102, 20);
+            this.tbxTargetServerAddr.Location = new System.Drawing.Point(102, 50);
             this.tbxTargetServerAddr.Name = "tbxTargetServerAddr";
             this.tbxTargetServerAddr.Size = new System.Drawing.Size(82, 21);
             this.tbxTargetServerAddr.TabIndex = 3;
@@ -278,37 +347,28 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(43, 23);
+            this.label4.Location = new System.Drawing.Point(7, 53);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 12);
             this.label4.TabIndex = 0;
             this.label4.Text = "内网地址";
-            // 
-            // tbxPort
-            // 
-            this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxPort.Location = new System.Drawing.Point(102, 74);
-            this.tbxPort.MaxLength = 5;
-            this.tbxPort.Name = "tbxPort";
-            this.tbxPort.Size = new System.Drawing.Size(82, 21);
-            this.tbxPort.TabIndex = 5;
-            this.tbxPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
-            this.tbxPort.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label5
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(43, 50);
+            this.label5.Location = new System.Drawing.Point(7, 80);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(53, 12);
             this.label5.TabIndex = 1;
             this.label5.Text = "内网端口";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // tbxTargetServerPort
             // 
             this.tbxTargetServerPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 47);
+            this.tbxTargetServerPort.Location = new System.Drawing.Point(102, 77);
             this.tbxTargetServerPort.MaxLength = 5;
             this.tbxTargetServerPort.Name = "tbxTargetServerPort";
             this.tbxTargetServerPort.Size = new System.Drawing.Size(82, 21);
@@ -320,20 +380,20 @@
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 77);
+            this.label6.Location = new System.Drawing.Point(7, 107);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(95, 12);
             this.label6.TabIndex = 2;
             this.label6.Text = "外网端口(*可选)";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnTest);
             this.groupBox1.Controls.Add(this.tbxProviderAddr);
             this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Controls.Add(this.tbxConfigPort);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.tbxReversePort);
-            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.tbxWebPort);
             this.groupBox1.Location = new System.Drawing.Point(6, 6);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(513, 57);
@@ -341,11 +401,21 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "外网服务器";
             // 
+            // btnTest
+            // 
+            this.btnTest.Location = new System.Drawing.Point(425, 18);
+            this.btnTest.Name = "btnTest";
+            this.btnTest.Size = new System.Drawing.Size(75, 23);
+            this.btnTest.TabIndex = 5;
+            this.btnTest.Text = "测试";
+            this.btnTest.UseVisualStyleBackColor = true;
+            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
+            // 
             // tbxProviderAddr
             // 
             this.tbxProviderAddr.Location = new System.Drawing.Point(81, 20);
             this.tbxProviderAddr.Name = "tbxProviderAddr";
-            this.tbxProviderAddr.Size = new System.Drawing.Size(140, 21);
+            this.tbxProviderAddr.Size = new System.Drawing.Size(184, 21);
             this.tbxProviderAddr.TabIndex = 3;
             this.tbxProviderAddr.Text = "2017studio.imwork.net";
             this.tbxProviderAddr.TextChanged += new System.EventHandler(this.ConfigValueChanged);
@@ -359,56 +429,39 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "服务器地址";
             // 
-            // tbxConfigPort
-            // 
-            this.tbxConfigPort.Location = new System.Drawing.Point(448, 20);
-            this.tbxConfigPort.MaxLength = 5;
-            this.tbxConfigPort.Name = "tbxConfigPort";
-            this.tbxConfigPort.Size = new System.Drawing.Size(55, 21);
-            this.tbxConfigPort.TabIndex = 5;
-            this.tbxConfigPort.Text = "12308";
-            this.tbxConfigPort.TextChanged += new System.EventHandler(this.ConfigValueChanged);
-            this.tbxConfigPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(251, 23);
+            this.label2.Location = new System.Drawing.Point(303, 23);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(53, 12);
+            this.label2.Size = new System.Drawing.Size(29, 12);
             this.label2.TabIndex = 1;
-            this.label2.Text = "连接端口";
+            this.label2.Text = "端口";
             // 
-            // tbxReversePort
+            // tbxWebPort
             // 
-            this.tbxReversePort.Location = new System.Drawing.Point(310, 20);
-            this.tbxReversePort.MaxLength = 5;
-            this.tbxReversePort.Name = "tbxReversePort";
-            this.tbxReversePort.Size = new System.Drawing.Size(55, 21);
-            this.tbxReversePort.TabIndex = 4;
-            this.tbxReversePort.Text = "19974";
-            this.tbxReversePort.TextChanged += new System.EventHandler(this.ConfigValueChanged);
-            this.tbxReversePort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(389, 23);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 12);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "配置端口";
+            this.tbxWebPort.Location = new System.Drawing.Point(342, 20);
+            this.tbxWebPort.MaxLength = 5;
+            this.tbxWebPort.Name = "tbxWebPort";
+            this.tbxWebPort.Size = new System.Drawing.Size(55, 21);
+            this.tbxWebPort.TabIndex = 4;
+            this.tbxWebPort.Text = "12309";
+            this.tbxWebPort.TextChanged += new System.EventHandler(this.ConfigValueChanged);
+            this.tbxWebPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
             // 
             // listBox1
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 12;
-            this.listBox1.Items.AddRange(new object[] {
-            "2017studio.imwork.net:20001 => 127.0.0.1:80"});
+            this.listBox1.FullRowSelect = true;
+            this.listBox1.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem1});
             this.listBox1.Location = new System.Drawing.Point(11, 84);
+            this.listBox1.MultiSelect = false;
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(303, 196);
+            this.listBox1.Size = new System.Drawing.Size(303, 244);
+            this.listBox1.SmallImageList = this.imageList1;
             this.listBox1.TabIndex = 6;
+            this.listBox1.UseCompatibleStateImageBehavior = false;
+            this.listBox1.View = System.Windows.Forms.View.List;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.listBox1.Leave += new System.EventHandler(this.listBox1_Leave);
             // 
@@ -416,21 +469,108 @@
             // 
             this.tabServerConfig.Controls.Add(this.tabPage1);
             this.tabServerConfig.Controls.Add(this.tabPage2);
+            this.tabServerConfig.Controls.Add(this.tabPage3);
             this.tabServerConfig.Location = new System.Drawing.Point(12, 12);
             this.tabServerConfig.Name = "tabServerConfig";
             this.tabServerConfig.SelectedIndex = 0;
-            this.tabServerConfig.Size = new System.Drawing.Size(533, 380);
+            this.tabServerConfig.Size = new System.Drawing.Size(533, 437);
             this.tabServerConfig.TabIndex = 5;
+            // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.btnUnRegWinSrv);
+            this.tabPage3.Controls.Add(this.btnRegWinSrv);
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Size = new System.Drawing.Size(525, 411);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "服务";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // btnUnRegWinSrv
+            // 
+            this.btnUnRegWinSrv.Location = new System.Drawing.Point(180, 155);
+            this.btnUnRegWinSrv.Name = "btnUnRegWinSrv";
+            this.btnUnRegWinSrv.Size = new System.Drawing.Size(154, 49);
+            this.btnUnRegWinSrv.TabIndex = 1;
+            this.btnUnRegWinSrv.Text = "卸载windows服务";
+            this.btnUnRegWinSrv.UseVisualStyleBackColor = true;
+            this.btnUnRegWinSrv.Click += new System.EventHandler(this.btnUnRegWinSrv_Click);
+            // 
+            // btnRegWinSrv
+            // 
+            this.btnRegWinSrv.Location = new System.Drawing.Point(180, 100);
+            this.btnRegWinSrv.Name = "btnRegWinSrv";
+            this.btnRegWinSrv.Size = new System.Drawing.Size(154, 49);
+            this.btnRegWinSrv.TabIndex = 0;
+            this.btnRegWinSrv.Text = "注册为windows服务";
+            this.btnRegWinSrv.UseVisualStyleBackColor = true;
+            this.btnRegWinSrv.Click += new System.EventHandler(this.btnRegWinSrv_Click);
             // 
             // errorProvider1
             // 
             this.errorProvider1.ContainerControl = this;
             // 
+            // btnLogin
+            // 
+            this.btnLogin.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnLogin.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnLogin.Location = new System.Drawing.Point(158, 455);
+            this.btnLogin.Name = "btnLogin";
+            this.btnLogin.Size = new System.Drawing.Size(91, 23);
+            this.btnLogin.TabIndex = 6;
+            this.btnLogin.Text = "  未登录";
+            this.btnLogin.UseVisualStyleBackColor = true;
+            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "run");
+            this.imageList1.Images.SetKeyName(1, "stop");
+            this.imageList1.Images.SetKeyName(2, "error");
+            // 
+            // tbxDescription
+            // 
+            this.tbxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxDescription.Location = new System.Drawing.Point(16, 182);
+            this.tbxDescription.MaxLength = 32;
+            this.tbxDescription.Name = "tbxDescription";
+            this.tbxDescription.PlaceHolderStr = "<请输入32位以内的字符>";
+            this.tbxDescription.Size = new System.Drawing.Size(168, 21);
+            this.tbxDescription.TabIndex = 12;
+            this.tbxDescription.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            // 
+            // tbxHost
+            // 
+            this.tbxHost.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxHost.Location = new System.Drawing.Point(102, 131);
+            this.tbxHost.MaxLength = 500;
+            this.tbxHost.Name = "tbxHost";
+            this.tbxHost.PlaceHolderStr = null;
+            this.tbxHost.Size = new System.Drawing.Size(82, 21);
+            this.tbxHost.TabIndex = 10;
+            this.tbxHost.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            // 
+            // tbxPort
+            // 
+            this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxPort.Location = new System.Drawing.Point(102, 104);
+            this.tbxPort.MaxLength = 5;
+            this.tbxPort.Name = "tbxPort";
+            this.tbxPort.PlaceHolderStr = "<随机>";
+            this.tbxPort.Size = new System.Drawing.Size(82, 21);
+            this.tbxPort.TabIndex = 5;
+            this.tbxPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbxTargetServerPort_KeyPress);
+            this.tbxPort.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            // 
             // ClientMngr
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(557, 433);
+            this.ClientSize = new System.Drawing.Size(557, 490);
+            this.Controls.Add(this.btnLogin);
             this.Controls.Add(this.tabServerConfig);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnOpenInExplorer);
@@ -439,6 +579,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "ClientMngr";
+            this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "配置对话框";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClientMngr_FormClosing);
@@ -452,6 +593,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabServerConfig.ResumeLayout(false);
+            this.tabPage3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
 
@@ -467,19 +609,14 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TextBox tbxLog;
         private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TextBox tbxConfigPort;
-        private System.Windows.Forms.TextBox tbxReversePort;
-        private System.Windows.Forms.TextBox tbxProviderAddr;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TabControl tabServerConfig;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListView listBox1;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.TextBox tbxTargetServerAddr;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox tbxPort;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbxTargetServerPort;
         private System.Windows.Forms.Label label6;
@@ -494,6 +631,21 @@
         private System.Windows.Forms.Button btnSaveConfig;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ErrorProvider errorProvider1;
+        private System.Windows.Forms.Button btnLogin;
+        public System.Windows.Forms.TextBox tbxProviderAddr;
+        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.Button btnRegWinSrv;
+        private System.Windows.Forms.Button btnUnRegWinSrv;
+        private System.Windows.Forms.Button btnTest;
+        private TextBoxEx tbxPort;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox cbxProtocol;
+        private System.Windows.Forms.Label label8;
+        private TextBoxEx tbxHost;
+        private System.Windows.Forms.Label label9;
+        private TextBoxEx tbxDescription;
+        public System.Windows.Forms.TextBox tbxWebPort;
+        private System.Windows.Forms.ImageList imageList1;
     }
 }
 

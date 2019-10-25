@@ -1,0 +1,85 @@
+﻿<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3">证书管理</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openCABound()">
+                <span data-feather="plus"></span>
+                添加证书
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="mb-2 collapse" id="divAddCert">
+    <form class="bv-form" id="frmCAConfig" enctype="multipart/form-data" method="post">
+
+        <div class="form-group">
+            <label for="inputPort">端口</label>
+            <input type="number" data-bv-field="inputPort" min="0" max="65535" name="tbxPort" class="form-control" id="tbxPort" placeholder="请输入0~65535之间的整数">
+        </div>
+
+        <div class="form-group">
+            <label>证书上传</label>
+            <br />
+            <input type="text" id="hidCAFilename" style="display: none"/>
+            <div id="fileBottoms">
+                <button type="button" style="color: green;" id="btnAddUser" onclick="genCA();">生成自签名证书</button>
+                <input type="file" id="fileToUpload" onchange="fileSelected();">
+            </div>
+
+            <div id="fileInfo" style="display: none;">
+                <span id="fileName"></span>
+                <button type="button" style="color: red;" id="btnAddUser" onclick="delCAFile();">删除文件</button>
+            </div>
+            <div id="divLoading" style="display: none">
+                <img src="loading-s.gif" />
+                <div style="display: inline">
+                    <span id="fileSize"></span>
+                    <span id="progressNumber"></span>
+                </div>
+            </div>
+        </div>
+         
+        <button type="button" id="btnAddCA" onclick="addCABound();" class="btn btn-primary">提交</button>
+    </form>
+</div>
+
+<div class="row" id="divCertList">
+    <div class="col-md-4 pb-2">
+        <div class="card">
+
+            <div class="card-body">
+
+
+                <h5 class="card-title"> <span style="zoom: 1.5" data-feather="key"></span> 绑定端口:{Port}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Pfx证书</h6>
+                <p class="card-text">
+                    创建时间：{CreateTime}<br />
+                    <!--绑定域名：{Hosts}<br />-->
+                    有效期限：{ToTime}<br />
+                    {Ext}
+                </p>
+                <a href="javascript:delCABound('{Port}')" class="card-link">删除证书</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3">其他配置</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <span data-feather="refresh-ccw"></span>
+                刷新配置
+            </button>
+        </div>
+    </div>
+</div>
+<div class="custom-control custom-switch" onclick="toggleConfig(this)">
+    <input type="checkbox" class="custom-control-input" id="configAllowAnonymousUser" change="toggleConfig(this)">
+    <label class="custom-control-label" for="configAllowAnonymousUser">匿名登录</label>
+
+</div>
+

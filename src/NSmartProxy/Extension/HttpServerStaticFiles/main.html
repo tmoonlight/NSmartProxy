@@ -1,0 +1,144 @@
+﻿<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <title>NSmart 仪表盘</title>
+
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        .pointer {
+            cursor: pointer;
+        }
+
+        #content {
+            height: calc(100vh - 50px);
+        }
+        .dropdown-item { font-size: 14px;}
+    </style>
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+    <link href="bootstrapValidator.css" rel="stylesheet" />
+</head>
+<body>
+    <!--顶部navbar-->
+    <nav class="navbar navbar-light fixed-top bg-light flex-md-nowrap p-1 shadow-sm">
+        <div class="navbar-light col-sm-3 col-md-2 col-xl-1.5 mr-0">
+            <a href="main.html" class="d-none d-sm-block">
+
+                <img src="NSmartProxyNew.png" width="200px" />
+            </a>
+
+        </div>
+
+        <!-- <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search"> -->
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                <a class="nav-link" href="javascript:signOut();"><span data-feather="log-out"></span> Sign out</a>
+            </li>
+        </ul>
+        <button class="navbar-toggler d-block d-md-none" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="开启导航">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <!--左侧navbar-->
+            <nav class="col-md-2 navbar-expand-md bg-light sidebar">
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#dashboard">
+                                <span data-feather="home"></span>
+                                仪表盘 <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users">
+                                <span data-feather="users"></span>
+                                用户
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#connections">
+                                <span data-feather="activity"></span>
+                                连接
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#logs">
+                                <span data-feather="layers"></span>
+                                日志
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#config">
+                                <span data-feather="file-text"></span>
+                                配置
+                            </a>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-10 ml-md-auto col-lg-10 px-4">
+                <div class="alert alert-success hide" id="green_alert" style="display:none" role="alert">
+                    <span>NoTextGreen</span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="alert alert-danger hide" id="red_alert" style="display:none" role="alert">
+                    <span>NoText</span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+
+                <div id="content"></div>
+            </main>
+        </div>
+    </div>
+    <!-- <script src="jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+    <script src="jquery-slim.min.js?v=2"></script>
+
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="bootstrapValidator.js"></script>
+    <script src="feather.min.js?v=23"></script>
+    <script src="Chart.min.js"></script>
+    <!--<script src="dashboard.js"></script>-->
+    <!--<script src="bootstrap-table-expandable.js"></script>-->
+    <script src="main.js?v=145"></script>
+    <script></script>
+
+</body>
+</html>

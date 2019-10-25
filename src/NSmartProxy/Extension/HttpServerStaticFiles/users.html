@@ -1,0 +1,74 @@
+﻿<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3">用户</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <!--<div class="btn-group mr-2">-->
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addUser()"><span data-feather="user"></span> 新增</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mr-2" onclick="delUser()"><span data-feather="user-x"></span> 删除</button>
+
+        </div>
+        <div class="btn-group" role="group">
+               <button type="button" class="btn btn-sm btn-outline-secondary" onclick="banUsers()"><span data-feather="zap-off"></span> 断开</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="unBanUsers()"><span data-feather="zap"></span> 恢复</button>
+        </div>
+        <!--</div>-->
+
+    </div>
+    </div>
+
+<div class="mb-2 collapse" id="divAddUser">
+    <form class="bv-form" id="frmAddUser">
+        <div class="form-group">
+            <label for="inputUserName">用户名</label>
+            <input type="text" class="form-control" data-bv-field="inputUserName" name="inputUserName" id="inputUserName" placeholder="UserName">
+            <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
+        </div>
+        <div class="form-group">
+            <label for="inputPassword">密码</label>
+            <input type="password" data-bv-field="inputPassword" name="inputPassword" class="form-control" id="inputPassword" placeholder="Password">
+        </div>
+        <!--<div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+        <label class="form-check-label" for="exampleCheck1">Check me out</label>
+    </div>-->
+        <div class="custom-control custom-switch mb-4">
+            <input type="checkbox" class="custom-control-input" id="cbxIsAdmin">
+            <label class="custom-control-label" for="cbxIsAdmin">超级管理员</label>
+        </div>
+        <button type="button" id="btnAddUser" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+   
+
+<div class="table-responsive-md">
+   
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th style="width:30px"></th>
+          
+            <th style="width:30px">Row</th>
+            <th>Operation</th>
+            <th>Userid</th>
+            <th>Username</th>
+            <th>RegisterTime</th>
+            <th>Status</th>
+            <th>Port Bound</th>
+           
+
+        </tr>
+        </thead>
+        <tbody id="user_tb_body">
+            <tr>
+                <td> <input type="checkbox" value="test"></td>
+                <td>无效内容</td>
+                <td>无效内容</td>
+                <td>无效内容</td>
+                <td>无效内容</td>
+                <td>无效内容</td>
+                <td><span data-feather='user'></span></td>
+                <td>无效内容</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

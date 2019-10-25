@@ -1,0 +1,99 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.106
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy", "NSmartProxy\NSmartProxy.csproj", "{AAB4283A-6A0F-4258-A86F-CDABA316556B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{30378AB8-F008-4AB6-8DB7-71B7C706C604}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ServerHost", "NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj", "{094B0334-FEDB-4867-9960-03382408BFBA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Data", "NSmartProxy.Data\NSmartProxy.Data.csproj", "{24542AF8-7666-42E4-B5D4-6E814162108D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ClientRouter", "NSmartProxy.ClientRouter\NSmartProxy.ClientRouter.csproj", "{E14FF601-B534-46EA-9759-6E050ECAD592}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Infrastructure", "NSmartProxy.Infrastructure\NSmartProxy.Infrastructure.csproj", "{8604F141-1392-434C-AF51-A1B73B214D98}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxyClient", "NSmartProxyClient\NSmartProxyClient.csproj", "{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxyWinform", "NSmartProxyWinform\NSmartProxyWinform.csproj", "{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HttpServerStaticFiles", "NSmartProxy\Extension\HttpServerStaticFiles\", "{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_5671"
+		Debug.AspNetCompiler.PhysicalPath = "NSmartProxy\Extension\HttpServerStaticFiles\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_5671\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_5671"
+		Release.AspNetCompiler.PhysicalPath = "NSmartProxy\Extension\HttpServerStaticFiles\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_5671\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "5671"
+		SlnRelativePath = "NSmartProxy\Extension\HttpServerStaticFiles\"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.NUnitTest", "NSmartProxy.NUnitTest\NSmartProxy.NUnitTest.csproj", "{DDF2C0DE-FBFD-4AC2-BD00-44D96D9833B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAB4283A-6A0F-4258-A86F-CDABA316556B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB4283A-6A0F-4258-A86F-CDABA316556B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB4283A-6A0F-4258-A86F-CDABA316556B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAB4283A-6A0F-4258-A86F-CDABA316556B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{094B0334-FEDB-4867-9960-03382408BFBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{094B0334-FEDB-4867-9960-03382408BFBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{094B0334-FEDB-4867-9960-03382408BFBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{094B0334-FEDB-4867-9960-03382408BFBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24542AF8-7666-42E4-B5D4-6E814162108D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E14FF601-B534-46EA-9759-6E050ECAD592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E14FF601-B534-46EA-9759-6E050ECAD592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E14FF601-B534-46EA-9759-6E050ECAD592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E14FF601-B534-46EA-9759-6E050ECAD592}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8604F141-1392-434C-AF51-A1B73B214D98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{DDF2C0DE-FBFD-4AC2-BD00-44D96D9833B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDF2C0DE-FBFD-4AC2-BD00-44D96D9833B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDF2C0DE-FBFD-4AC2-BD00-44D96D9833B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDF2C0DE-FBFD-4AC2-BD00-44D96D9833B7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{094B0334-FEDB-4867-9960-03382408BFBA} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
+		{2654C6B4-E3F0-4F66-9CB3-F267790AC5BE} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
+		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CBECE17A-7F2B-4821-843B-65DCE2A768C2}
+	EndGlobalSection
+EndGlobal

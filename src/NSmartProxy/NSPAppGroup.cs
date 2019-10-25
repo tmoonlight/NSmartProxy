@@ -1,0 +1,76 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Net.Sockets;
+using System.Text;
+using NSmartProxy.Data;
+
+namespace NSmartProxy
+{
+    /// <summary>
+    /// 按host区分的app组，ActivateApp始终是最后一个进来的app。
+    /// </summary>
+    public class NSPAppGroup : Dictionary<string, NSPApp>
+    {
+        public new void Add(string key, NSPApp value)
+        {
+            key = key.Replace(" ", "");
+            _activateApp = value;
+            ProtocolInGroup = value.AppProtocol;
+            base.Add(key, value);
+        }
+
+        public new NSPApp this[string key]
+        {
+            get => base[key.Replace(" ", "")];
+            set
+            {
+                _activateApp = value;
+                ProtocolInGroup = value.AppProtocol; base[key.Replace(" ", "")] = value;
+            }
+        }
+
+        public NSPApp _activateApp;
+
+        public NSPApp ActivateApp
+        {
+            get { return _activateApp; }
+           // set { _activateApp = value; }
+        }
+        public Protocol ProtocolInGroup;//组协议
+
+        public new void Clear()
+        {
+            _activateApp = null;
+            base.Clear();
+        }
+
+        //TODO 3 考虑禁用该方法，closeall会误关闭其他的socket
+        [Obsolete]
+        public void CloseAllXXX()
+        {
+
+            foreach (var key in base.Keys)
+            {
+                this[key].Close();
+            }
+            _activateApp?.Close();
+        }
+
+        public bool IsAllClosed()
+        {
+
+            foreach (var key in base.Keys)
+            {
+                if (!this[key].IsClosed)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public TcpListener Listener { get; set; }
+    }
+}

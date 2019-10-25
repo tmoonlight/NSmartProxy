@@ -14,7 +14,7 @@ namespace TCPTester.Client
         static void Main(string[] args)
         {
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect("124.116.157.31", 5944);
+            tcpClient.Connect("127.0.0.1", 5944);
             //tcpClient.Connect("192.168.1.2", 12306);
             var stream = tcpClient.GetStream();
 
@@ -25,12 +25,12 @@ namespace TCPTester.Client
                 while (true)
                 {
                     int readResultLength = stream.Read(buffer, 0, buffer.Length);
-                    
+
                     //if(readResultLength)
                     Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, readResultLength).Trim());
                 }
             });
-
+            int x = 0;
             while (true)
             {
                 string str = "testgo ";//Console.ReadLine();
@@ -42,10 +42,11 @@ namespace TCPTester.Client
                     break;
                 }
 
-                byte[] allbBytes = ASCIIEncoding.ASCII.GetBytes(str);
+                byte[] allbBytes = ASCIIEncoding.ASCII.GetBytes(str + x);
                 stream.WriteTimeout = 3000;
                 stream.Write(allbBytes, 0, allbBytes.Length);
-                Thread.Sleep(2000);
+                x++;
+                Console.ReadLine();
             }
 
         }
