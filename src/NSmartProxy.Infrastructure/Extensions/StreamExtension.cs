@@ -37,14 +37,13 @@ namespace NSmartProxy.Infrastructure
             return receiveCount;
         }
 
-       
+
         public static async Task<int> ReadAsyncEx(this NetworkStream stream, byte[] buffer)
         {
-            return await stream.ReadAsync(buffer,0,buffer.Length,Global.DefaultConnectTimeout);
+            return await stream.ReadAsync(buffer, 0, buffer.Length, Global.DefaultConnectTimeout);
         }
 
-
-        public static Stream ProcessSSL(this Stream clientStream,X509Certificate cert)
+        public static Stream ProcessSSL(this Stream clientStream, X509Certificate cert)
         {
             try
             {
@@ -62,5 +61,11 @@ namespace NSmartProxy.Infrastructure
 
             //return null;
         }
+
+        public static async Task WriteAsync(this Stream stream, byte[] bytes)
+        {
+            await stream.WriteAsync(bytes, 0, bytes.Length);
+        }
+
     }
 }

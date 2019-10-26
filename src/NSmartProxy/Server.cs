@@ -21,6 +21,7 @@ using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 using NSmartProxy.Database;
+using NSmartProxy.Infrastructure.Extension;
 
 namespace NSmartProxy
 {
@@ -109,7 +110,7 @@ namespace NSmartProxy
             //2.开启http服务
             if (ServerContext.ServerConfig.WebAPIPort > 0)
             {
-                var httpServer = new HttpServer(Logger, DbOp, ServerContext);
+                var httpServer = new HttpServer(Logger, DbOp, ServerContext, new HttpServerApis(ServerContext, DbOp, "./log"));
                 _ = httpServer.StartHttpService(ctsHttp, ServerContext.ServerConfig.WebAPIPort);
             }
 
