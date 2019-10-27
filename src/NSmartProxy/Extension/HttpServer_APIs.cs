@@ -192,6 +192,14 @@ namespace NSmartProxy.Extension
         #endregion
 
         #region login
+
+        [API]
+        public string GetVersionInfo()
+        {
+            //return $"Server:{Global.NSmartProxyServerName} Client:{Global.NSmartProxyClientName}";
+            return Global.NSmartProxyServerName;
+        }
+
         [FormAPI]
         public string Login(string username, string userpwd)
         {
