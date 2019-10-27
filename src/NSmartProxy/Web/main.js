@@ -29,7 +29,7 @@ var basepath = "/";//api根地址,这里需要和配置文件一致
     }
 
     function loadContent(storedHash) {
-        if (!this.location.href.contains("login.html") && this.location.href.indexOf('#') < 0) {
+        if (this.location.href.indexOf("login.html") < 0 && this.location.href.indexOf('#') < 0) {
             this.location.href += "#dashboard";
             return;
         }

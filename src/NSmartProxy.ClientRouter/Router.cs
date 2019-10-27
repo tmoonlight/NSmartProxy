@@ -79,7 +79,7 @@ namespace NSmartProxy.Client
                     string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
                     NspClientCachePath = assemblyDirPath + "\\" + NSMART_CLIENT_CACHE_FILE;
                     //NspClientCachePath = System.Environment.CurrentDirectory + "\\" + NSMART_CLIENT_CACHE_FILE;
-                    
+
                 }
 
                 return nspClientCachePath;
@@ -184,7 +184,7 @@ namespace NSmartProxy.Client
 
                         //File.WriteAllText(NspClientCachePath, arrangedToken);
                         UserCacheManager.UpdateUser(arrangedToken, "",
-                            GetEndPoint(),NspClientCachePath);
+                            GetEndPoint(), NspClientCachePath);
                     }
                 }
                 catch (Exception ex)//出错 重连
@@ -371,16 +371,22 @@ namespace NSmartProxy.Client
                 //消费端长连接，需要在server端保活
                 try
                 {
-                    int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length);//双端标记S0001
-                    if (readByteCount == 0)
+                    ControlMethod controlMethod;
+                    //TODO 5 处理应用级的keepalive
+                    do
                     {
-                        //抛出错误以便上层重启客户端。
-                        _waiter.TrySetResult(new Exception($"连接{appId}被服务器主动切断，已断开连接"));
-                        return;
+                        int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length); //双端标记S0001
+                        if (readByteCount == 0)
+                        {
+                            //抛出错误以便上层重启客户端。
+                            _waiter.TrySetResult(new Exception($"连接{appId}被服务器主动切断，已断开连接"));
+                            return;
 
-                    }
-                    //TODO 4 如果是UDP则直接转发，之后返回上层
-                    var controlMethod = (ControlMethod)buffer[0];
+                        }
+
+                        //TODO 4 如果是UDP则直接转发，之后返回上层
+                        controlMethod = (ControlMethod) buffer[0];
+                    } while (controlMethod == ControlMethod.KeepAlive);
                 }
                 catch (Exception ex)
                 {

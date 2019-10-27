@@ -348,9 +348,10 @@ namespace NSmartProxy
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
-
+            
             //TODO 4 增加一个udp转发的选项
             providerStream = s2pClient.GetStream();
+            //TODO 5 这里会出错导致无法和客户端通信
             await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
             //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
             if (restBytes != null)
