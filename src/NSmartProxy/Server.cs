@@ -348,7 +348,7 @@ namespace NSmartProxy
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
-            
+
             //TODO 4 增加一个udp转发的选项
             providerStream = s2pClient.GetStream();
             //TODO 5 这里会出错导致无法和客户端通信
@@ -487,13 +487,28 @@ namespace NSmartProxy
             if (ServerContext.Clients.ContainsKey(clientID))
             {
                 //2.2 响应ACK 
-                await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
-                ServerContext.Clients[clientID].LastUpdateTime = DateTime.Now;
+                await nstream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer });
+
+                var nspClient = ServerContext.Clients[clientID];
+                nspClient.LastUpdateTime = DateTime.Now;
+
+                //2.3 TODO 5 发送保活数据包
+                foreach (var kv in nspClient.AppMap)
+                {
+                    TcpClient peekedClient = kv.Value.TcpClientBlocks.Peek();
+                    if (peekedClient != null)
+                    {
+                        //发送保活数据
+                        _ = nstream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.KeepAlive });
+                    }
+                }
             }
             else
             {
                 Server.Logger.Debug($"clientId为{clientID}客户端已经被清除。");
             }
+
+
 
             //3.接收完立即关闭
             client.Close();

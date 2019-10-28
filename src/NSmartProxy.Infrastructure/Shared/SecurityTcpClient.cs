@@ -156,7 +156,7 @@ namespace NSmartProxy.Authorize
                 return null;
             }
 
-            var token = ASCIIEncoding.ASCII.GetString(tokenBytes);
+            var token = Encoding.ASCII.GetString(tokenBytes);
             //校验Token
             if (token == Global.NO_TOKEN_STRING)
             {

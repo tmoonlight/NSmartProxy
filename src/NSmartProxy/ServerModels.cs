@@ -13,9 +13,11 @@ namespace NSmartProxy
         public int AppID;
     }
 
+    /// <summary>
+    /// nspclient集合 clientid->NSPClient
+    /// </summary>
     public class NSPClientCollection:IEnumerable<NSPClient>
     {
-        //clientid->NSPClient
         private Dictionary<int, NSPClient> ClientMap;
 
         public NSPClient this[int index]
