@@ -17,7 +17,7 @@ namespace NSmartProxy.ServerHost
                 var name = Global.NSPServerServiceName;
                 config.SetDisplayName(Global.NSPServerServiceName);
                 config.SetName(Global.NSPServerDisplayName);
-                config.SetDescription(Global.NSmartProxyServerName);
+                config.SetDescription(NSPVersion.NSmartProxyServerName);
 
                 config.Service(serviceConfig =>
                 {

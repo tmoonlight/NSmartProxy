@@ -80,7 +80,7 @@ namespace NSmartProxyWinService
                 _currentLoginInfo.UserPwd = args[3];
             }
 
-            Logger.Info($"*** {Global.NSmartProxyClientName} ***");
+            Logger.Info($"*** {NSPVersion.NSmartProxyClientName} ***");
 
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())

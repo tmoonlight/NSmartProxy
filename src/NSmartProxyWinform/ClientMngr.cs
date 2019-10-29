@@ -69,14 +69,14 @@ namespace NSmartProxyWinform
 
 
 
-            this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
+            this.notifyIconNSPClient.Text = NSPVersion.NSmartProxyClientName;
 
             UpdateText();
         }
 
         private void UpdateText()
         {
-            this.notifyIconNSPClient.Text = Global.NSmartProxyClientName;
+            this.notifyIconNSPClient.Text = NSPVersion.NSmartProxyClientName;
             btnStart.Text = L("开始");
             btnOpenInExplorer.Text = L("资源管理器中打开");
             启动内网穿透ToolStripMenuItem.Text = L("启动内网穿透");

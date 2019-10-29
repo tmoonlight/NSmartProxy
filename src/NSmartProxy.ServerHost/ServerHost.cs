@@ -71,7 +71,7 @@ namespace NSmartProxy.ServerHost
             Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServer");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
 
-            Logger.Debug($"*** {Global.NSmartProxyServerName} ***");
+            Logger.Debug($"*** {NSPVersion.NSmartProxyServerName} ***");
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
               .AddJsonFile(CONFIG_FILE_PATH);
@@ -150,7 +150,7 @@ namespace NSmartProxy.ServerHost
         public void Stop()
         {
             //
-            Console.WriteLine(Global.NSmartProxyClientName +" STOPPED.");
+            Console.WriteLine(NSPVersion.NSmartProxyClientName +" STOPPED.");
             Environment.Exit(0);
         }
     }

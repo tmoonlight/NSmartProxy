@@ -303,7 +303,7 @@ namespace NSmartProxy.Client
                 Router.Logger.Debug("登录成功");
                 var data = result.Data;
                 arrangedToken = data.Token;
-                Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{Global.NSmartProxyServerName}");
+                Router.Logger.Debug($"服务端版本号：{data.Version},当前适配版本号{NSPVersion.NSmartProxyServerName}");
                 clientId = int.Parse(data.Userid);
                 //File.WriteAllText(NspClientCachePath, arrangedToken);
                 var endPoint = ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;

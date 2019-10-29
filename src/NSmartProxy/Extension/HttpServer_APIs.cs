@@ -197,7 +197,7 @@ namespace NSmartProxy.Extension
         public string GetVersionInfo()
         {
             //return $"Server:{Global.NSmartProxyServerName} Client:{Global.NSmartProxyClientName}";
-            return Global.NSmartProxyServerName;
+            return NSPVersion.NSmartProxyServerName;
         }
 
         [FormAPI]
@@ -281,7 +281,7 @@ window.location.href='main.html';
             //2.给token
             string output = $"{username}|{DateTime.Now.ToString("yyyy-MM-dd")}";
             string token = EncryptHelper.AES_Encrypt(output);
-            return new LoginFormClientResult { Token = token, Version = Global.NSmartProxyServerName, Userid = user.userId };
+            return new LoginFormClientResult { Token = token, Version = NSPVersion.NSmartProxyServerName, Userid = user.userId };
         }
         #endregion
 
