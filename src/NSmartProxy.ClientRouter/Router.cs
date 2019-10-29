@@ -116,7 +116,7 @@ namespace NSmartProxy.Client
         /// AlwaysReconnect：始终重试，开启此选项，无论何时，一旦程序在连接不上时都会进行重试，否则只在连接成功后的异常中断时才重试。
         /// </summary>
         /// <returns></returns>
-        public async Task Start(bool AlwaysReconnect = false)
+        public async Task Start(bool AlwaysReconnect = false, Action<ClientModel> complete = null)
         {
             if (AlwaysReconnect) IsStarted = true;
             var oneLiveToken = ONE_LIVE_TOKEN_SRC.Token;
@@ -208,6 +208,7 @@ namespace NSmartProxy.Client
                 {
                     //从服务端初始化客户端配置
                     clientModel = await ConnectionManager.InitConfig(this.ClientConfig).ConfigureAwait(false);
+                    complete?.Invoke(clientModel);
                 }
                 catch (Exception ex)
                 {
@@ -385,7 +386,7 @@ namespace NSmartProxy.Client
                         }
 
                         //TODO 4 如果是UDP则直接转发，之后返回上层
-                        controlMethod = (ControlMethod) buffer[0];
+                        controlMethod = (ControlMethod)buffer[0];
                     } while (controlMethod == ControlMethod.KeepAlive);
                 }
                 catch (Exception ex)
