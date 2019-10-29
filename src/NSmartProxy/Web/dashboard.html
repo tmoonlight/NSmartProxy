@@ -1,0 +1,84 @@
+﻿ <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3">仪表盘</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary"> <span data-feather="power"></span>
+                重启服务</button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 col-xl-4">
+        <canvas class="my-2 pointer" id="myChart" width="900" height="480"></canvas>
+
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <canvas class="my-2 pointer" id="myChart2" width="900" height="480"></canvas>
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <canvas class="my-2 pointer" id="myChart3" width="900" height="480"></canvas>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h3>最新日志</h3>
+   
+</div>
+
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+        <tr>
+        <th style="width: 60px;">Line</th>
+        <th>Content</th>
+                
+        </thead>
+        <tbody id="tbodyLogs">
+        <tr>
+            <td>1,001</td>
+            <td>无效内容</td>
+                
+        </tr>
+        <tr>
+            <td>1,002</td>
+            <td>无效内容</td>
+               
+        </tr>
+        <tr>
+            <td>1,003</td>
+            <td>无效内容</td>
+                
+        </tr>
+        <tr>
+            <td>1,003</td>
+            <td>无效内容</td>
+                
+        </tr>
+        <tr>
+            <td>1,004</td>
+            <td>无效内容</td>
+              
+        </tr>
+        <tr>
+            <td>1,005</td>
+            <td>无效内容</td>
+               
+        </tr>
+        <tr>
+            <td>1,006</td>
+            <td>无效内容</td>
+               
+        </tr>
+          
+
+        </tbody>
+    </table>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.href='#logs'"> <span data-feather="layers"></span>
+                更多日志</button>
+        </div>
+    </div>
+</div>

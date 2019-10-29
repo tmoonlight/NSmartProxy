@@ -8,13 +8,19 @@ using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
 using System.Threading;
+using NSmartProxy.Data.Config;
+using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
+using PeterKottas.DotNetCore.WindowsService.Interfaces;
 
 namespace NSmartProxy.ServerHost
 {
-    class ServerHost
+    public class ServerHost:IMicroService
     {
 
         private static Mutex mutex = new Mutex(true, "{8639B0AD-A27C-4F15-B3D9-08035D0FC6D6}");
+        private static ILog Logger;
+
         #region logger
         public class Log4netLogger : INSmartLogger
         {
@@ -37,46 +43,58 @@ namespace NSmartProxy.ServerHost
         }
         #endregion
 
-        public static IConfigurationRoot Configuration { get; set; }
-        public static ILog Logger;
+        public IConfigurationRoot Configuration { get; set; }
 
-        static void Main(string[] args)
+        public const string CONFIG_FILE_PATH = "./appsettings.json";
+
+        public void Start()
         {
             if (!mutex.WaitOne(3, false))
             {
-                string msg = "Another instance of the program is running.";
-                //Logger.Error(msg, new Exception(msg));
-                Console.Write(msg);
-                return;
+                //如果启动多个实例，则警告
+                string msg = "Another instance of the program is running.It may cause fatal error.";
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine(msg);
             }
 
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Initializing..");
             //log
+            InitLogConfig();
+            StartNSPServer();
+        }
+
+        private void InitLogConfig()
+        {
             var loggerRepository = LogManager.CreateRepository("NSmartServerRepository");
             XmlConfigurator.ConfigureAndWatch(loggerRepository, new FileInfo("log4net.config"));
             Logger = LogManager.GetLogger(loggerRepository.Name, "NSmartServer");
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
 
-            Logger.Debug("*** NSmart Server v0.2 ***");
+            Logger.Debug($"*** {Global.NSmartProxyServerName} ***");
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
-              .AddJsonFile("appsettings.json");
+              .AddJsonFile(CONFIG_FILE_PATH);
 
             Configuration = builder.Build();
-            StartServer();
         }
 
-        private static void StartServer()
+        private static void StartNSPServer()
         {
-            try
+            NSPServerConfig serverConfig = null;
+            //初始化配置
+            if (!File.Exists(CONFIG_FILE_PATH))
             {
-                Server.ClientServicePort = int.Parse(Configuration.GetSection("ClientServicePort").Value);
-                Server.ConfigServicePort = int.Parse(Configuration.GetSection("ConfigServicePort").Value);
+                serverConfig = new NSPServerConfig();
+                serverConfig.SaveChanges(CONFIG_FILE_PATH);
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Debug("配置文件读取失败：" + ex.ToString());
-                return;
+                serverConfig = ConfigHelper.ReadAllConfig<NSPServerConfig>(CONFIG_FILE_PATH);
             }
+
+            
+
             Server srv = new Server(new Log4netLogger());
 
             int retryCount = 0;
@@ -87,7 +105,10 @@ namespace NSmartProxy.ServerHost
                 try
                 {
                     watch.Start();
-                    srv.SetWebPort(int.Parse(Configuration.GetSection("WebAPIPort").Value))
+                    srv
+                       .SetConfiguration(serverConfig)
+                       .SetAnonymousLogin(true)
+                       .SetServerConfigPath(CONFIG_FILE_PATH)
                        .Start()
                        .Wait();
                 }
@@ -109,7 +130,7 @@ namespace NSmartProxy.ServerHost
                 {
                     retryCount++;
                 }
-                if (retryCount > 100) break;
+                if (retryCount > 10) break;
 
             }
 
@@ -117,6 +138,7 @@ namespace NSmartProxy.ServerHost
             Logger.Debug("NSmart server terminated. Press any key to continue.");
             try
             {
+                //只是为了服务器挂了不那么快退出进程而已
                 Console.Read();
             }
             catch
@@ -124,9 +146,12 @@ namespace NSmartProxy.ServerHost
                 // ignored
             }
         }
-    }
 
-    internal class NSmartProxyClient
-    {
+        public void Stop()
+        {
+            //
+            Console.WriteLine(Global.NSmartProxyClientName +" STOPPED.");
+            Environment.Exit(0);
+        }
     }
 }

@@ -15,14 +15,30 @@ namespace NSmartProxy
 {
     public static class NetworkUtil
     {
-        private const string PortReleaseGuid = "C086DE94-2C45-4247-81E2-2E5248F5A769";
+        private const string PortReleaseGuid = "23495C95-AEB6-41C6-B8AF-D03025EF0AE6";
 
         private static HashSet<int> _usedPorts = new HashSet<int>();
 
         public static bool ReleasePort(int port)
         {
-            return _usedPorts.Remove(port);
+            try
+            {
+                mutex.WaitOne();
+                _usedPorts.Remove(port);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
         }
+
+        private static readonly Mutex mutex = new Lazy<Mutex>(() =>
+            new Mutex(false,
+                PortReleaseGuid)).Value;
+        /*string.Concat("./Global/", PortReleaseGuid)*/
 
         /// <summary>
         /// 查找一个端口
@@ -47,9 +63,8 @@ namespace NSmartProxy
             bool isAvailable = true;
 
             var mutex = new Mutex(false,
-                PortReleaseGuid
-                /*string.Concat("./Global/", PortReleaseGuid)*/);
-            mutex.WaitOne();
+                PortReleaseGuid);
+            mutex.WaitOne();　//全局锁
             try
             {
                 for (int i = 0; i < PortCount; i++)
@@ -72,10 +87,16 @@ namespace NSmartProxy
                             continue;
                         }
                         foreach (IPEndPoint endPoint in endPoints)
-                        {
-                            if (endPoint.Port != port) continue;
-                            isAvailable = false;
-                            break;
+                        {//判断规则 ：0000或者三冒号打头，ip占用，才算占用，否则pass
+                         //因为linux下 出现192.168.0.106:8787的记录，也会被误判为端口被占用
+                            if (endPoint.Address.ToString() == "0.0.0.0" || endPoint.Address.ToString() == ":::")
+                            {
+                                if (endPoint.Port == port)
+                                {
+                                    isAvailable = false;
+                                    break;
+                                }
+                            }
                         }
 
                     } while (!isAvailable && port < IPEndPoint.MaxPort);
@@ -94,8 +115,50 @@ namespace NSmartProxy
         }
 
         /// <summary> 
-        /// Check if startPort is available, incrementing and 
-        /// checking again if it's in use until a free port is found 
+        /// 找出正在被使用的端口
+        /// </summary> 
+        /// <param name="startPort">The first port to check</param> 
+        /// <returns>The first available port</returns> 
+        public static List<int> FindUnAvailableTCPPorts(List<int> ports)
+        {
+            //bool isAvailable = true;
+            List<int> usedPortList = new List<int>(ports.Count);
+
+            mutex.WaitOne();
+            try
+            {
+                IPGlobalProperties ipGlobalProperties =
+                    IPGlobalProperties.GetIPGlobalProperties();
+                IPEndPoint[] endPoints =
+                    ipGlobalProperties.GetActiveTcpListeners();
+                for (int i = ports.Count - 1; i > -1; i--)
+                {
+                    if (ports[i] > 65535 || ports[i] < 1 || _usedPorts.Contains(ports[i]))
+                    {
+                        usedPortList.Add(ports[i]);
+                        ports.Remove(ports[i]);
+                    }
+                }
+                foreach (IPEndPoint endPoint in endPoints)
+                {
+                    var thisPort = endPoint.Port;
+                    if (ports.Any(p => p == thisPort))
+                    {
+                        usedPortList.Add(thisPort);
+                    }
+                }
+
+                return usedPortList.Distinct().ToList();
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+
+
+        /// <summary> 
+        /// 找UDP空闲端口
         /// </summary> 
         /// <param name="startPort">The first port to check</param> 
         /// <returns>The first available port</returns> 
@@ -144,7 +207,7 @@ namespace NSmartProxy
         }
 
 
-        public static async Task<TcpClient> ConnectAndSend(string addess, int port, Protocol protocol, byte[] data, bool isClose = false)
+        public static async Task<TcpClient> ConnectAndSend(string addess, int port, ServerProtocol protocol, byte[] data, bool isClose = false)
         {
             TcpClient configClient = new TcpClient();
             bool isConnected = false;
@@ -153,7 +216,7 @@ namespace NSmartProxy
                 var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
                 var connectAsync = configClient.ConnectAsync(addess, port);
                 //超时则dispose掉
-                var comletedTask = await Task.WhenAny(delayDispose, connectAsync);
+                var completedTask = await Task.WhenAny(delayDispose, connectAsync);
                 if (!connectAsync.IsCompleted)
                 {
                     Console.WriteLine("ConnectAndSend连接超时,5秒后重试");
@@ -170,15 +233,26 @@ namespace NSmartProxy
             var configStream = configClient.GetStream();
             await configStream.WriteAsync(new byte[] { (byte)protocol }, 0, 1);
             await configStream.WriteAndFlushAsync(data, 0, data.Length);
-            Console.Write(protocol.ToString() + " proceed.");
+            //Console.Write(protocol.ToString() + " proceed.");
+            Console.Write("->");
             if (isClose)
                 configClient.Close();
             return configClient;
         }
 
+        /// <summary>
+        ///linux需要添加或修改以下值以手动实现keepalive
+        /// vim /etc/sysctl.conf
+        ///net.ipv4.tcp_keepalive_time = 300
+        ///net.ipv4.tcp_keepalive_intvl = 10
+        ///net.ipv4.tcp_keepalive_probes = 10
+        /// sysctl -p+-
+        /// </summary>
+        /// <param name="tcpClient"></param>
+        /// <param name="ErrorMsg"></param>
         public static void SetKeepAlive(this TcpClient tcpClient, out string ErrorMsg)
         {
-            
+
             ErrorMsg = "";
             // not all platforms support IOControl
             //try
@@ -242,5 +316,75 @@ namespace NSmartProxy
             return buffer;
         }
 
+        /// <summary>
+        /// 清空排除端口集合
+        /// </summary>
+        public static void ClearAllUsedPorts()
+        {
+            try
+            {
+                mutex.WaitOne();
+                _usedPorts = new HashSet<int>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+        }
+
+        public static void ReAddUsedPorts(List<int> usedPorts)
+        {
+            ClearAllUsedPorts();
+            AddUsedPorts(usedPorts);
+        }
+
+        /// <summary>
+        /// 增加排除端口，这些端口永远不会被分配到
+        /// </summary>
+        /// <param name="usedPorts"></param>
+        public static void AddUsedPorts(List<int> usedPorts)
+        {
+            try
+            {
+                mutex.WaitOne();
+                foreach (var port in usedPorts)
+                {
+                    if (!_usedPorts.Contains(port))
+                        _usedPorts.Add(port);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+
+        }
+
+        /// <summary>
+        /// 删除排除端口
+        /// </summary>
+        /// <param name="usedPorts"></param>
+        public static void RemoveUsedPorts(List<int> usedPorts)
+        {
+            try
+            {
+                mutex.WaitOne();
+                foreach (var port in usedPorts)
+                {
+                    usedPorts.Remove(port);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            finally { mutex.ReleaseMutex(); }
+
+        }
     }
 }

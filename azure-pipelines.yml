@@ -1,0 +1,86 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  clientImageName: 'nspclient'
+  serverImageName: 'nspserver'
+  clientProjectName: 'NSmartProxyClient'
+  serverProjectName: 'NSmartProxy.ServerHost'
+
+steps:
+# - task: NuGetToolInstaller@0
+
+# - task: NuGetCommand@2
+#   inputs:
+#     restoreSolution: '$(solution)'
+
+# - task: VSBuild@1
+#   inputs:
+#     solution: '$(solution)'
+#     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(System.DefaultWorkingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+#     platform: '$(buildPlatform)'
+#     configuration: '$(buildConfiguration)'
+
+# - task: VSTest@2
+#   inputs:
+#     platform: '$(buildPlatform)'
+#     configuration: '$(buildConfiguration)'
+- bash: |
+    mkdir ./build
+    mkdir ./build/$(clientImageName)
+    mkdir ./build/$(clientImageName)/$(clientProjectName)
+    mkdir ./build/nspserver
+    mkdir ./build/nspserver/NSmartProxy.ServerHost
+  displayName: Create build directory
+  workingDirectory: '$(System.DefaultWorkingDirectory)/'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
+    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspserver'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/'
+    zipAfterPublish: false
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: './src/NSmartProxyClient/NSmartProxyClient.csproj'
+    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspclient'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/'
+    zipAfterPublish: false
+
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      docker login -u $(dhName) -p $(dhPwd)
+      docker build . -t nspclient
+      docker tag nspclient tmoonlight/nspclient
+      docker push tmoonlight/nspclient
+    workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspclient/NSmartProxyClient'
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      docker login -u $(dhName) -p $(dhPwd)
+      docker build . -t nspserver
+      docker tag nspserver tmoonlight/nspserver
+      docker push tmoonlight/nspserver
+    workingDirectory: '$(System.DefaultWorkingDirectory)/build/nspserver/$(serverProjectName)'
+

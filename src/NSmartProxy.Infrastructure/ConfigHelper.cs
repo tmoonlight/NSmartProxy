@@ -10,22 +10,22 @@ namespace NSmartProxy.Infrastructure
         /// 读配置
         /// </summary>
         /// <returns></returns>
-        public static Config ReadAllConfig(string path)
+        public static T ReadAllConfig<T>(string path)
         {
             using (var fs = new FileStream(path, FileMode.Open))
             {
                 StreamReader sr = new StreamReader(fs);
                 var str = sr.ReadToEnd();
-                return JsonConvert.DeserializeObject<Config>(str);
+                return JsonConvert.DeserializeObject<T>(str);
             }
         }
 
         /// <summary>
-        /// 村配置
+        /// 存配置
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static Config SaveChanges(this Config config, string path)
+        public static T SaveChanges<T>(this T config, string path)
         {
             JsonSerializer serializer = new JsonSerializer();
             using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))

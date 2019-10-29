@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using NSmartProxy.Authorize;
+using NSmartProxy.Database;
+using NSmartProxy.Infrastructure;
+using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 
 namespace NSmartProxy
@@ -21,53 +25,85 @@ namespace NSmartProxy
         /// <summary>
         /// 当app增加时触发
         /// </summary>
-        public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
+       // public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
         public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
-        //public event EventHandler<AppChangedEventArgs> AppRemoved = delegate { };
-        public NSPClientCollection Clients = new NSPClientCollection();
 
-        //端口和app的映射关系
-        public Dictionary<int, NSPApp> PortAppMap = new Dictionary<int, NSPApp>();
+        private NSPServerContext ServerContext;
+
 
         private ClientConnectionManager()
         {
             Server.Logger.Debug("ClientManager initialized");
-            Task.Run(ListenServiceClient);
+            // Task.Run(ListenServiceClient);
         }
 
         private readonly object _lockObject = new Object();
         private readonly object _lockObject2 = new Object();
         private readonly Random _rand = new Random();
-        private async Task ListenServiceClient()
+        public async Task ListenServiceClient(IDbOperator dbOp)
         {
             //侦听，并且构造连接池
-            Server.Logger.Debug("Listening client on port " + Server.ClientServicePort + "...");
-            TcpListener listener = new TcpListener(IPAddress.Any, Server.ClientServicePort);
+            Server.Logger.Debug("Listening client on port " + ServerContext.ServerConfig.ReversePort + "...");
+            TcpListener listener = new TcpListener(IPAddress.Any, ServerContext.ServerConfig.ReversePort);
             listener.Start(1000);
             while (true)
             {
-                TcpClient incomeClient = await listener.AcceptTcpClientAsync();
+                SecurityTcpClient incomeClient = await listener.AcceptSecureTcpClientAsync(dbOp);
                 Server.Logger.Debug("已建立一个空连接" +
-                    incomeClient.Client.LocalEndPoint.ToString() + "-" +
-                    incomeClient.Client.RemoteEndPoint.ToString());
-                incomeClient.SetKeepAlive(out _);
-                ProcessReverseRequest(incomeClient);
+                    incomeClient.Client.Client.LocalEndPoint.ToString() + "-" +
+                    incomeClient.Client.Client.RemoteEndPoint.ToString());
+                incomeClient.Client.SetKeepAlive(out _);
+                _ = ProcessReverseRequest(incomeClient);
             }
 
         }
 
+        public static ClientConnectionManager GetInstance()
+        {
+            return Instance;
+        }
+
+        public ClientConnectionManager SetServerContext(NSPServerContext serverContext)
+        {
+            ServerContext = serverContext;
+            return this;
+        }
+
         /// <summary>
-        /// 处理反向连接请求
+        /// 处理反向连接请求（服务端）
         /// </summary>
         /// <param name="incomeClient"></param>
         /// <returns></returns>
-        private async Task ProcessReverseRequest(TcpClient incomeClient)
+        private async Task ProcessReverseRequest(SecurityTcpClient incomeClient)
         {
+            var iClient = incomeClient.Client;
             try
             {
+                var result = await incomeClient.AuthorizeAsync();
+                if (result == null) return;//主动关闭
+
+                if (!result.IsSuccess)
+                {
+                    Server.Logger.Debug("SecurityTcpClient校验失败：" + incomeClient.ErrorMessage);
+                    await iClient.GetStream().WriteAsync(new byte[] { (byte)result.ResultState });
+                    iClient.Close();//如果校验失败则发送一个字节的直接关闭连接
+                }
+                else
+                {
+                    Server.Logger.Debug("SecurityTcpClient校验成功！");
+                    await iClient.GetStream().WriteAsync(new byte[] { (byte)result.ResultState });
+                }
+
                 //读取头四个字节
                 byte[] bytes = new byte[4];
-                await incomeClient.GetStream().ReadAsync(bytes);
+                if (await iClient.GetStream().ReadAsync(bytes, 0, bytes.Length, Global.DefaultConnectTimeout) < 1)
+                {
+                    Server.Logger.Debug("服务端read出错，关闭连接");
+                    incomeClient.Client.Close();
+                    return;
+                }
+
+
 
                 var clientIdAppId = GetAppFromBytes(bytes);
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID
@@ -76,8 +112,8 @@ namespace NSmartProxy
                 //分配
                 lock (_lockObject)
                 {
-                    Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
-                        .PushInComeClient(incomeClient);
+                    ServerContext.Clients[clientIdAppId.ClientID].GetApp(clientIdAppId.AppID)
+                        .PushInComeClient(iClient);
                 }
                 //var arg = new AppChangedEventArgs();
                 //arg.App = clientIdAppId;
@@ -91,21 +127,56 @@ namespace NSmartProxy
         }
 
 
-        private static ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
+        private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
-        public static ClientConnectionManager GetInstance()
-        {
-            return Instance;
-        }
 
-        public async Task<TcpClient> GetClient(int consumerPort)
+        //public async Task<TcpClient> GetHTTPClient(int consumerPort)
+        //{
+        //    var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
+        //    var appId = ServerContext.PortAppMap[consumerPort].AppId;
+
+        //    //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
+        //    TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
+        //    if (client == null) return null;
+        //    ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
+        //    return client;
+        //}
+
+        public async Task<TcpClient> GetClient(int consumerPort, string host = null)
         {
-            var clientID = PortAppMap[consumerPort].ClientId;
-            var appID = PortAppMap[consumerPort].AppId;
+            NSPApp nspApp = null;
+            if (host == null || string.IsNullOrEmpty(host.Trim())) //host为空则随便匹配一个
+            { nspApp = ServerContext.PortAppMap[consumerPort].ActivateApp; }
+            else
+            {
+                if (!ServerContext.PortAppMap[consumerPort].TryGetValue(host, out nspApp))
+                {
+                    //throw new KeyNotFoundException($"无法找到{consumerPort}的host:{host}");
+                    Server.Logger.Debug($"无法找到{consumerPort}的host:{host}");
+                    nspApp = ServerContext.PortAppMap[consumerPort].ActivateApp;
+                }
+            }
+            if (nspApp == null) throw new KeyNotFoundException($"无法找到{consumerPort}下的任何一个客户端app");
+            //if (NSPApp.AppProtocol == Protocol.HTTP)
+            //{
+            //    //NSPApp.
+
+            //}
+
+            //var clientId = NSPApp.ClientId;
+            //var appId = NSPApp.AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
-            TcpClient client = await Clients[clientID].AppMap[appID].PopClientAsync();
-            PortAppMap[consumerPort].ReverseClients.Add(client);
+            //TODO 2这里的弹出比较麻烦了
+            TcpClient client = await nspApp.PopClientAsync();
+            if (client == null)
+            {
+                throw new TimeoutException($"弹出{consumerPort}超时");
+            }
+
+            //TODO 2 反向链接还写在这里？？
+            //ServerContext.PortAppMap[consumerPort].ActivateApp.ReverseClients.Add(client);
+            nspApp.ReverseClients.Add(client);
             return client;
         }
 
@@ -118,11 +189,22 @@ namespace NSmartProxy
         //   2          2
         //  clientid    count
         //  methodType  value = 0
-        public byte[] ArrageConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes)
+        public byte[] ArrangeConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes, int highPriorityClientId)
         {
             // byte[] arrangedBytes = new byte[256];
             ClientModel clientModel = new ClientModel();
-            int clientId = (appRequestBytes[0] << 8) + appRequestBytes[1];
+            int clientId;
+            //apprequestbytes里本身有clientId，但是如果传了highPriorityClientId，那就用这个clientId
+            if (highPriorityClientId != 0)
+            {
+                clientId = highPriorityClientId;
+            }
+            else
+            {
+                clientId = StringUtil.DoubleBytesToInt(appRequestBytes[0], appRequestBytes[1]);
+            }
+
+            //2.分配clientid //TODO 这一段可能不会再用到了
             int appCount = (int)appRequestBytes[2];
 
             if (clientId == 0)
@@ -135,12 +217,12 @@ namespace NSmartProxy
                     {
                         _rand.NextBytes(tempClientIdBytes);
                         int tempClientId = (tempClientIdBytes[0] << 8) + tempClientIdBytes[1];
-                        if (!Clients.ContainsKey(tempClientId))
+                        if (!ServerContext.Clients.ContainsKey(tempClientId))
                         {
 
                             clientModel.ClientId = tempClientId;
                             clientId = tempClientId;
-                            
+
                             break;
                         }
                     }
@@ -152,26 +234,77 @@ namespace NSmartProxy
             }
 
             //注册客户端
-            Clients.RegisterNewClient(clientModel.ClientId);
+            ServerContext.Clients.RegisterNewClient(clientModel.ClientId);
+            int oneEndpointLength = 2 + 1 + 1024 + 96;
             lock (_lockObject2)
             {
                 //注册app
                 clientModel.AppList = new List<App>(appCount);
                 for (int i = 0; i < appCount; i++)
                 {
-                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[2 * i], consumerPortBytes[2 * i + 1]);
-
-                    int arrangedAppid = Clients[clientId].RegisterNewApp();
+                    int offset = oneEndpointLength * i;
+                    int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[offset], consumerPortBytes[offset + 1]);
+                    int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
+                    Protocol protocol = (Protocol)consumerPortBytes[offset + 2];
+                    string host = Encoding.ASCII.GetString(consumerPortBytes, offset + 3, 1024).TrimEnd('\0');
+                    string description = Encoding.UTF8.GetString(consumerPortBytes, offset + 3 + 1024, 96).TrimEnd('\0');
                     //查找port的起始端口如果未指定，则设置为20000
-                    if (startPort == 0) startPort = 20000;
-                    int port = NetworkUtil.FindOneAvailableTCPPort(startPort);
-                    NSPApp app = Clients[clientId].AppMap[arrangedAppid];
+                    if (startPort == 0) startPort = Global.StartArrangedPort;
+                    int port = 0;
+                    //如果端口是指定的并且是绑定的，不加任何检测
+                    bool hasListened = false;
+                    if (IsBoundedByUser(clientId, startPort))
+                    {
+                        port = startPort;
+                    }
+                    else
+                    {
+                        int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
+                        if (protocol == Protocol.TCP)
+                        {
+                            port = relocatedPort; //TODO 2 如果是共享端口协议，如果找不到端口则不进行侦听
+                        }
+                        else if (protocol == Protocol.HTTP)
+                        {
+                            //兼容http侦听端口公用
+                            if (port != relocatedPort)
+                            {
+                                //http协议下如果portappmap已经有值，说明已经发起过侦听，接下来不必再侦听
+                                if (ServerContext.PortAppMap.ContainsKey(startPort))
+                                {
+                                    port = startPort;
+                                    hasListened = true;
+                                }
+                                else
+                                {
+                                    port = relocatedPort;
+                                }
+                            }
+                        }
+                    }
+                    NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];
                     app.ClientId = clientId;
                     app.AppId = arrangedAppid;
                     app.ConsumePort = port;
+                    app.AppProtocol = protocol;
+                    app.Host = host;
+                    app.Description = description;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
-                    PortAppMap[port] = app;
+                    //app.Host = host;
+                    //TODO 设置app的host和protocoltype
+                    if (!ServerContext.PortAppMap.ContainsKey(port))
+                    {
+                        ServerContext.PortAppMap[port] = new NSPAppGroup();
+                    }
+
+                    //if (protocol == Protocol.HTTP)
+                    //{
+                    ServerContext.PortAppMap[port][host] = app;
+                    //}
+
+                    //ServerContext.PortAppMap[port].ActivateApp = app;
+                    //ServerContext.PortAppMap[port] = nspAppGroup;
 
                     clientModel.AppList.Add(new App
                     {
@@ -181,11 +314,24 @@ namespace NSmartProxy
 
                     Logger.Info(port);
                     //配置时触发
-                    AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = app });
+                    if (!hasListened)
+                    {
+                        AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = app });//触发listener侦听
+                    }
                 }
                 Logger.Debug(" <=端口已分配。");
             }
             return clientModel.ToBytes();
+        }
+
+        private bool IsBoundedByUser(int clientId, int port)
+        {
+            var boundHash = ServerContext.ServerConfig.BoundConfig.UserPortBounds;
+            if (boundHash.TryGetValue(clientId.ToString(), out UserPortBound userBound))
+            {
+                return userBound.Bound.Contains(port);
+            }
+            return false;
         }
 
         private ClientIDAppID GetAppFromBytes(byte[] bytes)

@@ -1,0 +1,38 @@
+﻿Start
+Open in Explorer
+Start
+Configuration...
+Exit
+Log
+Application
+Save configuration
+Restore configuration
+Add
+Copy
+Delete
+Node configuration
+* : If the external network port is 0 or empty, the port will automatically assigned by the server.
+Intranet addr.
+Intranet port
+External port (*optional)
+External addr.
+Test
+Server address
+Port
+Service
+Uninstall windows service
+Register windows service
+ Anonymous
+<Random>
+Configuration
+Login
+Anonymous Login
+Password
+Username
+保存成功
+保存成功
+登录成功
+登录失败
+登录成功
+已登录
+保存成功

@@ -1,39 +1,53 @@
-
 <img src="https://github.com/tmoonlight/NSmartProxy/blob/master/NSmartProxyNew.png">
 
-# NSmartProxy ServerHost
+# NSmartProxy Server
 
-这里介绍NSmartProxy服务端的安装方法（linux,windows,MacOS均适用）<br />
+Here is the installation method of NSmartProxy server (Linux, windows, MacOS are compatible)<br />
 
-## 启动准备
-* 首先你需要一台具备独立IP的服务器，以下安装过程均在此机器上执行：
+## Startup preparation
+* First of all, you need a server with a separate IP, the following installation process is performed on this machine:
 #### Linux/Windows/MacOS
-1.安装[.NET Core环境](https://dotnet.microsoft.com/download)<br />
-2.下载最新版的[NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
+1. Install [.NET Core Environment](https://dotnet.microsoft.com/download)<br />
+2. Download the latest version of [NSmartProxy](https://github.com/tmoonlight/NSmartProxy/releases)
 
-## 使用方法
-1. 解压缩NSmartProxy服务端的压缩包。
-2. 打开安装目录下的appsettings.json文件，设置反向连接端口和配置服务端口：<br />
+#### Docker
+* You can run the nspserver directly without having to install the runtime. Four sets of ports are required to run the docker image: configuration port, reverse connection port, API service port and consumer port:
+```
+sudo docker pull tmoonlight/nspserver
+sudo docker run --name mynspserver -dit -p 7842:7842 -p 7841:7841 -p 12309:12309 -p 20000-20050 tmoonlight/nspserver
+```
+
+## Instructions
+1. Unzip the package of NSmartProxy server.
+2. Open the appsettings.json file in the installation directory, set the reverse connection port and configure the service port:<br />
 ```
 {
-  "ClientServicePort": 9974,      //反向连接端口
-  "ConfigServicePort": 12308      //配置服务端口
+  "ReversePort": 7842, //Reverse connection port
+  "ConfigPort": 7841, //Configure the service port
+  "WebAPIPort": 12309 //API service port
 }
 ```
 <br />
-3. 运行NSmartProxy <br />
+3. Run NSmartProxy Server<br />
 
-第一步 cd到安装目录 <br />
-第二步 执行以下命令
-* Linux/MacOS：
+
+* Linux/MacOS:
+Change directory to the installation directory ,then execute the following command:
 ```
 sudo dotnet NSmartProxy.ServerHost.dll
 ```
-* Windows：
-
+* Windows:
+Press Windows+R to open the “Run” box. Type “cmd” into the box and then press Ctrl+Shift+Enter to run the command as an administrator.
+Change directory to the installation directory ,then execute the following command:
 ```
-运行安装目录下的run.cmd
+dotnet NSmartProxy.ServerHost.dll
 ```
 
 
+In the next step,you can log in to http://youraddress:12309 and enter the web terminal. The default user password is admin/admin.
 
+<img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_1.gif" />
+
+And enter the server to perform various management operations.
+
+<img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_2.gif" />

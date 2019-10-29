@@ -71,6 +71,16 @@ namespace NSmartProxyWinform.Properties {
         }
         
         /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap logined {
+            get {
+                object obj = ResourceManager.GetObject("logined", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
         /// </summary>
         internal static System.Drawing.Icon servicepaused {
@@ -97,6 +107,16 @@ namespace NSmartProxyWinform.Properties {
             get {
                 object obj = ResourceManager.GetObject("servicestopped", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap unlogin {
+            get {
+                object obj = ResourceManager.GetObject("unlogin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }
