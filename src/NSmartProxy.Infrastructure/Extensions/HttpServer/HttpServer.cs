@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+//using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -13,12 +13,13 @@ using NSmartProxy.Data;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Infrastructure.Interfaces;
 using NSmartProxy.Interfaces;
 // ReSharper disable All
 
-namespace NSmartProxy.Extension
+namespace NSmartProxy.Infrastructure.Extension
 {
-    partial class HttpServer
+    public partial class HttpServer
     {
         #region HTTPServer
 
@@ -26,19 +27,21 @@ namespace NSmartProxy.Extension
         public IDbOperator Dbop;
 
         private const string INDEX_PAGE = "/main.html";
-        private const string BASE_FILE_PATH = "./Extension/HttpServerStaticFiles/";
-        private const string BASE_LOG_FILE_PATH = "./log";
+        private const string BASE_FILE_PATH = "./Web/";
+        //private const string BASE_LOG_FILE_PATH = "./log";
 
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
-        public NSPServerContext ServerContext { get; }
+        public IHttpServerContext ServerContext { get; }
+        public IWebController ControllerInstance;
 
-        public HttpServer(INSmartLogger logger, IDbOperator dbop, NSPServerContext serverContext)
+        public HttpServer(INSmartLogger logger, IDbOperator dbop, IHttpServerContext serverContext, IWebController controllerInstance)
         {
             Logger = logger;
             Dbop = dbop;
             //第一次加载所有mime类型
             PopulateMappings();
             ServerContext = serverContext;
+            ControllerInstance = controllerInstance;
         }
 
 
@@ -68,12 +71,6 @@ namespace NSmartProxy.Extension
                 }
                 Logger.Debug($"{files.Length} files cached.");
 
-                //如果库中没有任何记录，则增加默认用户
-                if (Dbop.GetLength() < 1)
-                {
-                    AddUserV2("admin", "admin", "1");
-                }
-
                 listener.Prefixes.Add($"http://+:{WebManagementPort}/");
                 Logger.Debug("Listening HTTP request on port " + WebManagementPort.ToString() + "...");
                 await AcceptHttpRequest(listener, ctsHttp);
@@ -81,12 +78,12 @@ namespace NSmartProxy.Extension
             catch (HttpListenerException ex)
             {
                 Logger.Debug("Please run this program in administrator mode." + ex);
-                Server.Logger.Error(ex.ToString(), ex);
+                Logger.Error(ex.ToString(), ex);
             }
             catch (Exception ex)
             {
                 Logger.Debug(ex);
-                Server.Logger.Error(ex.ToString(), ex);
+                Logger.Error(ex.ToString(), ex);
             }
             Logger.Debug("Http服务结束。");
         }
@@ -130,7 +127,7 @@ namespace NSmartProxy.Extension
 
                     if (!File.Exists(BASE_FILE_PATH + unit))
                     {
-                        Server.Logger.Debug($"未找到文件{BASE_FILE_PATH + unit}");
+                        Logger.Debug($"未找到文件{BASE_FILE_PATH + unit}");
                         return;
 
                     }
@@ -175,7 +172,7 @@ namespace NSmartProxy.Extension
                     MethodInfo method = null;
                     try
                     {
-                        method = this.GetType().GetMethod(unit);
+                        method = ControllerInstance.GetType().GetMethod(unit);
                         if (method == null)
                         {
                             //Server.Logger.Debug($"无效的方法名{unit}");
@@ -201,21 +198,21 @@ namespace NSmartProxy.Extension
                         {
                             //返回json，类似WebAPI
                             response.ContentType = "application/json";
-                            jsonObj = method.Invoke(this, parameters);
+                            jsonObj = method.Invoke(ControllerInstance, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                         }
                         else if (method.GetCustomAttribute<FormAPIAttribute>() != null)
                         {
                             //返回表单页面
                             response.ContentType = "text/html";
-                            jsonObj = method.Invoke(this, parameters);
+                            jsonObj = method.Invoke(ControllerInstance, parameters);
                             await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.ToString()));
                         }
                         else if (method.GetCustomAttribute<ValidateAPIAttribute>() != null)
                         {
                             //验证模式
                             response.ContentType = "application/json";
-                            bool validateResult = (bool)method.Invoke(this, parameters);
+                            bool validateResult = (bool)method.Invoke(ControllerInstance, parameters);
                             if (validateResult == true)
                             {
                                 await response.OutputStream.WriteAsync(HtmlUtil.GetContent("{\"valid\":true}"));
@@ -229,7 +226,7 @@ namespace NSmartProxy.Extension
                         {
                             //文件下载
                             response.ContentType = "application/octet-stream";
-                            if (!(method.Invoke(this, parameters) is FileDTO fileDto))
+                            if (!(method.Invoke(ControllerInstance, parameters) is FileDTO fileDto))
                             {
                                 throw new Exception("文件返回失败，请查看错误日志。");
                             }
@@ -252,7 +249,7 @@ namespace NSmartProxy.Extension
                                 paraList.Add(new FileInfo($"./{fileName}"));
                                 if (parameters != null)
                                     paraList.AddRange(parameters);
-                                jsonObj = method.Invoke(this, paraList.ToArray());
+                                jsonObj = method.Invoke(ControllerInstance, paraList.ToArray());
                                 await response.OutputStream.WriteAsync(HtmlUtil.GetContent(jsonObj.Wrap().ToJsonString()));
                             }
                             else

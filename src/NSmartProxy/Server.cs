@@ -21,6 +21,7 @@ using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 using NSmartProxy.Database;
+using NSmartProxy.Infrastructure.Extension;
 
 namespace NSmartProxy
 {
@@ -109,7 +110,7 @@ namespace NSmartProxy
             //2.开启http服务
             if (ServerContext.ServerConfig.WebAPIPort > 0)
             {
-                var httpServer = new HttpServer(Logger, DbOp, ServerContext);
+                var httpServer = new HttpServer(Logger, DbOp, ServerContext, new HttpServerApis(ServerContext, DbOp, "./log"));
                 _ = httpServer.StartHttpService(ctsHttp, ServerContext.ServerConfig.WebAPIPort);
             }
 
@@ -350,6 +351,7 @@ namespace NSmartProxy
 
             //TODO 4 增加一个udp转发的选项
             providerStream = s2pClient.GetStream();
+            //TODO 5 这里会出错导致无法和客户端通信
             await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
             //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
             if (restBytes != null)
@@ -485,13 +487,28 @@ namespace NSmartProxy
             if (ServerContext.Clients.ContainsKey(clientID))
             {
                 //2.2 响应ACK 
-                await nstream.WriteAndFlushAsync(new byte[] { 0x01 }, 0, 1);
-                ServerContext.Clients[clientID].LastUpdateTime = DateTime.Now;
+                await nstream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer });
+
+                var nspClient = ServerContext.Clients[clientID];
+                nspClient.LastUpdateTime = DateTime.Now;
+
+                //2.3 TODO 5 发送保活数据包
+                foreach (var kv in nspClient.AppMap)
+                {
+                    TcpClient peekedClient = kv.Value.TcpClientBlocks.Peek();
+                    if (peekedClient != null)
+                    {
+                        //发送保活数据
+                        _ = nstream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.KeepAlive });
+                    }
+                }
             }
             else
             {
                 Server.Logger.Debug($"clientId为{clientID}客户端已经被清除。");
             }
+
+
 
             //3.接收完立即关闭
             client.Close();

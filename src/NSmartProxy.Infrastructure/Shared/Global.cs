@@ -6,8 +6,8 @@
     public sealed class Global
     {
         public const string NO_TOKEN_STRING = "notoken";
-        public const string NSmartProxyClientName = "NSmartProxy Client v1.1";
-        public const string NSmartProxyServerName = "NSmartProxy Server v1.1";
+        public const string NSmartProxyClientName = "NSmartProxy Client v1.1.1028";
+        public const string NSmartProxyServerName = "NSmartProxy Server v1.1.1028";
 
         public const int ClientReconnectInterval = 3000;//客户端断线重连时间间隔（毫秒）
 
@@ -18,7 +18,7 @@
         public const int DefaultPopClientTimeout = 30000; //反弹连接超时时间
         public const int TokenExpiredMinutes = 60 * 24 * 30; //token过期时间（分钟）TODO 待生效
 
-        public const string NSPClientDisplayName = "NSPClient";//windows服务显示名
+        public const string NSPClientServiceDisplayName = "NSPClient";//windows服务显示名
         public const string NSPClientServiceName = "NSPClient";//windows服务名
 
         #region 服务端配置

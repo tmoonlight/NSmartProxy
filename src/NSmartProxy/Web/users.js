@@ -63,13 +63,6 @@ function addUser_submit() {
 
 function editUser_submit(oldUserName) {
     var newUserName = $("#inputUserName").val();
-    //if (newUserName == oldUserName) {
-    //    newUserName += "***";
-    //}
-    //var validator = $('#divAddUser').data('bootstrapValidator');
-    //validator.validate();
-    //alert(validator.isValid());
-    //if (validator.isValid()) {
         $.get(basepath +
             "UpdateUser?oldusername=" + oldUserName +
             "&newusername=" +

@@ -15,7 +15,7 @@ namespace NSmartProxyWinService
         public ProjectInstaller()
         {
             InitializeComponent();
-            this.serviceInstaller1.DisplayName = Global.NSPClientDisplayName;
+            this.serviceInstaller1.DisplayName = Global.NSPClientServiceDisplayName;
             this.serviceInstaller1.ServiceName = Global.NSPClientServiceName;
         }
     }

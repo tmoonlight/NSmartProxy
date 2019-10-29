@@ -12,5 +12,7 @@
     {
         TCPTransfer = 0x01,
         UDPTransfer= 0x02,
+        KeepAlive = 0x03
     }
+
 }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using NSmartProxy.Data;
+using NSmartProxy.Infrastructure.Extensions;
 using NSmartProxy.Shared;
 
 namespace NSmartProxy
@@ -21,7 +22,7 @@ namespace NSmartProxy
         public int ConsumePort;
         //public TcpListener Listener;
         public CancellationTokenSource CancelListenSource;
-        public BufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
+        public PeekableBufferBlock<TcpClient> TcpClientBlocks; //反向连接的阻塞队列,一般只有一个元素
         public List<TcpTunnel> Tunnels;          //正在使用的隧道
         public List<TcpClient> ReverseClients;  //反向连接的socket
         public Protocol AppProtocol; //协议0 tcp 1 http
@@ -35,7 +36,7 @@ namespace NSmartProxy
         public NSPApp()
         {
             CancelListenSource = new CancellationTokenSource();
-            TcpClientBlocks = new BufferBlock<TcpClient>();
+            TcpClientBlocks = new PeekableBufferBlock<TcpClient>();
             Tunnels = new List<TcpTunnel>();
             ReverseClients = new List<TcpClient>();
             //HttpApps = new Dictionary<string, NSPApp>();
@@ -46,9 +47,9 @@ namespace NSmartProxy
         /// </summary>
         /// <param name="incomeClient"></param>
         /// <returns></returns>
-        public bool PushInComeClient(TcpClient incomeClient)
+        public void PushInComeClient(TcpClient incomeClient)
         {
-            return TcpClientBlocks.Post(incomeClient);
+            TcpClientBlocks.Post(incomeClient);
         }
 
         /// <summary>

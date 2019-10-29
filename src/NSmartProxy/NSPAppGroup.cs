@@ -46,18 +46,6 @@ namespace NSmartProxy
             base.Clear();
         }
 
-        //TODO 3 考虑禁用该方法，closeall会误关闭其他的socket
-        [Obsolete]
-        public void CloseAllXXX()
-        {
-
-            foreach (var key in base.Keys)
-            {
-                this[key].Close();
-            }
-            _activateApp?.Close();
-        }
-
         public bool IsAllClosed()
         {
 

@@ -6,13 +6,14 @@ using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Data.Config;
 using NSmartProxy.Infrastructure;
+using NSmartProxy.Infrastructure.Interfaces;
 
 namespace NSmartProxy.Authorize
 {
     /// <summary>
     /// 存放服务端的状态，以供其他组件共享
     /// </summary>
-    public class NSPServerContext
+    public class NSPServerContext : IHttpServerContext
     {
         public NSPClientCollection Clients;
         public Dictionary<int, NSPAppGroup> PortAppMap;//“地址:端口”和app的映射关系

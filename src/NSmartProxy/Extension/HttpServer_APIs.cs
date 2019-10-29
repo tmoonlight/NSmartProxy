@@ -11,6 +11,8 @@ using NSmartProxy.Data;
 using NSmartProxy.Data.DTOs;
 using NSmartProxy.Data.DBEntities;
 using NSmartProxy.Database;
+using NSmartProxy.Infrastructure.Extension;
+using NSmartProxy.Infrastructure.Interfaces;
 using NSmartProxy.Shared;
 
 namespace NSmartProxy.Extension
@@ -18,17 +20,35 @@ namespace NSmartProxy.Extension
     /// <summary>
     /// 这里存放API
     /// </summary>
-    partial class HttpServer
+    partial class HttpServerApis : IWebController
     {
         public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
+        private NSPServerContext ServerContext;
+        private IDbOperator Dbop;
+        private string baseLogFilePath;
+
+        public HttpServerApis(IHttpServerContext serverContext, IDbOperator dbOperator, string logfilePath)
+        {
+            ServerContext = (NSPServerContext)serverContext;
+            Dbop = dbOperator;
+            baseLogFilePath = logfilePath;
+
+            //如果库中没有任何记录，则增加默认用户
+            if (Dbop.GetLength() < 1)
+            {
+                AddUserV2("admin", "admin", "1");
+            }
+        }
 
         #region  dashboard
         [Secure]
         [API]
         public ServerStatusDTO GetServerStatus()
         {
+
             ServerStatusDTO dto = new ServerStatusDTO
             {
+
                 connectCount = ServerContext.ConnectCount,
                 totalReceivedBytes = ServerContext.TotalReceivedBytes,
                 totalSentBytes = ServerContext.TotalSentBytes
@@ -98,7 +118,7 @@ namespace NSmartProxy.Extension
             string allowedSuffix = ".log";
             string suffix = Path.GetExtension(filekey);
             string fileName = Path.GetFileName(filekey);
-            string fileFullPath = BASE_LOG_FILE_PATH + "/" + filekey;
+            string fileFullPath = baseLogFilePath + "/" + filekey;
             if (allowedSuffix == suffix)
             {
                 var fs = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read,
@@ -172,6 +192,14 @@ namespace NSmartProxy.Extension
         #endregion
 
         #region login
+
+        [API]
+        public string GetVersionInfo()
+        {
+            //return $"Server:{Global.NSmartProxyServerName} Client:{Global.NSmartProxyClientName}";
+            return Global.NSmartProxyServerName;
+        }
+
         [FormAPI]
         public string Login(string username, string userpwd)
         {
