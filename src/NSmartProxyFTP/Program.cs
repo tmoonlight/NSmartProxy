@@ -11,6 +11,7 @@ using System.IO;
 using System.Threading.Tasks;
 using FtpServer;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace NSmartProxyFTP
 {
@@ -82,10 +83,22 @@ namespace NSmartProxyFTP
 
         private static void StartFTP(ClientModel clientModel)
         {
-            IPAddress[] ips = Dns.GetHostAddresses("2017studio.imwork.net");
-            Console.WriteLine("外网IP:" + ips[0].ToString());
+            var ip = GetIP(Configuration.GetSection("ProviderAddress").Value);
+            Console.WriteLine("外网IP:" + ip.ToString());
             var server = new FtpServer.FtpServer(int.Parse(Configuration.GetSection("FtpPort").Value), int.Parse(Configuration.GetSection("PasvPort").Value), 2, new[] { new UserElement() { username = "admin", password = "654123", rootDir = "d:\\" } });
-            server.Start(ips[0], clientModel.AppList[1].Port);
+            server.Start(ip, clientModel.AppList[1].Port);
+        }
+
+        private static IPAddress GetIP(string server)
+        {
+            Regex rx = new Regex(@"((?:(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))))");
+            if (!rx.IsMatch(server))
+            {
+                //Dns.GetHostAddresses()返回的是一个IPAddress类型的集合,表示这个域名下的所有的IP地址
+                IPAddress[] ips = Dns.GetHostAddresses(server);
+                return ips[0];
+            }
+            return IPAddress.Parse(server);
         }
 
         private static async Task StartClient()
