@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using FtpServer;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace NSmartProxyFTP
 {
@@ -85,7 +86,12 @@ namespace NSmartProxyFTP
         {
             var ip = GetIP(Configuration.GetSection("ProviderAddress").Value);
             Console.WriteLine("外网IP:" + ip.ToString());
-            var server = new FtpServer.FtpServer(int.Parse(Configuration.GetSection("FtpPort").Value), int.Parse(Configuration.GetSection("PasvPort").Value), 2, new[] { new UserElement() { username = "admin", password = "654123", rootDir = "d:\\" } });
+            var users = new List<UserElement>();
+            foreach (var u in Configuration.GetSection("FtpUsers").GetChildren())
+            {
+                users.Add(new UserElement() { username = u["username"], password = u["password"], rootDir = u["rootDir"] });
+            }
+            var server = new FtpServer.FtpServer(int.Parse(Configuration.GetSection("FtpPort").Value), int.Parse(Configuration.GetSection("PasvPort").Value), int.Parse(Configuration.GetSection("FtpMaxConnect").Value), users);
             server.Start(ip, clientModel.AppList[1].Port);
         }
 
@@ -94,7 +100,6 @@ namespace NSmartProxyFTP
             Regex rx = new Regex(@"((?:(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))))");
             if (!rx.IsMatch(server))
             {
-                //Dns.GetHostAddresses()返回的是一个IPAddress类型的集合,表示这个域名下的所有的IP地址
                 IPAddress[] ips = Dns.GetHostAddresses(server);
                 return ips[0];
             }
