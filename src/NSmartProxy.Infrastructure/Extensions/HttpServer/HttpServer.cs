@@ -31,10 +31,10 @@ namespace NSmartProxy.Infrastructure.Extension
         //private const string BASE_LOG_FILE_PATH = "./log";
 
         public Dictionary<string, MemoryStream> FilesCache = new Dictionary<string, MemoryStream>(20);
-        public IHttpServerContext ServerContext { get; }
+        public IServerContext ServerContext { get; }
         public IWebController ControllerInstance;
 
-        public HttpServer(INSmartLogger logger, IDbOperator dbop, IHttpServerContext serverContext, IWebController controllerInstance)
+        public HttpServer(INSmartLogger logger, IDbOperator dbop, IServerContext serverContext, IWebController controllerInstance)
         {
             Logger = logger;
             Dbop = dbop;

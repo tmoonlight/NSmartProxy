@@ -13,7 +13,7 @@ namespace NSmartProxy.Authorize
     /// <summary>
     /// 存放服务端的状态，以供其他组件共享
     /// </summary>
-    public class NSPServerContext : IHttpServerContext
+    public class NSPServerContext : IServerContext
     {
         public NSPClientCollection Clients;
         public Dictionary<int, NSPAppGroup> PortAppMap;//“地址:端口”和app的映射关系
@@ -160,14 +160,7 @@ namespace NSmartProxy.Authorize
                     Server.Logger.Debug($"未加载位于{port}的证书。");
                 }
             }
-            //foreach (var client in Clients)
-            //{
-            //    foreach (var (k, v) in client.AppMap)
-            //    {
-            //        v.Certificate
-            //    }
 
-            //}
         }
 
         public void SaveConfigChanges()

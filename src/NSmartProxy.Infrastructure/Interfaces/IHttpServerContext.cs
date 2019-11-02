@@ -4,7 +4,7 @@ using System.Text;
 
 namespace NSmartProxy.Infrastructure.Interfaces
 {
-    public interface IHttpServerContext
+    public interface IServerContext
     {
     }
 }

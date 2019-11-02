@@ -352,7 +352,17 @@ namespace NSmartProxy
             //TODO 4 增加一个udp转发的选项
             providerStream = s2pClient.GetStream();
             //TODO 5 这里会出错导致无法和客户端通信
-            await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
+            try
+            {
+                await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
+            }
+            catch
+            {
+                Logger.Debug($"client:{nspApp.ClientId} app:{nspApp.AppId}写入失败,尝试切断该客户端");
+                ServerContext.CloseAllSourceByClient(nspApp.ClientId);
+                return;
+            }
+
             //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
             if (restBytes != null)
                 await providerStream.WriteAsync(restBytes, 0, restBytes.Length, transfering.Token);
@@ -414,9 +424,6 @@ namespace NSmartProxy
                 }
 
                 ServerProtocol proto = (ServerProtocol)protoRequestBytes[0];
-#if DEBUG
-                //Server.Logger.Debug("appRequestBytes received.");
-#endif
 
                 switch (proto)
                 {

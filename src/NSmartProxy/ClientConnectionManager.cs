@@ -157,14 +157,6 @@ namespace NSmartProxy
                 }
             }
             if (nspApp == null) throw new KeyNotFoundException($"无法找到{consumerPort}下的任何一个客户端app");
-            //if (NSPApp.AppProtocol == Protocol.HTTP)
-            //{
-            //    //NSPApp.
-
-            //}
-
-            //var clientId = NSPApp.ClientId;
-            //var appId = NSPApp.AppId;
 
             //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
             //TODO 2这里的弹出比较麻烦了

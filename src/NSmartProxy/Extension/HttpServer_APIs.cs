@@ -27,7 +27,7 @@ namespace NSmartProxy.Extension
         private IDbOperator Dbop;
         private string baseLogFilePath;
 
-        public HttpServerApis(IHttpServerContext serverContext, IDbOperator dbOperator, string logfilePath)
+        public HttpServerApis(IServerContext serverContext, IDbOperator dbOperator, string logfilePath)
         {
             ServerContext = (NSPServerContext)serverContext;
             Dbop = dbOperator;
