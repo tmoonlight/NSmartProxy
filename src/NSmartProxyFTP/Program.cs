@@ -60,7 +60,7 @@ namespace NSmartProxyFTP
                 _currentLoginInfo.UserPwd = args[3];
             }
 
-            Logger.Info($"*** {Global.NSmartProxyClientName} ***");
+            Logger.Info($"*** {NSPVersion.NSmartProxyServerName} ***");
 
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())

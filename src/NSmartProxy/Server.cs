@@ -499,16 +499,26 @@ namespace NSmartProxy
                 var nspClient = ServerContext.Clients[clientID];
                 nspClient.LastUpdateTime = DateTime.Now;
 
-                //2.3 TODO 5 发送保活数据包
-                foreach (var kv in nspClient.AppMap)
+                //2.3 TODO 5 发送保活数据包,一旦建立了这种机制就不需要iocontrol的keepalive了
+                try
                 {
-                    TcpClient peekedClient = kv.Value.TcpClientBlocks.Peek();
-                    if (peekedClient != null)
+                    //Server.Logger.Debug($"尝试对{clientID}发送保活数据包..");//TODO 待删除
+                    foreach (var kv in nspClient.AppMap)
                     {
-                        //发送保活数据
-                        _ = nstream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.KeepAlive });
+                        TcpClient peekedClient = kv.Value.TcpClientBlocks.Peek();
+                        if (peekedClient != null)
+                        {
+                            //发送保活数据
+                            await peekedClient.GetStream().WriteAndFlushAsync(new byte[] { (byte)ControlMethod.KeepAlive });
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Logger.Debug($"{clientID}保活失败尝试切断连接");
+                    throw ex;
+                }
+
             }
             else
             {

@@ -3,9 +3,14 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#
+	var v1 = DateTime.Now.Ticks.ToString().Substring(2, 4).TrimStart('0');
+	var v2 = DateTime.Now.Ticks.ToString().Substring(6, 4).TrimStart('0');
+#>
+
 public sealed class NSPVersion
 {
         public const string NO_TOKEN_STRING = "notoken";
-        public const string NSmartProxyClientName = "NSmartProxy Client v1.<#=DateTime.Now.ToString("yyMM.ddHH.mmss")#>";
-        public const string NSmartProxyServerName = "NSmartProxy Server v1.<#=DateTime.Now.ToString("yyMM.ddHH.mmss")#>";
+        public const string NSmartProxyClientName = "NSmartProxy Client v1.2.<#=v1#>.<#=v2#>";
+        public const string NSmartProxyServerName = "NSmartProxy Server v1.2.<#=v1#>.<#=v2#>";
 }
