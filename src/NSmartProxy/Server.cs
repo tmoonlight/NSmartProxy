@@ -526,8 +526,8 @@ namespace NSmartProxy
             }
 
 
-
-            //3.接收完立即关闭
+            //3.接收完立即关闭,心跳协议无需使用nagle算法
+            client.NoDelay = true;
             client.Close();
         }
 

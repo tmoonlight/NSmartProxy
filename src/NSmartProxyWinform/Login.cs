@@ -105,7 +105,7 @@ namespace NSmartProxyWinform
             }
             else if (connectAsync.Result.State == 0)
             {
-                MessageBox.Show(L("登录失败"));
+                MessageBox.Show(L("登录失败") + "->" + connectAsync.Result.Msg);
             }
             else
             {
