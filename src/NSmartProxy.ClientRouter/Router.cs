@@ -487,7 +487,7 @@ namespace NSmartProxy.Client
                     //TODO 4 如果是压缩，则从服务端拿到的数据需要解压缩
                 }
 
-                await fromStream.CopyToAsync(toStream, 81920, ct);
+                await fromStream.CopyToAsync(toStream, Global.ClientTunnelBuferSize, ct);
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
 
@@ -504,7 +504,7 @@ namespace NSmartProxy.Client
                 {
                     //TODO 4 如果是压缩，则把信息压缩发送给服务端
                 }
-                await fromStream.CopyToAsync(toStream, 81920, ct);
+                await fromStream.CopyToAsync(toStream, Global.ClientTunnelBuferSize, ct);
             }
             Router.Logger.Debug($"{epString}反向链接传输关闭。");
         }

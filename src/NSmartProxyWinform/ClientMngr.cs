@@ -91,7 +91,7 @@ namespace NSmartProxyWinform
             btnDuplicate.Text = L("复制");
             btnDelete.Text = L("删除");
             groupBox2.Text = L("节点配置");
-            label7.Text = L("* : 外网端口为0或者空则代表端口由服务端自动分派。");
+            //label7.Text = L("* : 外网端口为0或者空则代表端口由服务端自动分派。");
             label4.Text = L("内网地址");
             label5.Text = L("内网端口");
             label6.Text = L("外网端口(*可选)");
@@ -105,6 +105,7 @@ namespace NSmartProxyWinform
             btnLogin.Text = L("  未登录");
             tbxPort.PlaceHolderStr = L("<随机>");
             Text = L("配置对话框");
+            cbxIsCompress.Text = L("启用传输压缩");
         }
 
         //private void RefreshLoginState()
@@ -538,6 +539,7 @@ namespace NSmartProxyWinform
 
             app.Host = tbxHost.Text;
             app.Description = tbxDescription.Text;
+            app.IsCompress = cbxIsCompress.Checked;
             return app;
         }
 
@@ -936,5 +938,6 @@ namespace NSmartProxyWinform
                    tbxWebPort.Text; //ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
 
+       
     }
 }
