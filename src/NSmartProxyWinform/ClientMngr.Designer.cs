@@ -68,13 +68,13 @@ namespace NSmartProxyWinform
             this.label2 = new System.Windows.Forms.Label();
             this.tbxWebPort = new System.Windows.Forms.TextBox();
             this.listBox1 = new System.Windows.Forms.ListView();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.tabServerConfig = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.btnUnRegWinSrv = new System.Windows.Forms.Button();
             this.btnRegWinSrv = new System.Windows.Forms.Button();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.btnLogin = new System.Windows.Forms.Button();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.tbxDescription = new NSmartProxyWinform.Util.TextBoxEx();
             this.tbxHost = new NSmartProxyWinform.Util.TextBoxEx();
             this.tbxPort = new NSmartProxyWinform.Util.TextBoxEx();
@@ -220,7 +220,7 @@ namespace NSmartProxyWinform
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(21, 373);
+            this.btnRefresh.Location = new System.Drawing.Point(21, 374);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(75, 23);
             this.btnRefresh.TabIndex = 13;
@@ -452,6 +452,7 @@ namespace NSmartProxyWinform
             // listBox1
             // 
             this.listBox1.FullRowSelect = true;
+            this.listBox1.HideSelection = false;
             this.listBox1.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
             this.listBox1.Location = new System.Drawing.Point(11, 84);
@@ -464,6 +465,14 @@ namespace NSmartProxyWinform
             this.listBox1.View = System.Windows.Forms.View.List;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.listBox1.Leave += new System.EventHandler(this.listBox1_Leave);
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "run");
+            this.imageList1.Images.SetKeyName(1, "stop");
+            this.imageList1.Images.SetKeyName(2, "error");
             // 
             // tabServerConfig
             // 
@@ -522,14 +531,6 @@ namespace NSmartProxyWinform
             this.btnLogin.Text = "  未登录";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-            // 
-            // imageList1
-            // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList1.Images.SetKeyName(0, "run");
-            this.imageList1.Images.SetKeyName(1, "stop");
-            this.imageList1.Images.SetKeyName(2, "error");
             // 
             // tbxDescription
             // 

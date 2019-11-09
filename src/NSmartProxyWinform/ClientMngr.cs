@@ -494,13 +494,13 @@ namespace NSmartProxyWinform
             //刷新listview里的tag对象
             if (listBox1.SelectedItems.Count > 0)
             {
-                listBox1.SelectedItems[0].Tag = CurrentAppInForm();
+                listBox1.SelectedItems[0].Tag = GetClientAppFromForm();
             }
 
-            printTextToList();
+            PrintTextToList();
         }
 
-        private void printTextToList()
+        private void PrintTextToList()
         {
             if (listBox1.SelectedItems.Count > 0)
             {
@@ -517,7 +517,7 @@ namespace NSmartProxyWinform
             //configChanged = true;
         }
 
-        private ClientApp CurrentAppInForm()
+        private ClientApp GetClientAppFromForm()
         {
             ClientApp app = new ClientApp();
             app.Protocol = (Protocol)Enum.Parse(typeof(Protocol), cbxProtocol.Text);
@@ -654,7 +654,7 @@ namespace NSmartProxyWinform
                 }, StringSplitOptions.None);
                 if (strParts.Length != 4)
                 {
-                    MessageBox.Show($"发现非法节点数据：“{item}”");
+                    MessageBox.Show($"发现非法节点数据：“{item.Text}”");
                     listBox1.BackColor = Color.LightCoral;
 
                     return false;
@@ -662,12 +662,19 @@ namespace NSmartProxyWinform
 
                 try
                 {
+                    //校验clientApp
+                    var clientApp = (ClientApp)item.Tag;
+                    if (clientApp.Protocol == Protocol.HTTP&&String.IsNullOrEmpty(clientApp.Host))
+                    {
+                        MessageBox.Show($"节点“{item.Text}”为HTTP映射，必须输入域名！");
+                        return false;
+                    }
 
                     config.Clients.Add((ClientApp)item.Tag);
                 }
                 catch
                 {
-                    MessageBox.Show($"发现非法节点数据：“{item}”");
+                    MessageBox.Show($"发现非法节点数据：“{item.Text}”");
                     return false;
                 }
             }
