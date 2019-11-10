@@ -219,7 +219,15 @@ namespace NSmartProxy
         public static byte[] DecompressInSnappy(byte[] compressed,int offset ,int length)
         {
             SnappyDecompressor sd = new SnappyDecompressor();
-            return sd.Decompress(compressed, offset, length);
+            try
+            {
+                return sd.Decompress(compressed, offset, length);
+            }
+            catch (Exception ex)
+            {
+                //啥情況？
+                return null;
+            }
         }
 
         /// <summary>

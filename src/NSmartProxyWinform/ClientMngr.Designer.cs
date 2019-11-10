@@ -31,7 +31,7 @@ namespace NSmartProxyWinform
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem("2017studio.imwork.net:20001 => 127.0.0.1:80", 1);
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("2017studio.imwork.net:20001 => 127.0.0.1:80", 1);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClientMngr));
             this.btnStart = new System.Windows.Forms.Button();
             this.btnOpenInExplorer = new System.Windows.Forms.Button();
@@ -357,7 +357,7 @@ namespace NSmartProxyWinform
             this.cbxProtocol.Name = "cbxProtocol";
             this.cbxProtocol.Size = new System.Drawing.Size(82, 20);
             this.cbxProtocol.TabIndex = 7;
-            this.cbxProtocol.Leave += new System.EventHandler(this.targetServer_TextChanged);
+            this.cbxProtocol.SelectedIndexChanged += new System.EventHandler(this.targetServer_TextChanged);
             // 
             // tbxTargetServerAddr
             // 
@@ -491,7 +491,7 @@ namespace NSmartProxyWinform
             this.listBox1.FullRowSelect = true;
             this.listBox1.HideSelection = false;
             this.listBox1.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem2});
+            listViewItem1});
             this.listBox1.Location = new System.Drawing.Point(11, 84);
             this.listBox1.MultiSelect = false;
             this.listBox1.Name = "listBox1";
