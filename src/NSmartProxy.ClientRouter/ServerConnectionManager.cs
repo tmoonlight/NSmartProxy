@@ -55,7 +55,7 @@ namespace NSmartProxy.Client
             ClientModel clientModel = null;
             try
             {
-                clientModel = await ReadConfigFromProvider();
+                clientModel = await SendConfigRequest();
             }
             catch (Exception ex) //如果这里出错，则自动删除缓存
             {
@@ -85,7 +85,7 @@ namespace NSmartProxy.Client
         /// 从服务端读取配置，N问一答模式
         /// </summary>
         /// <returns></returns>
-        private async Task<ClientModel> ReadConfigFromProvider()
+        private async Task<ClientModel> SendConfigRequest()
         {
             //《c#并发编程经典实例》 9.3 超时后取消
             var config = ClientConfig;
@@ -140,9 +140,9 @@ namespace NSmartProxy.Client
             //请求2 分配端口
             //httpsupport: 增加host支持
             //TODO 7固定协议实现
-            //port proto host         description   option
-            //2    1     1024         96            1
-            int oneEndpointLength = 2 + 1 + 1024 + 96;//TODO 2 临时写的，这段需要重构
+            //port proto option(iscompress)  host         description   
+            //2    1     1                   1024         96            
+            int oneEndpointLength = 2 + 1 + 1 + 1024 + 96;//TODO 2 临时写的，这段需要重构
             byte[] requestBytes2 = new byte[config.Clients.Count * (oneEndpointLength)];
             int i = 0;
             foreach (var client in config.Clients)
@@ -152,11 +152,14 @@ namespace NSmartProxy.Client
                 requestBytes2[offSetPos] = portBytes[0];        //端口
                 requestBytes2[offSetPos + 1] = portBytes[1];    //端口
                 requestBytes2[offSetPos + 2] = (byte)client.Protocol;//协议
+                
+                requestBytes2[offSetPos + 2 + 1] = (byte)(client.IsCompress ? 1 : 0);
+
                 if (client.Host != null)                        //主机名
-                    Encoding.ASCII.GetBytes(client.Host, 0, client.Host.Length, requestBytes2, offSetPos + 3);
+                    Encoding.ASCII.GetBytes(client.Host, 0, client.Host.Length, requestBytes2, offSetPos + 4);
                 if (client.Description != null)
                 {
-                    Encoding.UTF8.GetBytes(client.Description, 0, client.Description.Length, requestBytes2, offSetPos + 3 + 1024);
+                    Encoding.UTF8.GetBytes(client.Description, 0, client.Description.Length, requestBytes2, offSetPos + 4 + 1024);
                 }
 
                 i++;

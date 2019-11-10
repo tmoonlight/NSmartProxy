@@ -459,6 +459,7 @@ namespace NSmartProxyWinform
                 tbxTargetServerPort.Text = app.TargetServicePort.ToString(); //strParts[3].Trim();
                 tbxHost.Text = app.Host;
                 tbxDescription.Text = app.Description;
+                cbxIsCompress.Checked = app.IsCompress;
                 cbxProtocol.SelectedValue = Enum.GetName(typeof(Protocol), app.Protocol);
             }
         }

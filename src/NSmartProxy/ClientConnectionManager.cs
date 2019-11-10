@@ -227,7 +227,9 @@ namespace NSmartProxy
 
             //注册客户端
             ServerContext.Clients.RegisterNewClient(clientModel.ClientId);
-            int oneEndpointLength = 2 + 1 + 1024 + 96;
+            //port proto option(iscompress)  host         description   
+            //2    1     1                   1024         96         
+            int oneEndpointLength = 2 + 1 + 1 + 1024 + 96;
             lock (_lockObject2)
             {
                 //注册app
@@ -238,8 +240,9 @@ namespace NSmartProxy
                     int startPort = StringUtil.DoubleBytesToInt(consumerPortBytes[offset], consumerPortBytes[offset + 1]);
                     int arrangedAppid = ServerContext.Clients[clientId].RegisterNewApp();
                     Protocol protocol = (Protocol)consumerPortBytes[offset + 2];
-                    string host = Encoding.ASCII.GetString(consumerPortBytes, offset + 3, 1024).TrimEnd('\0');
-                    string description = Encoding.UTF8.GetString(consumerPortBytes, offset + 3 + 1024, 96).TrimEnd('\0');
+                    bool isCompress = consumerPortBytes[offset + 3] == 1 ? true : false;
+                    string host = Encoding.ASCII.GetString(consumerPortBytes, offset + 4, 1024).TrimEnd('\0');
+                    string description = Encoding.UTF8.GetString(consumerPortBytes, offset + 4 + 1024, 96).TrimEnd('\0');
                     //查找port的起始端口如果未指定，则设置为20000
                     if (startPort == 0) startPort = Global.StartArrangedPort;
                     int port = 0;
@@ -283,6 +286,7 @@ namespace NSmartProxy
                     app.Description = description;
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
+                    app.IsCompress = isCompress;
                     //app.Host = host;
                     //TODO 设置app的host和protocoltype
                     if (!ServerContext.PortAppMap.ContainsKey(port))

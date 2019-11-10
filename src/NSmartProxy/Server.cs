@@ -574,7 +574,9 @@ namespace NSmartProxy
 
             //2.根据配置请求1获取更多配置信息
             int appCount = (int)appRequestBytes[2];
-            byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
+            //port proto option(iscompress)  host         description   
+            //2    1     1                   1024         96         
+            byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
             int resultByte2 = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)
@@ -705,14 +707,14 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                byte[] buffer = new byte[81920];
+                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
                 try
                 {
                     int bytesRead;
                     while ((bytesRead =
                                await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
-                        if (nspApp.IsCompressed)
+                        if (nspApp.IsCompress)
                         {
                             buffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
                             bytesRead = buffer.Length;
@@ -736,14 +738,14 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                byte[] buffer = new byte[81920];
+                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
                 try
                 {
                     int bytesRead;
                     while ((bytesRead =
                                await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
-                        if (nspApp.IsCompressed)
+                        if (nspApp.IsCompress)
                         {
                             var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
                             buffer = compressInSnappy.ContentBytes;

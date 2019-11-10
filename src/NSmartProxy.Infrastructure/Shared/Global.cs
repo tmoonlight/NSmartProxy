@@ -21,14 +21,15 @@
         public const string NSPClientServiceDisplayName = "NSPClient";//windows服务显示名
         public const string NSPClientServiceName = "NSPClient";//windows服务名
 
-        public const int ClientTunnelBuferSize = 81920; //客户端数据包大小
+        public const int ClientTunnelBufferSize = 81920; //客户端数据包大小
         #region 服务端配置
 
         public const int StartArrangedPort = 20000;
         public const string NSPServerDisplayName = "NSPServer";//windows服务显示名
         public const string NSPServerServiceName = "NSPServer";//windows服务名
 
-        
+        public const int ServerTunnelBufferSize = 81920;//服务端数据包大小
+
 
         #endregion
     }

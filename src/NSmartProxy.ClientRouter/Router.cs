@@ -480,14 +480,21 @@ namespace NSmartProxy.Client
         private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
+            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
             using (fromStream)
             {
-                if (item.IsCompress)
+                int bytesRead;
+                while ((bytesRead =
+                           await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                 {
-                    //TODO 4 如果是压缩，则从服务端拿到的数据需要解压缩
-                }
+                    if (item.IsCompress)
+                    {
+                        buffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                        bytesRead = buffer.Length;
+                    }
 
-                await fromStream.CopyToAsync(toStream, Global.ClientTunnelBuferSize, ct);
+                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                }
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
 
@@ -498,13 +505,22 @@ namespace NSmartProxy.Client
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
+            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
             using (fromStream)
             {
-                if (item.IsCompress)
+                int bytesRead;
+                while ((bytesRead =
+                           await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                 {
-                    //TODO 4 如果是压缩，则把信息压缩发送给服务端
+                    if (item.IsCompress)
+                    {
+                        var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
+                        buffer = compressInSnappy.ContentBytes;
+                        bytesRead = compressInSnappy.Length;
+                    }
+
+                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                 }
-                await fromStream.CopyToAsync(toStream, Global.ClientTunnelBuferSize, ct);
             }
             Router.Logger.Debug($"{epString}反向链接传输关闭。");
         }
