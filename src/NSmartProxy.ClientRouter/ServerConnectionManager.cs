@@ -50,6 +50,7 @@ namespace NSmartProxy.Client
         /// <returns></returns>
         public async Task<ClientModel> InitConfig(NSPClientConfig config)
         {
+            //TODO 7 需要重构
             ClientConfig = config;
             ClientModel clientModel = null;
             try
@@ -92,7 +93,7 @@ namespace NSmartProxy.Client
             TcpClient configClient = new TcpClient();
             bool isConnected = false;
             bool isReconn = (this.ClientID != 0); //TODO XXX如果clientid已经分配到了id 则算作重连
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 3; j++) //连接服务端
             {
                 var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
                 var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ConfigPort);
@@ -138,6 +139,9 @@ namespace NSmartProxy.Client
 
             //请求2 分配端口
             //httpsupport: 增加host支持
+            //TODO 7固定协议实现
+            //port proto host         description   option
+            //2    1     1024         96            1
             int oneEndpointLength = 2 + 1 + 1024 + 96;//TODO 2 临时写的，这段需要重构
             byte[] requestBytes2 = new byte[config.Clients.Count * (oneEndpointLength)];
             int i = 0;
