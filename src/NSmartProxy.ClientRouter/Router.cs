@@ -489,11 +489,17 @@ namespace NSmartProxy.Client
                 {
                     if (item.IsCompress)
                     {
-                        buffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                        var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                        bytesRead = compressBuffer.Length;
+                        await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    }
+                    else
+                    {
                         bytesRead = buffer.Length;
+                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                     }
 
-                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                   // await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                 }
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
@@ -515,11 +521,14 @@ namespace NSmartProxy.Client
                     if (item.IsCompress)
                     {
                         var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
-                        buffer = compressInSnappy.ContentBytes;
+                        var compressedBuffer = compressInSnappy.ContentBytes;
                         bytesRead = compressInSnappy.Length;
+                        await toStream.WriteAsync(compressedBuffer, 0, bytesRead, ct).ConfigureAwait(false);
                     }
-
-                    await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    else
+                    {
+                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    }
                 }
             }
             Router.Logger.Debug($"{epString}反向链接传输关闭。");

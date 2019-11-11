@@ -716,11 +716,15 @@ namespace NSmartProxy
                     {
                         if (nspApp.IsCompress)
                         {
-                            buffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
-                            bytesRead = buffer.Length;
+                            var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                            bytesRead = compressBuffer.Length;
+                            await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
                         }
-
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        else
+                        {
+                            bytesRead = buffer.Length;
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                         ServerContext.TotalSentBytes += bytesRead; //上行
                     }
                 }
@@ -748,11 +752,14 @@ namespace NSmartProxy
                         if (nspApp.IsCompress)
                         {
                             var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
-                            buffer = compressInSnappy.ContentBytes;
+                            var compressedBuffer = compressInSnappy.ContentBytes;
                             bytesRead = compressInSnappy.Length;
+                            await toStream.WriteAsync(compressedBuffer, 0, bytesRead, ct).ConfigureAwait(false);
                         }
-
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        else
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                         ServerContext.TotalReceivedBytes += bytesRead; //下行
                     }
                 }
