@@ -747,7 +747,7 @@ namespace NSmartProxy
                         }
                         else
                         {
-                            bytesRead = buffer.Length;
+                            //bytesRead = buffer.Length;
                             await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                         }
                         ServerContext.TotalSentBytes += bytesRead; //上行
