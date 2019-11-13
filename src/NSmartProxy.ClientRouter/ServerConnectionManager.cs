@@ -235,12 +235,12 @@ namespace NSmartProxy.Client
             byte[] requestBytes = StringUtil.ClientIDAppIdToBytes(ClientID, appid);
             var clientList = new List<TcpClient>();
             //补齐
-            var secclient = (new TcpClient()).WrapClient(this.CurrentToken);//包装成客户端
-            var client = secclient.Client; 
+            var secureClient = (new TcpClient()).WrapClient(this.CurrentToken);//包装成客户端
+            var client = secureClient.Client; 
             try
             {
                 //1.连接服务端
-                var state = await secclient.ConnectWithAuthAsync(config.ProviderAddress, config.ReversePort);
+                var state = await secureClient.ConnectWithAuthAsync(config.ProviderAddress, config.ReversePort);
                 switch (state)
                 {
                     case AuthState.Success:

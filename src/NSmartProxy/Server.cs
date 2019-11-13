@@ -31,7 +31,7 @@ namespace NSmartProxy
     //|                        |
     //|    +----------+        |   +-----------+
     //|    |          |        |   |           |
-    //|    |  client  |------------>  provider |
+    //|    |  Client  |------------>  Provider |
     //|    |          |        |   |           |
     //|    +----+-----+        |   +------^----+
     //|         |              |          |
@@ -39,11 +39,11 @@ namespace NSmartProxy
     //|         |              |          |
     //|    +----V-----+        |          |
     //|    |          |        |          |
-    //|    |   IIS    |        |          |
-    //|    |          |        |          |
-    //|    +----------+        |   +------+-------+
-    //|                        |   |              |
-    //|                        |   |   consumer   |
+    //|    |  Target  |        |          |
+    //|    |  Server  |        |          |
+    //|    |          |        |   +------+-------+
+    //|    +----------+        |   |              |
+    //|                        |   |   Consumer   |
     //|                        |   |              |
     //+------------------------+   +--------------+
     public class Server
@@ -177,7 +177,6 @@ namespace NSmartProxy
             finally
             {
                 Logger.Debug("fatal error:心跳检测处理异常终止。");
-                //TODO 重新开始
             }
         }
 
@@ -241,10 +240,9 @@ namespace NSmartProxy
                 nspAppGrp.ActivateApp.CancelListenSource = cts;
                 if (nspAppGrp.ProtocolInGroup == Protocol.UDP)  //UDP协议侦听
                 {
-                    //var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
                     var consumerUdpClient = new UdpClient(consumerPort);
                     nspAppGrp.UdpClient = consumerUdpClient;
-                    //consumerUdpListener.ReceiveAsync()
+
                     while (!ct.IsCancellationRequested)
                     {
                         Logger.Debug("Server UDP Receiving....Port:" + consumerPort);
@@ -256,11 +254,8 @@ namespace NSmartProxy
                 {
                     var consumerTcpListener = new TcpListener(IPAddress.Any, consumerPort);
                     consumerTcpListener.Start(1000);
-                    //nspApp.ActivateApp.Listener = consumerlistener;
                     nspAppGrp.Listener = consumerTcpListener;
                     //临时编下号，以便在日志里区分不同隧道的连接
-                    //string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
-
                     while (!ct.IsCancellationRequested)
                     {
                         Logger.Debug("Server TCP listening....Port:" + consumerPort);
@@ -274,9 +269,6 @@ namespace NSmartProxy
             {
                 _ = ode;
                 Logger.Debug($"外网端口{consumerPort}侦听时被外部终止");
-                //#if DEBUG
-                //                Logger.Debug("详细信息：" + ode);
-                //#endif
             }
             catch (Exception ex)
             {
@@ -306,11 +298,10 @@ namespace NSmartProxy
             var nspAppGroup = ServerContext.PortAppMap[consumerPort];
             NSPApp nspApp = null;
             TcpClient s2pClient = null;
-            Stream consumerStream = consumerClient.GetStream();//; = consumerClient.GetStream().ProcessSSL(TestCert);
-            Stream providerStream = null;// = s2pClient.GetStream();
+            Stream consumerStream = consumerClient.GetStream();
+            Stream providerStream = null;
             byte[] restBytes = null;
 
-            //int restBytesLength = 0;
             try
             {
 
@@ -362,11 +353,9 @@ namespace NSmartProxy
                 return;
             }
 
-            //Logger.Debug("consumer已连接：" + consumerClient.Client.RemoteEndPoint.ToString());
             ServerContext.ConnectCount += 1;
 
             //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
-            //if()
             //II.弹出先前已经准备好的socket
             tunnel.ClientServerClient = s2pClient;
             CancellationTokenSource transfering = new CancellationTokenSource();
@@ -566,7 +555,6 @@ namespace NSmartProxy
             //TODO !!!!获取Token，截取clientID，校验
             //TODO !!!!这里的校验逻辑和httpserver_api存在太多重复，需要重构
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
-            //var userClaims = StringUtil.ConvertStringToTokenClaims(clientIdFromToken);
             if (clientIdFromToken == 0)
             {
                 //TODO 2 服务端错误，校验失败
@@ -707,16 +695,11 @@ namespace NSmartProxy
             {
                 Server.Logger.Debug($"New client ({nspApp.ClientId}-{nspApp.AppId}) connected");
 
-                //CancellationTokenSource transfering = new CancellationTokenSource();
-
-                //var providerStream = providerClient.GetStream();//.ProcessSSL("test");
-                //var consumerStream = consumerClient.GetStream();
                 Task taskC2PLooping = ToStaticTransfer(ct, consumerStream, providerStream, nspApp);
                 Task taskP2CLooping = StreamTransfer(ct, providerStream, consumerStream, nspApp);
 
                 //任何一端传输中断或者故障，则关闭所有连接
                 var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
-                //comletedTask.
                 Logger.Debug($"Transferring ({nspApp.ClientId}-{nspApp.AppId}) STOPPED");
 
             }
@@ -747,7 +730,6 @@ namespace NSmartProxy
                         }
                         else
                         {
-                            //bytesRead = buffer.Length;
                             await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                         }
                         ServerContext.TotalSentBytes += bytesRead; //上行
@@ -757,10 +739,8 @@ namespace NSmartProxy
                 {
                     if (ioe is IOException) { return; } //Suppress this exception.
                     throw;
-                    //Server.Logger.Info(ioe.Message);
                 }
             }
-            //Server.Logger.Debug($"{clientApp}对服务端传输关闭。");
         }
 
         private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
@@ -812,15 +792,6 @@ namespace NSmartProxy
         #region http
         private async Task<Tuple<string, string>> ReadHostName(Stream consumerStream)
         {
-            //const int BUFFER_SIZE = 1024 * 1024 * 2;
-            ////提取host方法
-            //byte[] hostStr = new byte[]{1};
-            //byte[] endLineStr = new byte[]{2};
-            //byte[] reveivedData = null;
-
-            //int readbyte = await consumerClient.GetStream().ReadAsync(reveivedData);
-            //StringUtil.SearchBytesFromBytes(reveivedData, hostStr);
-
             //需要进一步截包 TODO 2 待优化1.内存优化 2.查询优化
             const int BUFFER_SIZE = 1024 * 1024 * 2;
             var length = 0;
@@ -842,20 +813,6 @@ namespace NSmartProxy
 
                 );
         }
-
-        //private string GetRequestData(Stream stream)
-        //{
-        //    const int BUFFER_SIZE = 1024 * 1024 * 2;
-        //    var length = 0;
-        //    var data = string.Empty;
-        //    do
-        //    {
-        //        length = stream.Read(bytes, 0, BUFFER_SIZE);
-        //        data += Encoding.UTF8.GetString(bytes, 0, length);
-        //    } while (length > 0 && !data.Contains("\r\n\r\n"));
-
-        //    return data;
-        //}
         #endregion
 
     }

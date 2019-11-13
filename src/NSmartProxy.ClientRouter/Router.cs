@@ -392,10 +392,10 @@ namespace NSmartProxy.Client
                         {
                             case ControlMethod.KeepAlive: continue;
                             case ControlMethod.UDPTransfer:
-                                await OpenUdpTransmission(); 
+                                await OpenUdpTransmission(appId, providerClient);
                                 continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
-                            case ControlMethod.TCPTransfer: 
-                                await OpenTcpTransmission(appId, providerClient, toTargetServer); 
+                            case ControlMethod.TCPTransfer:
+                                await OpenTcpTransmission(appId, providerClient, toTargetServer);
                                 return;//tcp 开启隧道，并且不再利用此连接
                         }
                     } //while (controlMethod == ControlMethod.KeepAlive) ;
@@ -419,31 +419,37 @@ namespace NSmartProxy.Client
 
         }
 
-        private async Task OpenUdpTransmission()
+        //公用这个udpclient来发送UDP包
+        public UdpClient CurrentUdpClient = new Lazy<UdpClient>(() => new UdpClient()).Value;
+
+        private async Task OpenUdpTransmission(int appId, TcpClient providerClient)
         {
+            //连接后设置client为null 
+            if (!ClearOldClient(appId, providerClient)) return;
+
+            Router.Logger.Debug(appId + "接收到连接请求(UDP)");
+
+            //TODO 4 这里有性能隐患，考虑后期改成哈希表
+            ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
+            var networkStream = providerClient.GetStream();
+            byte[] bytesLength = new byte[2];
+            await networkStream.ReadAsync(bytesLength, 0, 2);
+
+            int intLength = StringUtil.DoubleBytesToInt(bytesLength);
+            byte[] bytesData = new byte[intLength];
+            await networkStream.ReadAsync(bytesData, 0, intLength);
+            Router.Logger.Debug($"{appId} 发送 {intLength} 字节");
+            _ = CurrentUdpClient.SendAsync(bytesData, intLength, item.IP, item.TargetServicePort);
 
         }
 
         private async Task OpenTcpTransmission(int appId, TcpClient providerClient, TcpClient toTargetServer)
         {
             //连接后设置client为null 
-            if (ConnectionManager.ExistClient(appId, providerClient))
-            {
-                var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
-                if (removedClient == false)
-                {
-                    Router.Logger.Debug($"没有移除{appId}任何的对象，对象不存在. hash:{providerClient.GetHashCode()}");
-                    return;
-                }
-            }
-            else
-            {
-                Router.Logger.Debug($"已无法在{appId}中找到客户端 hash:{providerClient.GetHashCode()}.");
-                return;
-            }
+            if (!ClearOldClient(appId, providerClient)) return;
 
             //每移除一个链接则发起一个新的链接
-            Router.Logger.Debug(appId + "接收到连接请求");
+            Router.Logger.Debug(appId + "接收到连接请求(TCP)");
             //根据clientid_appid发送到固定的端口
             //TODO 4 这里有性能隐患，考虑后期改成哈希表
             ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
@@ -467,8 +473,27 @@ namespace NSmartProxy.Client
 
             NetworkStream targetServerStream = toTargetServer.GetStream();
             NetworkStream providerClientStream = providerClient.GetStream();
-            //targetServerStream.Write(buffer, 0, readByteCount);
             _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString, item);
+        }
+
+        private bool ClearOldClient(int appId, TcpClient providerClient)
+        {
+            if (ConnectionManager.ExistClient(appId, providerClient))
+            {
+                var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
+                if (removedClient == false)
+                {
+                    Router.Logger.Debug($"没有移除{appId}任何的对象，对象不存在. hash:{providerClient.GetHashCode()}");
+                    return false;
+                }
+            }
+            else
+            {
+                Router.Logger.Debug($"已无法在{appId}中找到客户端 hash:{providerClient.GetHashCode()}.");
+                return false;
+            }
+
+            return true;
         }
 
 
@@ -483,8 +508,7 @@ namespace NSmartProxy.Client
                 var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString, item);
 
                 //close connnection,whether client or server stopped transferring.
-                var comletedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
-                //Router.Logger.Debug(comletedTask.Result + "传输关闭，重新读取字节");
+                var completedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
                 providerClient.Close();
                 Router.Logger.Debug("已关闭toProvider连接。");
                 toTargetServer.Close();
