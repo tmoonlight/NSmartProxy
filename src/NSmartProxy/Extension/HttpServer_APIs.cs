@@ -183,8 +183,8 @@ namespace NSmartProxy.Extension
             var config = ServerContext.ServerConfig;
             return new ServerPortsDTO()
             {
-                ReversePort = config.ReversePort,
-                ConfigPort = config.ConfigPort,
+                ReversePort = config.ReversePort_Out > 0 ? config.ReversePort_Out : config.ReversePort,
+                ConfigPort = config.ConfigPort_Out > 0 ? config.ConfigPort_Out : config.ConfigPort,
                 WebAPIPort = config.WebAPIPort
             };
         }
