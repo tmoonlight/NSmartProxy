@@ -7,7 +7,8 @@ namespace NSmartProxy.Data
     {
         TCP = 0x00,
         HTTP = 0x01,
-        HTTPS = 0x02
+        HTTPS = 0x02,
+        UDP = 0x04
     }
 
     public class ClientApp

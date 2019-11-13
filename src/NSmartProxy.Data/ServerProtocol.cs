@@ -8,11 +8,15 @@
         CloseClient = 0x04
     }
 
+    /// <summary>
+    /// 反弹控制端口协议头
+    /// </summary>
     public enum ControlMethod : byte
     {
         TCPTransfer = 0x01,
-        UDPTransfer= 0x02,
-        KeepAlive = 0x03
+        KeepAlive = 0x03,
+        UDPTransfer = 0x04,
+       
     }
 
 }

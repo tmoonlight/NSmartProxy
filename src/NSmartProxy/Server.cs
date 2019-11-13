@@ -103,7 +103,7 @@ namespace NSmartProxy
             //1.反向连接池配置
             ConnectionManager = ClientConnectionManager.GetInstance().SetServerContext(ServerContext);
             //注册客户端发生连接时的事件
-            ConnectionManager.AppTcpClientMapConfigConnected += ConnectionManager_AppAdded;
+            ConnectionManager.AppTcpClientMapConfigApplied += ConnectionManager_AppAdded;
             _ = ConnectionManager.ListenServiceClient(DbOp);
             Logger.Debug("NSmart server started");
 
@@ -209,28 +209,23 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
-            //Protocol protocol;
-            //string host = "";
-            //TODO 如果有host 则分配到相同的group中
+            //多个app共用一个端口时，只需要对这个端口开启一次侦听循环
             foreach (var kv in ServerContext.PortAppMap)
             {
                 if (kv.Value.ActivateApp.AppId == e.App.AppId &&
                     kv.Value.ActivateApp.ClientId == e.App.ClientId)
                 {
                     port = kv.Value.ActivateApp.ConsumePort;
-                    //protocol = kv.Value.ActivateApp.AppProtocol;
                     break;
                 }
-
             }
             if (port == 0) throw new Exception("app未注册");
-            //var ct = new CancellationToken();
 
             _ = ListenConsumeAsync(port);
         }
 
         /// <summary>
-        /// 主循环，处理所有来自外部的请求
+        /// 主循环，处理所有来自外部的请求（UDP&TCP）
         /// </summary>
         /// <param name="consumerlistener"></param>
         /// <param name="ct"></param>
@@ -242,23 +237,37 @@ namespace NSmartProxy
             var ct = cts.Token;
             try
             {
-                var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
-                var nspApp = ServerContext.PortAppMap[consumerPort];
-
-                consumerlistener.Start(1000);
-                //nspApp.ActivateApp.Listener = consumerlistener;
-                nspApp.Listener = consumerlistener;
-                nspApp.ActivateApp.CancelListenSource = cts;
-
-                //临时编下号，以便在日志里区分不同隧道的连接
-                //string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
-
-                while (!ct.IsCancellationRequested)
+                var nspAppGrp = ServerContext.PortAppMap[consumerPort];
+                nspAppGrp.ActivateApp.CancelListenSource = cts;
+                if (nspAppGrp.ProtocolInGroup == Protocol.UDP)  //UDP协议侦听
                 {
-                    Logger.Debug("listening serviceClient....Port:" + consumerPort);
-                    //I.主要对外侦听循环
-                    var consumerClient = await consumerlistener.AcceptTcpClientAsync();
-                    _ = ProcessConsumeRequestAsync(consumerPort, consumerClient, ct);
+                    //var consumerlistener = new TcpListener(IPAddress.Any, consumerPort);
+                    var consumerUdpClient = new UdpClient(consumerPort);
+                    nspAppGrp.UdpClient = consumerUdpClient;
+                    //consumerUdpListener.ReceiveAsync()
+                    while (!ct.IsCancellationRequested)
+                    {
+                        Logger.Debug("Server UDP Receiving....Port:" + consumerPort);
+                        var receiveResult = await consumerUdpClient.ReceiveAsync();
+                        _ = ProcessConsumeUdpRequestAsync(consumerPort, receiveResult);
+                    }
+                }
+                else  //TCP HTTP/HTTPS都走tcplistener侦听
+                {
+                    var consumerTcpListener = new TcpListener(IPAddress.Any, consumerPort);
+                    consumerTcpListener.Start(1000);
+                    //nspApp.ActivateApp.Listener = consumerlistener;
+                    nspAppGrp.Listener = consumerTcpListener;
+                    //临时编下号，以便在日志里区分不同隧道的连接
+                    //string clientApp = $"clientapp:{nspApp.ActivateApp.ClientId}-{nspApp.ActivateApp.AppId}";
+
+                    while (!ct.IsCancellationRequested)
+                    {
+                        Logger.Debug("Server TCP listening....Port:" + consumerPort);
+                        //I.主要对外侦听循环
+                        var consumerClient = await consumerTcpListener.AcceptTcpClientAsync();
+                        await ProcessConsumeTcpRequestAsync(consumerPort, consumerClient, ct);//同步发送
+                    }
                 }
             }
             catch (ObjectDisposedException ode)
@@ -275,7 +284,23 @@ namespace NSmartProxy
             }
         }
 
-        private async Task ProcessConsumeRequestAsync(int consumerPort, TcpClient consumerClient, CancellationToken ct)
+        private async Task ProcessConsumeUdpRequestAsync(int consumerPort, UdpReceiveResult receiveResult)
+        {
+            var nspAppGroup = ServerContext.UDPPortAppMap[consumerPort];
+            if (nspAppGroup.ProtocolInGroup == Protocol.UDP)
+            {
+                var s2pClient = await ConnectionManager.GetClientForUdp(consumerPort, null);
+                var tunnelStream = s2pClient.GetStream();
+                // method   packegelength   buffer
+                // udp      2               packagelength
+                tunnelStream.Write(new byte[] { (byte)ControlMethod.UDPTransfer }, 0, 1);
+                tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
+                await tunnelStream.WriteAsync(receiveResult.Buffer);
+                Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节");
+            }
+        }
+
+        private async Task ProcessConsumeTcpRequestAsync(int consumerPort, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
             var nspAppGroup = ServerContext.PortAppMap[consumerPort];
@@ -303,7 +328,7 @@ namespace NSmartProxy
                     string host = tp.Item1;
                     restBytes = Encoding.UTF8.GetBytes(tp.Item2); //预发送bytes，因为这部分用来抓host消费掉了
                     //restBytesLength = tp.Item3;
-                    s2pClient = await ConnectionManager.GetClient(consumerPort, host);
+                    s2pClient = await ConnectionManager.GetClientForTcp(consumerPort, host);
                     if (nspAppGroup.ContainsKey(host))
                     {
                         nspAppGroup[host].Tunnels.Add(tunnel); //bug修改：建立隧道
@@ -315,9 +340,9 @@ namespace NSmartProxy
 
                     nspApp = nspAppGroup[host];
                 }
-                else
+                else if (nspAppGroup.ProtocolInGroup == Protocol.TCP) //TCP
                 {
-                    s2pClient = await ConnectionManager.GetClient(consumerPort);
+                    s2pClient = await ConnectionManager.GetClientForTcp(consumerPort);
                     nspAppGroup.ActivateApp.Tunnels.Add(tunnel);//bug修改：建立隧道
                     nspApp = nspAppGroup.ActivateApp;
                 }

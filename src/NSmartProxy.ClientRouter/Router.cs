@@ -325,7 +325,7 @@ namespace NSmartProxy.Client
             foreach (TcpClient providerClient in args.NewClients)
             {
                 Router.Logger.Debug("Open server connection.");
-                _ = OpenTrasferation(args.App.AppId, providerClient);
+                _ = OpenTransmission(args.App.AppId, providerClient);
             }
 
         }
@@ -360,7 +360,7 @@ namespace NSmartProxy.Client
             }
         }
 
-        private async Task OpenTrasferation(int appId, TcpClient providerClient)
+        private async Task OpenTransmission(int appId, TcpClient providerClient)
         {
             TcpClient toTargetServer = new TcpClient();
             //事件循环2
@@ -374,7 +374,7 @@ namespace NSmartProxy.Client
                 {
                     ControlMethod controlMethod;
                     //TODO 5 处理应用级的keepalive
-                    do
+                    while (true)
                     {
                         int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length); //双端标记S0001
                         if (readByteCount == 0)
@@ -387,7 +387,20 @@ namespace NSmartProxy.Client
 
                         //TODO 4 如果是UDP则直接转发，之后返回上层
                         controlMethod = (ControlMethod)buffer[0];
-                    } while (controlMethod == ControlMethod.KeepAlive);
+
+                        switch (controlMethod)
+                        {
+                            case ControlMethod.KeepAlive: continue;
+                            case ControlMethod.UDPTransfer:
+                                await OpenUdpTransmission(); 
+                                continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
+                            case ControlMethod.TCPTransfer: 
+                                await OpenTcpTransmission(appId, providerClient, toTargetServer); 
+                                break;//tcp 开启隧道，并且不再利用此连接
+                        }
+
+
+                    } //while (controlMethod == ControlMethod.KeepAlive) ;
                 }
                 catch (Exception ex)
                 {
@@ -397,47 +410,7 @@ namespace NSmartProxy.Client
                     throw;
                 }
 
-                //连接后设置client为null 
-                if (ConnectionManager.ExistClient(appId, providerClient))
-                {
-                    var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
-                    if (removedClient == false)
-                    {
-                        Router.Logger.Debug($"没有移除{appId}任何的对象，对象不存在. hash:{providerClient.GetHashCode()}");
-                        return;
-                    }
-                }
-                else
-                {
-                    Router.Logger.Debug($"已无法在{appId}中找到客户端 hash:{providerClient.GetHashCode()}.");
-                    return;
-                }
-                //每移除一个链接则发起一个新的链接
-                Router.Logger.Debug(appId + "接收到连接请求");
-                //根据clientid_appid发送到固定的端口
-                //TODO 4 这里有性能隐患，考虑后期改成哈希表
-                ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
-
-
-                //向服务端发起一次长连接，没有接收任何外来连接请求时，
-                //该方法会在write处会阻塞???。
-                await ConnectionManager.ConnectAppToServer(appId);
-                Router.Logger.Debug("已建立反向连接:" + appId);
-                // item1:app编号，item2:ip地址，item3:目标服务端口
-                try
-                {
-                    toTargetServer.Connect(item.IP, item.TargetServicePort);
-                }
-                catch
-                {
-                    throw new Exception($"对内网服务的 {item.IP}：{item.TargetServicePort} 连接失败。");
-                }
-                string epString = item.IP.ToString() + ":" + item.TargetServicePort.ToString();
-                Router.Logger.Debug("已连接目标服务:" + epString);
-
-                NetworkStream targetServerStream = toTargetServer.GetStream();
-                //targetServerStream.Write(buffer, 0, readByteCount);
-                _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString, item);
+                
                 //already close connection
             }
             catch (Exception ex)
@@ -449,6 +422,58 @@ namespace NSmartProxy.Client
                 throw;
             }
 
+        }
+
+        private async Task OpenUdpTransmission()
+        {
+
+        }
+
+        private async Task OpenTcpTransmission(int appId, TcpClient providerClient, TcpClient toTargetServer)
+        {
+            //连接后设置client为null 
+            if (ConnectionManager.ExistClient(appId, providerClient))
+            {
+                var removedClient = ConnectionManager.RemoveClient(appId, providerClient);
+                if (removedClient == false)
+                {
+                    Router.Logger.Debug($"没有移除{appId}任何的对象，对象不存在. hash:{providerClient.GetHashCode()}");
+                    return;
+                }
+            }
+            else
+            {
+                Router.Logger.Debug($"已无法在{appId}中找到客户端 hash:{providerClient.GetHashCode()}.");
+                return;
+            }
+
+            //每移除一个链接则发起一个新的链接
+            Router.Logger.Debug(appId + "接收到连接请求");
+            //根据clientid_appid发送到固定的端口
+            //TODO 4 这里有性能隐患，考虑后期改成哈希表
+            ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
+
+
+            //向服务端再发起另一次长连接
+            await ConnectionManager.ConnectAppToServer(appId);
+            Router.Logger.Debug("已建立反向连接:" + appId);
+            // item1:app编号，item2:ip地址，item3:目标服务端口
+            try
+            {
+                toTargetServer.Connect(item.IP, item.TargetServicePort);
+            }
+            catch
+            {
+                throw new Exception($"对内网服务的 {item.IP}：{item.TargetServicePort} 连接失败。");
+            }
+
+            string epString = item.IP.ToString() + ":" + item.TargetServicePort.ToString();
+            Router.Logger.Debug("已连接目标服务:" + epString);
+
+            NetworkStream targetServerStream = toTargetServer.GetStream();
+            NetworkStream providerClientStream = providerClient.GetStream();
+            //targetServerStream.Write(buffer, 0, readByteCount);
+            _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString, item);
         }
 
 
@@ -499,7 +524,7 @@ namespace NSmartProxy.Client
                         await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                     }
 
-                   // await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                    // await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
                 }
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");

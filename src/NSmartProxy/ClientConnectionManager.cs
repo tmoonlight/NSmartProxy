@@ -26,7 +26,7 @@ namespace NSmartProxy
         /// 当app增加时触发
         /// </summary>
        // public event EventHandler<AppChangedEventArgs> AppTcpClientMapReverseConnected = delegate { };
-        public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigConnected = delegate { };
+        public event EventHandler<AppChangedEventArgs> AppTcpClientMapConfigApplied = delegate { };
 
         private NSPServerContext ServerContext;
 
@@ -142,7 +142,28 @@ namespace NSmartProxy
         //    return client;
         //}
 
-        public async Task<TcpClient> GetClient(int consumerPort, string host = null)
+
+        public async Task<TcpClient> GetClientForUdp(int consumerPort, string host = null)
+        {
+            NSPApp nspApp = null;
+            nspApp = ServerContext.PortAppMap[consumerPort].ActivateApp;
+
+            TcpClient client = nspApp.TcpClientBlocks.Peek();
+            if (client == null)
+            {
+                throw new TimeoutException($"UDP获取{consumerPort}失败");
+            }
+            return client;
+        }
+
+        /// <summary>
+        /// 从当前app的连接池取出一个socket
+        /// </summary>
+        /// <param name="consumerPort"></param>
+        /// <param name="host"></param>
+        /// <param name="onlySeek">仅仅获取这个client 而不消费它（开启新连接）</param>
+        /// <returns></returns>
+        public async Task<TcpClient> GetClientForTcp(int consumerPort, string host = null)
         {
             NSPApp nspApp = null;
             if (host == null || string.IsNullOrEmpty(host.Trim())) //host为空则随便匹配一个
@@ -312,7 +333,7 @@ namespace NSmartProxy
                     //配置时触发
                     if (!hasListened)
                     {
-                        AppTcpClientMapConfigConnected(this, new AppChangedEventArgs() { App = app });//触发listener侦听
+                        AppTcpClientMapConfigApplied(this, new AppChangedEventArgs() { App = app });//触发listener侦听
                     }
                 }
                 Logger.Debug(" <=端口已分配。");

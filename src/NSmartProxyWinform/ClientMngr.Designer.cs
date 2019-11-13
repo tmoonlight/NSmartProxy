@@ -352,6 +352,7 @@ namespace NSmartProxyWinform
             this.cbxProtocol.FormattingEnabled = true;
             this.cbxProtocol.Items.AddRange(new object[] {
             "TCP",
+            "UDP",
             "HTTP"});
             this.cbxProtocol.Location = new System.Drawing.Point(102, 21);
             this.cbxProtocol.Name = "cbxProtocol";

@@ -236,7 +236,7 @@ namespace NSmartProxy.Client
             var clientList = new List<TcpClient>();
             //补齐
             var secclient = (new TcpClient()).WrapClient(this.CurrentToken);//包装成客户端
-            var client = secclient.Client;
+            var client = secclient.Client; 
             try
             {
                 //1.连接服务端

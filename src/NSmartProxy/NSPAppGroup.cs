@@ -10,6 +10,7 @@ namespace NSmartProxy
 {
     /// <summary>
     /// 按host区分的app组，ActivateApp始终是最后一个进来的app。
+    /// 一个app组中所有的app的协议必须相同。
     /// </summary>
     public class NSPAppGroup : Dictionary<string, NSPApp>
     {
@@ -60,5 +61,6 @@ namespace NSmartProxy
         }
 
         public TcpListener Listener { get; set; }
+        public UdpClient UdpClient { get; set; }
     }
 }
