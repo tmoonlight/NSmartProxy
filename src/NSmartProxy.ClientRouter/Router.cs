@@ -396,10 +396,8 @@ namespace NSmartProxy.Client
                                 continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
                             case ControlMethod.TCPTransfer: 
                                 await OpenTcpTransmission(appId, providerClient, toTargetServer); 
-                                break;//tcp 开启隧道，并且不再利用此连接
+                                return;//tcp 开启隧道，并且不再利用此连接
                         }
-
-
                     } //while (controlMethod == ControlMethod.KeepAlive) ;
                 }
                 catch (Exception ex)
@@ -409,9 +407,6 @@ namespace NSmartProxy.Client
                     _waiter.TrySetResult(ex);
                     throw;
                 }
-
-                
-                //already close connection
             }
             catch (Exception ex)
             {
