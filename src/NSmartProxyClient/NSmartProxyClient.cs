@@ -47,7 +47,7 @@ namespace NSmartProxy
         public static ILog Logger;
         public static IConfigurationRoot Configuration { get; set; }
         private static LoginInfo _currentLoginInfo;
-        static void Main(string[] args)
+        public void Start(string[] args)
         {
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
@@ -56,7 +56,7 @@ namespace NSmartProxy
             if (!loggerRepository.Configured) throw new Exception("log config failed.");
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            //用户登录
+            //用户登录 e.g.: ./NSmartProxyClient -u admin -p admin
             if (args.Length == 4)
             {
                 _currentLoginInfo = new LoginInfo();
@@ -132,6 +132,13 @@ namespace NSmartProxy
                 });
             }
             clientRouter.SetConfiguration(config);
+        }
+
+        public void Stop()
+        {
+            //
+            Console.WriteLine(NSPVersion.NSmartProxyServerName + " STOPPED.");
+            Environment.Exit(0);
         }
     }
 }
