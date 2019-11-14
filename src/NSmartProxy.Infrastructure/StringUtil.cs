@@ -60,12 +60,12 @@ namespace NSmartProxy
 
         public static string ToASCIIString(this byte[] bytes)
         {
-            return System.Text.ASCIIEncoding.ASCII.GetString(bytes);
+            return System.Text.Encoding.ASCII.GetString(bytes);
         }
 
         public static byte[] ToASCIIBytes(this string str)
         {
-            return System.Text.ASCIIEncoding.ASCII.GetBytes(str);
+            return System.Text.Encoding.ASCII.GetBytes(str);
         }
 
         /// <summary>

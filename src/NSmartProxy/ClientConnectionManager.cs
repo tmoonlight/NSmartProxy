@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -104,7 +105,6 @@ namespace NSmartProxy
                 }
 
 
-
                 var clientIdAppId = GetAppFromBytes(bytes);
                 Server.Logger.Debug("已获取到消息ClientID:" + clientIdAppId.ClientID
                                                       + "AppID:" + clientIdAppId.AppID
@@ -129,24 +129,10 @@ namespace NSmartProxy
 
         private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
-
-        //public async Task<TcpClient> GetHTTPClient(int consumerPort)
-        //{
-        //    var clientId = ServerContext.PortAppMap[consumerPort].ClientId;
-        //    var appId = ServerContext.PortAppMap[consumerPort].AppId;
-
-        //    //TODO ***需要处理服务端长时间不来请求的情况（无法建立隧道）
-        //    TcpClient client = await ServerContext.Clients[clientId].AppMap[appId].PopClientAsync();
-        //    if (client == null) return null;
-        //    ServerContext.PortAppMap[consumerPort].ReverseClients.Add(client);
-        //    return client;
-        //}
-
-
         public async Task<TcpClient> GetClientForUdp(int consumerPort, string host = null)
         {
             NSPApp nspApp = null;
-            nspApp = ServerContext.PortAppMap[consumerPort].ActivateApp;
+            nspApp = ServerContext.UDPPortAppMap[consumerPort].ActivateApp;
 
             TcpClient client = nspApp.TcpClientBlocks.Peek();
             if (client == null)
@@ -193,15 +179,17 @@ namespace NSmartProxy
             return client;
         }
 
-        //通过客户端的id请求，分配好服务端端口和appid交给客户端
-        //arrange ConfigId from top 4 bytes which received from client.
-        //response:
-        //   2          1       1       1           1        ...N
-        //  clientid    appid   port    appid2      port2
-        //request:
-        //   2          2
-        //  clientid    count
-        //  methodType  value = 0
+        /// <summary>
+        /// 分配端口方法
+        /// arrange ConfigId from top 4 bytes which received from client.
+        /// response:
+        ///   2          1       1       1           1        ...N
+        ///  clientid    appid   port    appid2      port2
+        /// request:
+        ///   2          2
+        ///  clientid    count
+        ///  methodType  value = 0
+        /// </summary>
         public byte[] ArrangeConfigIds(byte[] appRequestBytes, byte[] consumerPortBytes, int highPriorityClientId)
         {
             // byte[] arrangedBytes = new byte[256];
@@ -229,7 +217,7 @@ namespace NSmartProxy
                     for (int i = 0; i < 10000; i++)
                     {
                         _rand.NextBytes(tempClientIdBytes);
-                        int tempClientId = (tempClientIdBytes[0] << 8) + tempClientIdBytes[1];
+                        int tempClientId = StringUtil.DoubleBytesToInt(tempClientIdBytes);
                         if (!ServerContext.Clients.ContainsKey(tempClientId))
                         {
 
@@ -275,13 +263,14 @@ namespace NSmartProxy
                     }
                     else
                     {
-                        int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
                         if (protocol == Protocol.TCP)
                         {
+                            int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
                             port = relocatedPort; //TODO 2 如果是共享端口协议，如果找不到端口则不进行侦听
                         }
                         else if (protocol == Protocol.HTTP)
                         {
+                            int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
                             //兼容http侦听端口公用
                             if (port != relocatedPort)
                             {
@@ -297,6 +286,12 @@ namespace NSmartProxy
                                 }
                             }
                         }
+                        else if (protocol == Protocol.UDP)
+                        {
+                            int relocatedPort = NetworkUtil.FindOneAvailableUDPPort(startPort);
+                            port = relocatedPort;
+                        }
+
                     }
                     NSPApp app = ServerContext.Clients[clientId].AppMap[arrangedAppid];
                     app.ClientId = clientId;
@@ -308,20 +303,24 @@ namespace NSmartProxy
                     app.Tunnels = new List<TcpTunnel>();
                     app.ReverseClients = new List<TcpClient>();
                     app.IsCompress = isCompress;
-                    //app.Host = host;
-                    //TODO 设置app的host和protocoltype
-                    if (!ServerContext.PortAppMap.ContainsKey(port))
+
+                    if (protocol == Protocol.UDP)
                     {
-                        ServerContext.PortAppMap[port] = new NSPAppGroup();
+                        if (!ServerContext.UDPPortAppMap.ContainsKey(port))
+                        {
+                            ServerContext.UDPPortAppMap[port] = new NSPAppGroup();
+                        }
+                        ServerContext.UDPPortAppMap[port][host] = app;
                     }
-
-                    //if (protocol == Protocol.HTTP)
-                    //{
-                    ServerContext.PortAppMap[port][host] = app;
-                    //}
-
-                    //ServerContext.PortAppMap[port].ActivateApp = app;
-                    //ServerContext.PortAppMap[port] = nspAppGroup;
+                    else
+                    {
+                        //TODO 设置app的host和protocoltype(TCP Only)
+                        if (!ServerContext.PortAppMap.ContainsKey(port))
+                        {
+                            ServerContext.PortAppMap[port] = new NSPAppGroup();
+                        }
+                        ServerContext.PortAppMap[port][host] = app;
+                    }
 
                     clientModel.AppList.Add(new App
                     {

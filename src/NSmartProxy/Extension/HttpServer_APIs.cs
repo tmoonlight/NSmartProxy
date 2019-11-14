@@ -459,8 +459,22 @@ window.location.href='main.html';
                 {
                     AddAppJsonItem(json, key, value.ActivateApp);
                 }
+            }
 
+            foreach (var (key, value) in ServerContext.UDPPortAppMap)
+            {
 
+                if (value.Count > 0)
+                {
+                    foreach (var (key2, value2) in value)
+                    {
+                        AddAppJsonItem(json, key, value2);
+                    }
+                }
+                else
+                {
+                    AddAppJsonItem(json, key, value.ActivateApp);
+                }
             }
 
             json.D();
@@ -677,7 +691,7 @@ window.location.href='main.html';
         }
         private string KV2Json(string key, object value)
         {
-            return "\"" + key + "\":\"" + value.ToString() + "\"";
+            return "\"" + key + "\":\"" + value + "\"";
         }
 
         #endregion

@@ -6,8 +6,8 @@ namespace NSmartProxy.Data
     public enum Protocol : byte
     {
         TCP = 0x00,
-        HTTP = 0x01,
-        HTTPS = 0x02,
+        HTTP = 0x01, //同时代表HTTP/HTTPS
+        //HTTPS = 0x02,
         UDP = 0x04
     }
 

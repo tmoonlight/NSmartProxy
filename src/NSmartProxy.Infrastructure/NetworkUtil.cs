@@ -162,13 +162,12 @@ namespace NSmartProxy
         /// </summary> 
         /// <param name="startPort">The first port to check</param> 
         /// <returns>The first available port</returns> 
-        public static int FindNextAvailableUDPPort(int startPort)
+        public static int FindOneAvailableUDPPort(int startPort)
         {
             int port = startPort;
             bool isAvailable = true;
 
-            var mutex = new Mutex(false,
-                string.Concat("Global/", PortReleaseGuid));
+            var mutex = new Mutex(false, PortReleaseGuid);
             mutex.WaitOne();
             try
             {

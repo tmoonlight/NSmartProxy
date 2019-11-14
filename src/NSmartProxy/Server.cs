@@ -208,8 +208,17 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
+            Dictionary<int, NSPAppGroup> appMap = null;
+            if (e.App.AppProtocol == Protocol.UDP)
+            {
+                appMap = ServerContext.UDPPortAppMap;
+            }
+            else
+            {
+                appMap = ServerContext.PortAppMap;
+            }
             //多个app共用一个端口时，只需要对这个端口开启一次侦听循环
-            foreach (var kv in ServerContext.PortAppMap)
+            foreach (var kv in appMap)
             {
                 if (kv.Value.ActivateApp.AppId == e.App.AppId &&
                     kv.Value.ActivateApp.ClientId == e.App.ClientId)
@@ -220,23 +229,23 @@ namespace NSmartProxy
             }
             if (port == 0) throw new Exception("app未注册");
 
-            _ = ListenConsumeAsync(port);
+            _ = ListenConsumeAsync(port, appMap);
         }
 
         /// <summary>
         /// 主循环，处理所有来自外部的请求（UDP&TCP）
         /// </summary>
-        /// <param name="consumerlistener"></param>
-        /// <param name="ct"></param>
+        /// <param name="consumerPort"></param>
+        /// <param name="appMap"></param>
         /// <returns></returns>
-        async Task ListenConsumeAsync(int consumerPort)
+        async Task ListenConsumeAsync(int consumerPort, Dictionary<int, NSPAppGroup> appMap)
         {
             //TODO 区分http请求
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
             try
             {
-                var nspAppGrp = ServerContext.PortAppMap[consumerPort];
+                var nspAppGrp = appMap[consumerPort];
                 nspAppGrp.ActivateApp.CancelListenSource = cts;
                 if (nspAppGrp.ProtocolInGroup == Protocol.UDP)  //UDP协议侦听
                 {
@@ -305,7 +314,7 @@ namespace NSmartProxy
             try
             {
 
-                if (nspAppGroup.ProtocolInGroup == Protocol.HTTP || nspAppGroup.ProtocolInGroup == Protocol.HTTPS)
+                if (nspAppGroup.ProtocolInGroup == Protocol.HTTP /*|| nspAppGroup.ProtocolInGroup == Protocol.HTTPS*/)
                 {//不论是http协议还是https协议，有证书就加密
                     if (ServerContext.PortCertMap.TryGetValue(consumerPort.ToString(), out X509Certificate cert2))
                     {

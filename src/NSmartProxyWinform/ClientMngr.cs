@@ -667,9 +667,9 @@ namespace NSmartProxyWinform
                 {
                     //校验clientApp
                     var clientApp = (ClientApp)item.Tag;
-                    if (clientApp.Protocol == Protocol.HTTP&&String.IsNullOrEmpty(clientApp.Host))
+                    if (clientApp.Protocol == Protocol.HTTP && String.IsNullOrEmpty(clientApp.Host))
                     {
-                        MessageBox.Show($"节点“{item.Text}”为HTTP映射，必须输入域名！");
+                        MessageBox.Show($"节点“{item.Text}”为HTTP映射，必须输入域名！若没有域名，请使用TCP协议映射。");
                         return false;
                     }
 
@@ -722,21 +722,13 @@ namespace NSmartProxyWinform
             DataTable dt = new DataTable();
             dt.Columns.Add("id");
             dt.Columns.Add("value");
-            dt.Rows.Add("HTTP", "HTTP");
-            dt.Rows.Add("TCP", "TCP");
+            foreach (var protocolName in Enum.GetNames(typeof(Protocol)))
+            {
+                dt.Rows.Add(protocolName, protocolName);
+            }
+
             cbxProtocol.Items.Clear();
-            cbxProtocol.ValueMember = "id";
-            cbxProtocol.ValueMember = "value";
             cbxProtocol.DataSource = dt;
-            //    .Cast<Enum>()
-            //    .Select(value => new
-            //    {
-            //        //(Attribute.GetCustomAttribute(value.GetType().GetField(value.ToString()), typeof(DescriptionAttribute)) as DescriptionAttribute).Description,
-            //       // Enum.GetName(typeof(Protocol), value),
-            //        value
-            //    })
-            //    .OrderBy(item => item.value)
-            //    .ToList();
             cbxProtocol.DisplayMember = "value";
             cbxProtocol.ValueMember = "id";
         }
@@ -939,6 +931,6 @@ namespace NSmartProxyWinform
                    tbxWebPort.Text; //ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
 
-       
+
     }
 }
