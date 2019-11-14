@@ -572,8 +572,11 @@ namespace NSmartProxyWinform
         {
             if (listBox1.SelectedItems.Count > 0)
             {
+                var item = new ListViewItem(listBox1.SelectedItems[0].Text);
+                item.Tag = ((ClientApp)listBox1.SelectedItems[0].Tag).Clone();
                 //listBox1.SelectedIndex =
-                listBox1.Items.Add(listBox1.SelectedItems[0].Text).Selected = true;
+                listBox1.Items.Add(item);
+                item.Selected = true;
             }
         }
 

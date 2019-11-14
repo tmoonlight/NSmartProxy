@@ -290,14 +290,23 @@ namespace NSmartProxy
             var nspAppGroup = ServerContext.UDPPortAppMap[consumerPort];
             if (nspAppGroup.ProtocolInGroup == Protocol.UDP)
             {
-                var s2pClient = await ConnectionManager.GetClientForUdp(consumerPort, null);
-                var tunnelStream = s2pClient.GetStream();
-                // method   packegelength   buffer
-                // udp      2               packagelength
-                tunnelStream.Write(new byte[] { (byte)ControlMethod.UDPTransfer }, 0, 1);
-                tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
-                await tunnelStream.WriteAsync(receiveResult.Buffer);
-                Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节");
+                try
+                {
+                    var s2pClient = ConnectionManager.GetClientForUdp(consumerPort, null);
+                    var tunnelStream = s2pClient.GetStream();
+                    // method   packegelength   buffer
+                    // udp      2               packagelength
+                    tunnelStream.Write(new byte[] { (byte)ControlMethod.UDPTransfer }, 0, 1);
+                    tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
+                    await tunnelStream.WriteAsync(receiveResult.Buffer);
+                    Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug("UDP传输错误：" + ex.ToString());
+
+                }
+
             }
         }
 

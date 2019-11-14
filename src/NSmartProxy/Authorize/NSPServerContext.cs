@@ -32,6 +32,7 @@ namespace NSmartProxy.Authorize
             TokenCaches = new HashSet<string>();
             Clients = new NSPClientCollection();
             PortAppMap = new Dictionary<int, NSPAppGroup>();
+            UDPPortAppMap = new Dictionary<int, NSPAppGroup>();
             PortCertMap = new Dictionary<string, X509Certificate>();
             //ServerConfig = new NSPServerConfig();
         }
@@ -85,8 +86,9 @@ namespace NSmartProxy.Authorize
                     foreach (var appKV in client.AppMap)
                     {
                         int port = appKV.Value.ConsumePort;
+                        var appMap = appKV.Value.AppProtocol == Protocol.UDP ? UDPPortAppMap : PortAppMap;
                         //1.关闭，并移除AppMap中的App
-                        if (!PortAppMap.ContainsKey(port))
+                        if (!appMap.ContainsKey(port))
                         {
                             Server.Logger.Debug($"clientid:{clientId}不包含port:{port}");
                         }
@@ -96,7 +98,7 @@ namespace NSmartProxy.Authorize
                             //TODO 3 并且当nspgroup里的元素全都被关闭时，才remove掉这个节点
                             //PortAppMap[port]
                             //PortAppMap[port].CloseByHost();
-                            var nspAppGroup = PortAppMap[port];
+                            var nspAppGroup = appMap[port];
                             foreach (var (host, app) in nspAppGroup)
                             {
                                 if (app.ClientId == clientId)
@@ -116,7 +118,12 @@ namespace NSmartProxy.Authorize
                                     nspAppGroup.Listener.Stop();
                                 }
 
-                                PortAppMap.Remove(port);
+                                if (nspAppGroup.UdpClient != null)
+                                {
+                                    nspAppGroup.UdpClient.Close();
+                                }
+
+                                appMap.Remove(port);
                             }
                         }
 

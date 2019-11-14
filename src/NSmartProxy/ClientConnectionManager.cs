@@ -129,7 +129,7 @@ namespace NSmartProxy
 
         private static readonly ClientConnectionManager Instance = new Lazy<ClientConnectionManager>(() => new ClientConnectionManager()).Value;
 
-        public async Task<TcpClient> GetClientForUdp(int consumerPort, string host = null)
+        public TcpClient GetClientForUdp(int consumerPort, string host = null)
         {
             NSPApp nspApp = null;
             nspApp = ServerContext.UDPPortAppMap[consumerPort].ActivateApp;
@@ -266,10 +266,15 @@ namespace NSmartProxy
                         if (protocol == Protocol.TCP)
                         {
                             int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
-                            port = relocatedPort; //TODO 2 如果是共享端口协议，如果找不到端口则不进行侦听
+                            port = relocatedPort; 
+                        }
+                        else if (protocol == Protocol.UDP)
+                        {
+                            int relocatedPort = NetworkUtil.FindOneAvailableUDPPort(startPort);
+                            port = relocatedPort;
                         }
                         else if (protocol == Protocol.HTTP)
-                        {
+                        {//因为端口复用，允许公用端口
                             int relocatedPort = NetworkUtil.FindOneAvailableTCPPort(startPort);
                             //兼容http侦听端口公用
                             if (port != relocatedPort)
@@ -285,11 +290,6 @@ namespace NSmartProxy
                                     port = relocatedPort;
                                 }
                             }
-                        }
-                        else if (protocol == Protocol.UDP)
-                        {
-                            int relocatedPort = NetworkUtil.FindOneAvailableUDPPort(startPort);
-                            port = relocatedPort;
                         }
 
                     }
