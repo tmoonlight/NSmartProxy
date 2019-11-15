@@ -256,7 +256,7 @@ namespace NSmartProxy
                     {
                         Logger.Debug("Server UDP Receiving....Port:" + consumerPort);
                         var receiveResult = await consumerUdpClient.ReceiveAsync();
-                        _ = ProcessConsumeUdpRequestAsync(consumerPort, receiveResult);
+                        _ = ProcessConsumeUdpRequestAsync(consumerUdpClient,consumerPort, receiveResult,ct);
                     }
                 }
                 else  //TCP HTTP/HTTPS都走tcplistener侦听
@@ -285,7 +285,10 @@ namespace NSmartProxy
             }
         }
 
-        private async Task ProcessConsumeUdpRequestAsync(int consumerPort, UdpReceiveResult receiveResult)
+        ///接收到消费端的udp请求之后
+        private async Task ProcessConsumeUdpRequestAsync(UdpClient consumerUdpClient, int consumerPort,
+            UdpReceiveResult receiveResult,
+            CancellationToken ct)
         {
             var nspAppGroup = ServerContext.UDPPortAppMap[consumerPort];
             if (nspAppGroup.ProtocolInGroup == Protocol.UDP)
@@ -297,9 +300,13 @@ namespace NSmartProxy
                     // method   packegelength   buffer
                     // udp      2               packagelength
                     tunnelStream.Write(new byte[] { (byte)ControlMethod.UDPTransfer }, 0, 1);
-                    tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
-                    await tunnelStream.WriteAsync(receiveResult.Buffer);
-                    Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节");
+                    //tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
+                    await tunnelStream.WriteDLengthBytes(receiveResult.Buffer);
+                    Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节,remote ep:{receiveResult.RemoteEndPoint.ToString()}");
+                    if (nspAppGroup.UdpTransmissionTask == null)
+                    {
+                        nspAppGroup.UdpTransmissionTask = OpenUdpTransmission( tunnelStream,nspAppGroup.ActivateApp.IsCompress, ct);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -309,6 +316,45 @@ namespace NSmartProxy
 
             }
         }
+
+        /// <summary>
+        /// udp的传输流，只需要处理客户端到服务端的数据流
+        /// </summary>
+        /// <param name="consumerUdpClient"></param>
+        /// <param name="receiveResultRemoteEndPoint"></param>
+        /// <param name="providerStream"></param>
+        /// <param name="activateAppIsCompress"></param>
+        /// <param name="ct"></param>
+        /// <param name="consumerEndPoint"></param>
+        /// <returns></returns>
+        private async Task OpenUdpTransmission(/*UdpClient consumerUdpClient, IPEndPoint consumerEndPoint,*/
+            NetworkStream providerStream, bool isCompress, CancellationToken ct)
+        {
+            byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+            int bytesRead;
+            //while ((bytesRead =
+            //           await providerStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+            //{
+                //TODO 8 读取封包
+                //读取客户端传过来的封包：consumer源 EndPoint 目的 EndPoint
+                //new udpclient发送给相应的udpclient
+                //if (isCompress)
+                //{
+                //    var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+                //    bytesRead = compressBuffer.Length;
+                   
+                //    await consumerUdpClient.SendAsync(compressBuffer, bytesRead, consumerEndPoint);
+                //    //await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                //}
+                //else
+                //{
+                //    await consumerUdpClient.SendAsync(buffer, bytesRead, consumerEndPoint);
+                //    //await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                //}
+                //ServerContext.TotalSentBytes += bytesRead; //上行
+            //}
+        }
+
 
         private async Task ProcessConsumeTcpRequestAsync(int consumerPort, TcpClient consumerClient, CancellationToken ct)
         {
@@ -403,7 +449,7 @@ namespace NSmartProxy
             // if tcp
             try
             {
-                await TcpTransferAsync(consumerStream, providerStream, nspApp, transfering.Token);
+                await OpenTcpTransmission(consumerStream, providerStream, nspApp, transfering.Token);
             }
             finally
             {
@@ -705,7 +751,7 @@ namespace NSmartProxy
 
         #region datatransfer
         //3端互相传输数据
-        async Task TcpTransferAsync(Stream consumerStream, Stream providerStream,
+        async Task OpenTcpTransmission(Stream consumerStream, Stream providerStream,
             NSPApp nspApp,
             CancellationToken ct)
         {

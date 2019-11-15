@@ -67,5 +67,36 @@ namespace NSmartProxy.Infrastructure
             await stream.WriteAsync(bytes, 0, bytes.Length);
         }
 
+        /// <summary>
+        /// 写入动态长度的字节，头两字节存放长度
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static async Task WriteDLengthBytes(this Stream stream, byte[] bytes)
+        {
+            stream.Write(StringUtil.IntTo2Bytes(bytes.Length), 0, 2);
+            await stream.WriteAsync(bytes);
+        }
+
+        /// <summary>
+        /// 读取动态长度的字节，头两字节存放长度
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static async Task<int> ReadDLengthBytes(this Stream stream, byte[] bytes)
+        {
+            int readInt = 0; 
+            byte[] bt2 = new byte[2];
+            //readInt += bt2.Length;
+            var readByte = stream.Read(bt2, 0, 2);
+            if (readByte > 0)
+            {//TODO 7这种写法会不会有问题
+                readInt += await stream.ReadAsync(bytes, 0, StringUtil.DoubleBytesToInt(bt2));
+            }
+            return readInt;
+        }
+
     }
 }

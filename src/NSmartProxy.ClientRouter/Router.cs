@@ -14,6 +14,7 @@ using System.Reflection;
 using NSmartProxy.Client.Authorize;
 using NSmartProxy.ClientRouter.Dispatchers;
 using NSmartProxy.Data.Models;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy.Client
 {
@@ -432,12 +433,15 @@ namespace NSmartProxy.Client
             //TODO 4 这里有性能隐患，考虑后期改成哈希表
             ClientApp item = ClientConfig.Clients.First((obj) => obj.AppId == appId);
             var networkStream = providerClient.GetStream();
-            byte[] bytesLength = new byte[2];
-            await networkStream.ReadAsync(bytesLength, 0, 2);
+            //byte[] bytesLength = new byte[2];
+            // await networkStream.ReadAsync(bytesLength, 0, 2);
 
-            int intLength = StringUtil.DoubleBytesToInt(bytesLength);
-            byte[] bytesData = new byte[intLength];
-            await networkStream.ReadAsync(bytesData, 0, intLength);
+            // int intLength = StringUtil.DoubleBytesToInt(bytesLength);
+
+            //TODO 8 OpenUdpTransmission
+            //udp最大长度65535
+            byte[] bytesData = new byte[65535];// = new byte[intLength];
+            var intLength = await networkStream.ReadDLengthBytes(bytesData);
             Router.Logger.Debug($"{appId} 发送 {intLength} 字节");
             _ = CurrentUdpClient.SendAsync(bytesData, intLength, item.IP, item.TargetServicePort);
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using NSmartProxy.Data;
 
 namespace NSmartProxy
@@ -62,5 +63,6 @@ namespace NSmartProxy
 
         public TcpListener Listener { get; set; }
         public UdpClient UdpClient { get; set; }
+        public Task UdpTransmissionTask { get; set; }
     }
 }
