@@ -421,7 +421,7 @@ namespace NSmartProxy.Client
         }
 
         //公用这个udpclient来发送UDP包
-        public UdpClient CurrentUdpClient = new Lazy<UdpClient>(() => new UdpClient()).Value;
+        //public UdpClient CurrentUdpClient = new Lazy<UdpClient>(() => new UdpClient()).Value;
 
         private async Task OpenUdpTransmission(int appId, TcpClient providerClient)
         {
@@ -439,12 +439,54 @@ namespace NSmartProxy.Client
             // int intLength = StringUtil.DoubleBytesToInt(bytesLength);
 
             //TODO 8 OpenUdpTransmission
-            //udp最大长度65535
-            byte[] bytesData = new byte[65535];// = new byte[intLength];
-            var intLength = await networkStream.ReadDLengthBytes(bytesData);
-            Router.Logger.Debug($"{appId} 发送 {intLength} 字节");
-            _ = CurrentUdpClient.SendAsync(bytesData, intLength, item.IP, item.TargetServicePort);
 
+            // [method]   ip(D)    port      buffer(D)
+            // [udp]      X        2         X
+            //udp最大长度65535
+            //byte[] bytesData = new byte[65535];// = new byte[intLength];
+            byte[] ipByte = null;
+            byte[] portByte = new byte[2];
+            byte[] bytesData = null;
+            ipByte = await networkStream.ReadNextDLengthBytes();
+            networkStream.Read(portByte, 0, 2);
+            bytesData = await networkStream.ReadNextDLengthBytes();
+            Router.Logger.Debug($"{appId} 发送 {bytesData.Length} 字节");
+            UdpClient CurrentUdpClient = new UdpClient();
+            CurrentUdpClient.Connect(item.Host, item.TargetServicePort);
+
+            //发送udp包给下游，但需处理接收udp封包的情况
+            await CurrentUdpClient.SendAsync(bytesData, bytesData.Length, item.IP, item.TargetServicePort);
+            _ = ReceiveUdpRequest(ipByte, portByte, CurrentUdpClient, networkStream);
+
+        }
+        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+        //private object udpSendLocker = new object();
+        private async Task ReceiveUdpRequest(byte[] ipByte, byte[] portByte, UdpClient reciverUdpClient, NetworkStream toStatisStream)
+        {
+            //stream存在共同写入的情况
+            //throw new NotImplementedException();
+            while (true)
+            {
+                UdpReceiveResult udpReceiveResult
+                    = await reciverUdpClient.ReceiveAsync();//建立超时时间，不然资源会一直占用
+                //var udpReceiveResult2
+                //    = await reciverUdpClient.ReceiveAsync(Global.ClientUdpReceiveTimeout);
+                //读取endpoint，必须保证如下数据包原子性
+                //IPv4/IPv6(D)         port    returnbuffer(D)
+                //X                    2       X
+                await semaphoreSlim.WaitAsync();
+                try
+                {
+                    await toStatisStream.WriteDLengthBytes(ipByte);
+                    toStatisStream.Write(portByte, 0, 2);
+                    await toStatisStream.WriteDLengthBytes(udpReceiveResult.Buffer);
+                }
+                finally
+                {
+                    semaphoreSlim.Release();
+                }
+
+            }
         }
 
         private async Task OpenTcpTransmission(int appId, TcpClient providerClient, TcpClient toTargetServer)

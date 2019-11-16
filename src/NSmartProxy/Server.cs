@@ -252,11 +252,12 @@ namespace NSmartProxy
                     var consumerUdpClient = new UdpClient(consumerPort);
                     nspAppGrp.UdpClient = consumerUdpClient;
 
+                    //启动udp传输，外层仅处理服务端到客户端的请求
                     while (!ct.IsCancellationRequested)
                     {
                         Logger.Debug("Server UDP Receiving....Port:" + consumerPort);
                         var receiveResult = await consumerUdpClient.ReceiveAsync();
-                        _ = ProcessConsumeUdpRequestAsync(consumerUdpClient,consumerPort, receiveResult,ct);
+                        _ = ProcessConsumeUdpRequestAsync(consumerUdpClient, consumerPort, receiveResult, ct);
                     }
                 }
                 else  //TCP HTTP/HTTPS都走tcplistener侦听
@@ -284,8 +285,8 @@ namespace NSmartProxy
                 Logger.Debug($"外网端口{consumerPort}侦听时出错{ex}");
             }
         }
-
-        ///接收到消费端的udp请求之后
+        private object receiveUdpLocker = new object();
+        ///接收到消费端的udp请求之后，开始侦测服务端->客户端的请求
         private async Task ProcessConsumeUdpRequestAsync(UdpClient consumerUdpClient, int consumerPort,
             UdpReceiveResult receiveResult,
             CancellationToken ct)
@@ -297,15 +298,23 @@ namespace NSmartProxy
                 {
                     var s2pClient = ConnectionManager.GetClientForUdp(consumerPort, null);
                     var tunnelStream = s2pClient.GetStream();
-                    // method   packegelength   buffer
-                    // udp      2               packagelength
+                    var nspApp = nspAppGroup.ActivateApp;
+                    // method   ip(D)    port      buffer(D)
+                    // udp      X        2         X
                     tunnelStream.Write(new byte[] { (byte)ControlMethod.UDPTransfer }, 0, 1);
+                    //tunnelStream.Write(StringUtil.IntTo2Bytes(nspApp.AppId));
                     //tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.Buffer.Length), 0, 2);
+                    await tunnelStream.WriteDLengthBytes(receiveResult.RemoteEndPoint.Address.ToString());
+                    tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.RemoteEndPoint.Port));
                     await tunnelStream.WriteDLengthBytes(receiveResult.Buffer);
                     Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节,remote ep:{receiveResult.RemoteEndPoint.ToString()}");
-                    if (nspAppGroup.UdpTransmissionTask == null)
+                    lock (receiveUdpLocker)
                     {
-                        nspAppGroup.UdpTransmissionTask = OpenUdpTransmission( tunnelStream,nspAppGroup.ActivateApp.IsCompress, ct);
+                        if (nspAppGroup.UdpTransmissionTask == null)//一个app只产生一个udp隧道（共用隧道）
+                        {
+                            //传回连接 (异步)
+                            nspAppGroup.UdpTransmissionTask = OpenUdpTransmission(receiveResult.RemoteEndPoint, tunnelStream, nspAppGroup, ct);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -327,31 +336,58 @@ namespace NSmartProxy
         /// <param name="ct"></param>
         /// <param name="consumerEndPoint"></param>
         /// <returns></returns>
-        private async Task OpenUdpTransmission(/*UdpClient consumerUdpClient, IPEndPoint consumerEndPoint,*/
-            NetworkStream providerStream, bool isCompress, CancellationToken ct)
+        private async Task OpenUdpTransmission(IPEndPoint FXXXconsumerEndPoint,//这个endpoint没有意义
+            NetworkStream providerStream, NSPAppGroup nspAppGrp, CancellationToken ct)
         {
-            byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-            int bytesRead;
+            //byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+            //int bytesRead;
+            var nspApp = nspAppGrp.ActivateApp;
+            var udpClient = nspAppGrp.UdpClient;
+            //var buffer = new byte[Global.ServerUdpBufferSize];
+
+            while (true)
+            {
+                //读取endpoint，必须保证如下数据包原子性
+                //IPv4/IPv6(D)         port    returnbuffer(D)
+                //X                    2       X
+                byte[] ipByte = await providerStream.ReadNextDLengthBytes();//read，(只会存活很短时间不是这个)
+                byte[] portByte = new byte[2];
+                byte[] returnBuffer = null;
+
+                providerStream.Read(portByte, 0, 2);
+                returnBuffer = await providerStream.ReadNextDLengthBytes();
+
+                //if (readBytes > 0)
+                //{
+                _ = udpClient.SendAsync(returnBuffer, 
+                               returnBuffer.Length,
+                               new IPEndPoint(IPAddress.Parse(Encoding.ASCII.GetString(ipByte)),
+                                    StringUtil.DoubleBytesToInt(portByte)));
+                // }
+            }
+
+
+            //    }
             //while ((bytesRead =
             //           await providerStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
             //{
-                //TODO 8 读取封包
-                //读取客户端传过来的封包：consumer源 EndPoint 目的 EndPoint
-                //new udpclient发送给相应的udpclient
-                //if (isCompress)
-                //{
-                //    var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
-                //    bytesRead = compressBuffer.Length;
-                   
-                //    await consumerUdpClient.SendAsync(compressBuffer, bytesRead, consumerEndPoint);
-                //    //await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
-                //}
-                //else
-                //{
-                //    await consumerUdpClient.SendAsync(buffer, bytesRead, consumerEndPoint);
-                //    //await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                //}
-                //ServerContext.TotalSentBytes += bytesRead; //上行
+            //TODO 8 读取封包
+            //读取客户端传过来的封包：consumer源 EndPoint 目的 EndPoint
+            //new udpclient发送给相应的udpclient
+            //if (isCompress)
+            //{
+            //    var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
+            //    bytesRead = compressBuffer.Length;
+
+            //    await consumerUdpClient.SendAsync(compressBuffer, bytesRead, consumerEndPoint);
+            //    //await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+            //}
+            //else
+            //{
+            //    await consumerUdpClient.SendAsync(buffer, bytesRead, consumerEndPoint);
+            //    //await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+            //}
+            //ServerContext.TotalSentBytes += bytesRead; //上行
             //}
         }
 
