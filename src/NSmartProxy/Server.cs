@@ -258,6 +258,7 @@ namespace NSmartProxy
                         Logger.Debug("Server UDP Receiving....Port:" + consumerPort);
                         var receiveResult = await consumerUdpClient.ReceiveAsync();
                         _ = ProcessConsumeUdpRequestAsync(consumerUdpClient, consumerPort, receiveResult, ct);
+                        //int x = 1;
                     }
                 }
                 else  //TCP HTTP/HTTPS都走tcplistener侦听
@@ -308,14 +309,15 @@ namespace NSmartProxy
                     tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.RemoteEndPoint.Port));
                     await tunnelStream.WriteDLengthBytes(receiveResult.Buffer);
                     Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节,remote ep:{receiveResult.RemoteEndPoint.ToString()}");
-                    lock (receiveUdpLocker)
-                    {
+                    //lock (receiveUdpLocker)
+                    //{
                         if (nspAppGroup.UdpTransmissionTask == null)//一个app只产生一个udp隧道（共用隧道）
                         {
                             //传回连接 (异步)
                             nspAppGroup.UdpTransmissionTask = OpenUdpTransmission(receiveResult.RemoteEndPoint, tunnelStream, nspAppGroup, ct);
                         }
-                    }
+                    //int x = 1;
+                    //}
                 }
                 catch (Exception ex)
                 {
@@ -339,31 +341,40 @@ namespace NSmartProxy
         private async Task OpenUdpTransmission(IPEndPoint FXXXconsumerEndPoint,//这个endpoint没有意义
             NetworkStream providerStream, NSPAppGroup nspAppGrp, CancellationToken ct)
         {
-            //byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-            //int bytesRead;
-            var nspApp = nspAppGrp.ActivateApp;
-            var udpClient = nspAppGrp.UdpClient;
-            //var buffer = new byte[Global.ServerUdpBufferSize];
-
-            while (true)
+            try
             {
-                //读取endpoint，必须保证如下数据包原子性
-                //IPv4/IPv6(D)         port    returnbuffer(D)
-                //X                    2       X
-                byte[] ipByte = await providerStream.ReadNextDLengthBytes();//read，(只会存活很短时间不是这个)
-                byte[] portByte = new byte[2];
-                byte[] returnBuffer = null;
+                //byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                //int bytesRead;
+                var nspApp = nspAppGrp.ActivateApp;
+                var udpClient = nspAppGrp.UdpClient;
+                //var buffer = new byte[Global.ServerUdpBufferSize];
 
-                providerStream.Read(portByte, 0, 2);
-                returnBuffer = await providerStream.ReadNextDLengthBytes();
+                while (true)
+                {
+                    //读取endpoint，必须保证如下数据包原子性
+                    //IPv4/IPv6(D)         port    returnbuffer(D)
+                    //X                    2       X
+                    byte[] ipByte = await providerStream.ReadNextDLengthBytes();//read，(只会存活很短时间不是这个)
+                    byte[] portByte = new byte[2];
+                    byte[] returnBuffer = null;
 
-                //if (readBytes > 0)
-                //{
-                _ = udpClient.SendAsync(returnBuffer, 
-                               returnBuffer.Length,
-                               new IPEndPoint(IPAddress.Parse(Encoding.ASCII.GetString(ipByte)),
-                                    StringUtil.DoubleBytesToInt(portByte)));
-                // }
+                    await providerStream.ReadAsync(portByte, 0, 2);
+                    returnBuffer = await providerStream.ReadNextDLengthBytes();
+
+                    //if (readBytes > 0)
+                    //{
+                    _ = udpClient.SendAsync(returnBuffer,
+                                   returnBuffer.Length,
+                                   new IPEndPoint(IPAddress.Parse(Encoding.ASCII.GetString(ipByte)),
+                                        StringUtil.DoubleBytesToInt(portByte)));
+                    // }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("udp隧道传输失败");
+                Logger.Debug(ex.ToString());
+                throw;
             }
 
 

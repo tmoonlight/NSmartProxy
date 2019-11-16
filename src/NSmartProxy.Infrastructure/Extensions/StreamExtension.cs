@@ -122,11 +122,11 @@ namespace NSmartProxy.Infrastructure
             // int readInt = 0; 
             byte[] bt2 = new byte[2];
             //readInt += bt2.Length;
-            var readByte = stream.Read(bt2, 0, 2);
+            var readByte = await stream.ReadAsync(bt2, 0, 2);
             byte[] bytes = null;
             if (readByte > 0)
             {//TODO 7这种写法会不会有问题
-                bytes = new byte[readByte];
+                bytes = new byte[StringUtil.DoubleBytesToInt(bt2)];
                 await stream.ReadAsync(bytes, 0, StringUtil.DoubleBytesToInt(bt2));
             }
             return bytes;

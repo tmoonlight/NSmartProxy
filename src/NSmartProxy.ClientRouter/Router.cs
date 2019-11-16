@@ -448,14 +448,14 @@ namespace NSmartProxy.Client
             byte[] portByte = new byte[2];
             byte[] bytesData = null;
             ipByte = await networkStream.ReadNextDLengthBytes();
-            networkStream.Read(portByte, 0, 2);
+            await networkStream.ReadAsync(portByte, 0, 2);
             bytesData = await networkStream.ReadNextDLengthBytes();
             Router.Logger.Debug($"{appId} 发送 {bytesData.Length} 字节");
             UdpClient CurrentUdpClient = new UdpClient();
-            CurrentUdpClient.Connect(item.Host, item.TargetServicePort);
+            CurrentUdpClient.Connect(item.IP, item.TargetServicePort);
 
             //发送udp包给下游，但需处理接收udp封包的情况
-            await CurrentUdpClient.SendAsync(bytesData, bytesData.Length, item.IP, item.TargetServicePort);
+            await CurrentUdpClient.SendAsync(bytesData, bytesData.Length);//, item.IP, item.TargetServicePort);
             _ = ReceiveUdpRequest(ipByte, portByte, CurrentUdpClient, networkStream);
 
         }
