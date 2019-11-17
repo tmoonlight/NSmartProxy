@@ -309,15 +309,15 @@ namespace NSmartProxy
                     tunnelStream.Write(StringUtil.IntTo2Bytes(receiveResult.RemoteEndPoint.Port));
                     await tunnelStream.WriteDLengthBytes(receiveResult.Buffer);
                     Logger.Debug($"UDP数据包已发送{receiveResult.Buffer.Length}字节,remote ep:{receiveResult.RemoteEndPoint.ToString()}");
-                    //lock (receiveUdpLocker)
-                    //{
+                    lock (receiveUdpLocker)
+                    {
                         if (nspAppGroup.UdpTransmissionTask == null)//一个app只产生一个udp隧道（共用隧道）
                         {
                             //传回连接 (异步)
                             nspAppGroup.UdpTransmissionTask = OpenUdpTransmission(receiveResult.RemoteEndPoint, tunnelStream, nspAppGroup, ct);
                         }
                     //int x = 1;
-                    //}
+                    }
                 }
                 catch (Exception ex)
                 {

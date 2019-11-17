@@ -13,6 +13,7 @@ using NSmartProxy.Shared;
 using NSmartProxy.Authorize;
 using System.IO;
 using NSmartProxy.Client.Authorize;
+using System.Collections.Concurrent;
 
 namespace NSmartProxy.Client
 {
@@ -28,6 +29,7 @@ namespace NSmartProxy.Client
         private int _clientID = 0;
 
         public List<TcpClient> ConnectedConnections;
+        public Dictionary<string, UdpClient> ConnectedUdpClients;//ip:port->udpclient
         public ServiceClientListCollection ServiceClientList;  //key:appid value;ClientApp
         public Action ServerNoResponse = delegate { };
         public NSPClientConfig ClientConfig;
@@ -42,6 +44,7 @@ namespace NSmartProxy.Client
         private ServerConnectionManager()
         {
             ConnectedConnections = new List<TcpClient>();
+            ConnectedUdpClients = new Dictionary<string, UdpClient>();
             Router.Logger.Debug("ServerConnectionManager initialized.");
         }
         /// <summary>

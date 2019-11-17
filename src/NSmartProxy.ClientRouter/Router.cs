@@ -156,7 +156,7 @@ namespace NSmartProxy.Client
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
                 {
-                    var clientUserCacheItem = UserCacheManager.GetUserCacheFromEndpoint(GetEndPoint(), NspClientCachePath);
+                    var clientUserCacheItem = UserCacheManager.GetUserCacheFromEndpoint(GetProviderEndPoint(), NspClientCachePath);
                     //显式使用用户名密码登录
                     if (CurrentLoginInfo != null && CurrentLoginInfo.UserName != string.Empty)
                     {
@@ -185,7 +185,7 @@ namespace NSmartProxy.Client
 
                         //File.WriteAllText(NspClientCachePath, arrangedToken);
                         UserCacheManager.UpdateUser(arrangedToken, "",
-                            GetEndPoint(), NspClientCachePath);
+                            GetProviderEndPoint(), NspClientCachePath);
                     }
                 }
                 catch (Exception ex)//出错 重连
@@ -420,6 +420,7 @@ namespace NSmartProxy.Client
 
         }
 
+        private object GetUdpClientLocker = new object();
         //公用这个udpclient来发送UDP包
         //public UdpClient CurrentUdpClient = new Lazy<UdpClient>(() => new UdpClient()).Value;
 
@@ -451,14 +452,35 @@ namespace NSmartProxy.Client
             await networkStream.ReadAsync(portByte, 0, 2);
             bytesData = await networkStream.ReadNextDLengthBytes();
             Router.Logger.Debug($"{appId} 发送 {bytesData.Length} 字节");
-            UdpClient CurrentUdpClient = new UdpClient();
-            CurrentUdpClient.Connect(item.IP, item.TargetServicePort);
+            Dictionary<string, UdpClient> udpDict = ConnectionManager.ConnectedUdpClients;
+            string endPointStr = GetEndPointStr(ipByte, portByte);
+            UdpClient currentUdpClient = null;
+            lock (GetUdpClientLocker)
+            {
+                if (!(udpDict.ContainsKey(endPointStr)) || udpDict[endPointStr].Client == null)
+                {
+                    UdpClient uClient = new UdpClient();
+                    uClient.Connect(item.IP, item.TargetServicePort);
+                    udpDict.Add(endPointStr, uClient);
+                    currentUdpClient = uClient;
+                }
+                else
+                {
+                    currentUdpClient = udpDict[endPointStr];
+                }
+            }
 
             //发送udp包给下游，但需处理接收udp封包的情况
-            await CurrentUdpClient.SendAsync(bytesData, bytesData.Length);//, item.IP, item.TargetServicePort);
-            _ = ReceiveUdpRequest(ipByte, portByte, CurrentUdpClient, networkStream);
+            await currentUdpClient.SendAsync(bytesData, bytesData.Length);//, item.IP, item.TargetServicePort);
+            _ = ReceiveUdpRequest(ipByte, portByte, currentUdpClient, networkStream);
 
         }
+
+        private string GetEndPointStr(byte[] ipByte, byte[] portByte)
+        {//通过ip字节流获取ip:port串
+            return Encoding.ASCII.GetString(ipByte) + ":" + StringUtil.DoubleBytesToInt(portByte).ToString();
+        }
+
         private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         //private object udpSendLocker = new object();
         private async Task ReceiveUdpRequest(byte[] ipByte, byte[] portByte, UdpClient reciverUdpClient, NetworkStream toStatisStream)
@@ -469,7 +491,6 @@ namespace NSmartProxy.Client
             {
                 UdpReceiveResult udpReceiveResult
                     = await reciverUdpClient.ReceiveAsync();//建立超时时间，不然资源会一直占用
-                //var udpReceiveResult2
                 //    = await reciverUdpClient.ReceiveAsync(Global.ClientUdpReceiveTimeout);
                 //读取endpoint，必须保证如下数据包原子性
                 //IPv4/IPv6(D)         port    returnbuffer(D)
@@ -630,7 +651,7 @@ namespace NSmartProxy.Client
             tc.Connect("127.0.0.1", port);
             tc.Client.Send(new byte[] { 0x00 });
         }
-        public string GetEndPoint()
+        public string GetProviderEndPoint()
         {
             return ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
