@@ -98,6 +98,11 @@ namespace NSmartProxy.Client
             Logger = logger;
         }
 
+        //public Router SetConfiguration(string configstr)
+        //{
+        //    SetConfiguration(configstr.ToObject<NSPClientConfig>());
+        //    return this;
+        //}
         public Router SetConfiguration(NSPClientConfig config)//start之前一定要执行该方法，否则出错
         {
             ClientConfig = config;
@@ -238,9 +243,12 @@ namespace NSmartProxy.Client
                     {
                         var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
                         //var cApp = appIdIpPortConfig[ap.AppId];
-                        var tunnelStr = ap.AppId + ":  " + ClientConfig.ProviderAddress + ":" +
-                                        ap.Port + "=>" +
-                                        cApp.IP + ":" + cApp.TargetServicePort;
+                        var tunnelStr = $@"{ap.AppId}:({cApp.Protocol}){ClientConfig.ProviderAddress}:{ap.Port}=>{cApp.IP}:{cApp.TargetServicePort}";
+
+
+                        //var tunnelStr = ap.AppId + ":  " + ClientConfig.ProviderAddress + ":" +
+                        //                ap.Port + "=>" +
+                        //                cApp.IP + ":" + cApp.TargetServicePort;
                         Logger.Debug(tunnelStr);
                         tunnelstrs.Add(tunnelStr);
                     }

@@ -40,6 +40,7 @@ namespace NSmartProxyWinform
         private const string END_TAG_TEXT = "0";
         private const string SERVICE_PATH = "NSmartProxyWinService.exe";
         private const string LOG_FILE_PATH = "log-file.log";
+        
 
         public bool IsServiceMode
         {
@@ -49,7 +50,7 @@ namespace NSmartProxyWinform
             }
         }
 
-        public bool IsStarted
+        public bool IsNSPClientStarted
         {
             get => btnStart.Tag.ToString() == END_TAG_TEXT;
         }
@@ -387,8 +388,10 @@ namespace NSmartProxyWinform
 
         private void ClientMngr_FormClosing(object sender, FormClosingEventArgs e)
         {
+            
             e.Cancel = true;
             this.Hide();
+            this.ShowInTaskbar = false;
         }
 
         private void notifyIconNSPClient_DoubleClick(object sender, EventArgs e)
@@ -591,7 +594,7 @@ namespace NSmartProxyWinform
 
         private void 启动内网穿透ToolStripMenuItem_Paint(object sender, PaintEventArgs e)
         {
-            if (IsStarted)
+            if (IsNSPClientStarted)
             {
                 this.启动内网穿透ToolStripMenuItem.Image = global::NSmartProxyWinform.Properties.Resources.base_checkmark_32;
             }
@@ -846,21 +849,24 @@ namespace NSmartProxyWinform
 
         private void btnRegWinSrv_Click(object sender, EventArgs e)
         {
+            //如果当前开启了服务则先关闭
+            if (IsNSPClientStarted)
+            {
+                btnStart_Click(this, null);
+            }
             if (WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName))
                 WinServiceHelper.UninstallService(SERVICE_PATH);
             WinServiceHelper.InstallService(SERVICE_PATH);
-            //using (ServiceController control = new ServiceController(Global.ServiceName))
-            //{
-            //    if (control.Status == ServiceControllerStatus.Stopped)
-            //    {
-            //        control.Start();
-            //    }
-            //}
             RefreshWinServiceState();
         }
 
         private void btnUnRegWinSrv_Click(object sender, EventArgs e)
         {
+            //如果当前开启了服务则先关闭
+            if (IsNSPClientStarted)
+            {
+                btnStart_Click(this, null);
+            }
             if (WinServiceHelper.IsServiceExisted(Global.NSPClientServiceName))
                 WinServiceHelper.UninstallService(SERVICE_PATH);
             RefreshWinServiceState();
@@ -934,6 +940,9 @@ namespace NSmartProxyWinform
                    tbxWebPort.Text; //ClientConfig.ProviderAddress + ":" + ClientConfig.ProviderWebPort;
         }
 
-
+        private void ClientMngr_Activated(object sender, EventArgs e)
+        {
+            this.ShowInTaskbar = true;
+        }
     }
 }

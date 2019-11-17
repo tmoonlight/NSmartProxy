@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using NSmartProxy.Client;
 using NSmartProxy.Data;
 using NSmartProxy.Data.Models;
+using NSmartProxy.Infrastructure;
 using NSmartProxy.Interfaces;
 using NSmartProxy.Shared;
 
@@ -58,12 +59,13 @@ namespace NSmartProxyWinService
         public static IConfigurationRoot Configuration { get; set; }
         private static LoginInfo _currentLoginInfo;
         public Router ClientRouter;
+        private string appSettingFilePath;
         protected override void OnStart(string[] args)
         {
             string assemblyFilePath = Assembly.GetExecutingAssembly().Location;
             string assemblyDirPath = Path.GetDirectoryName(assemblyFilePath);
             string configFilePath = assemblyDirPath + "\\log4net.config";
-            string appSettingFilePath = assemblyDirPath + "\\appsettings.json";
+            appSettingFilePath = assemblyDirPath + "\\appsettings.json";
 
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
@@ -113,7 +115,7 @@ namespace NSmartProxyWinService
 
             ClientRouter = new Router(new Log4netLogger());
             //read config from config file.
-            SetConfig(ClientRouter);// clientRouter.SetConifiguration();
+            ClientRouter.SetConfiguration(ConfigHelper.ReadAllConfig<NSPClientConfig>(appSettingFilePath));
             if (_currentLoginInfo != null)
             {
                 ClientRouter.SetLoginInfo(_currentLoginInfo);
@@ -132,28 +134,16 @@ namespace NSmartProxyWinService
 
         }
 
-        private static void SetConfig(Router clientRouter)
-        {
 
-            NSPClientConfig config = new NSPClientConfig();
-            config.ProviderAddress = Configuration.GetSection("ProviderAddress").Value;
-            // config.ProviderPort = int.Parse(Configuration.GetSection("ProviderPort").Value);
-            // config.ProviderConfigPort = int.Parse(Configuration.GetSection("ProviderConfigPort").Value);
-            config.ProviderWebPort = int.Parse(Configuration.GetSection("ProviderWebPort").Value);
-            var configClients = Configuration.GetSection("Clients").GetChildren();
-            foreach (var cli in configClients)
-            {
-                int confConsumerPort = 0;
-                if (cli["ConsumerPort"] != null) confConsumerPort = int.Parse(cli["ConsumerPort"]);
-                config.Clients.Add(new ClientApp
-                {
-                    IP = cli["IP"],
-                    TargetServicePort = int.Parse(cli["TargetServicePort"]),
-                    ConsumerPort = confConsumerPort
-                });
-            }
-            // Configuration.GetSection("1").
-            clientRouter.SetConfiguration(config);
+        /// <summary>
+        /// 调试用
+        /// </summary>
+        /// <param name="args"></param>
+        internal void TestStartupAndStop(string[] args)
+        {
+            this.OnStart(args);
+            Console.ReadLine();
+            this.OnStop();
         }
     }
 }

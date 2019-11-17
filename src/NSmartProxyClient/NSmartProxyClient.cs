@@ -17,6 +17,7 @@ using NSmartProxy.Data.Models;
 using Exception = System.Exception;
 using NSmartProxy.Shared;
 using Protocol = NSmartProxy.Data.Protocol;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy
 {
@@ -47,8 +48,10 @@ namespace NSmartProxy
         public static ILog Logger;
         public static IConfigurationRoot Configuration { get; set; }
         private static LoginInfo _currentLoginInfo;
+        private static string appSettingFilePath;
         public void Start(string[] args)
         {
+            appSettingFilePath = Directory.GetCurrentDirectory() + "/appsettings.json";
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
             XmlConfigurator.Configure(loggerRepository, new FileInfo("log4net.config"));
@@ -65,12 +68,6 @@ namespace NSmartProxy
             }
 
             Logger.Info($"*** {NSPVersion.NSmartProxyClientName} ***");
-
-            var builder = new ConfigurationBuilder()
-               .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json");
-
-            Configuration = builder.Build();
 
             //start clientrouter.
             try
@@ -91,7 +88,7 @@ namespace NSmartProxy
 
             Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
-            SetConfig(clientRouter);
+            clientRouter.SetConfiguration(ConfigHelper.ReadAllConfig<NSPClientConfig>(appSettingFilePath));
             if (_currentLoginInfo != null)
             {
                 clientRouter.SetLoginInfo(_currentLoginInfo);
@@ -108,30 +105,6 @@ namespace NSmartProxy
                 throw;
             }
 
-        }
-
-        private static void SetConfig(Router clientRouter)
-        {
-
-            NSPClientConfig config = new NSPClientConfig();
-            config.ProviderAddress = Configuration.GetSection("ProviderAddress").Value;
-            config.ProviderWebPort = int.Parse(Configuration.GetSection("ProviderWebPort").Value);
-            var configClients = Configuration.GetSection("Clients").GetChildren();
-            foreach (var cli in configClients)
-            {
-                int confConsumerPort = 0;
-                if (cli["ConsumerPort"] != null) confConsumerPort = int.Parse(cli["ConsumerPort"]);
-                config.Clients.Add(new ClientApp
-                {
-                    IP = cli["IP"],
-                    TargetServicePort = int.Parse(cli["TargetServicePort"]),
-                    ConsumerPort = confConsumerPort,
-                    Host = cli["Host"],
-                    Protocol = Enum.Parse<Protocol>((cli["Protocol"] ?? "TCP").ToUpper()),
-                    Description = cli["Description"]
-                });
-            }
-            clientRouter.SetConfiguration(config);
         }
 
         public void Stop()

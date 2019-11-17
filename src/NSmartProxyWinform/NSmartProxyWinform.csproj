@@ -111,6 +111,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AboutBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="ClientMngr.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -131,6 +137,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Util\WinServiceHelper.cs" />
+    <EmbeddedResource Include="AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ClientMngr.resx">
       <DependentUpon>ClientMngr.cs</DependentUpon>
     </EmbeddedResource>
@@ -199,6 +208,7 @@
     </Content>
     <Content Include="nsp.ico" />
     <None Include="Resources\Permission_12796.png" />
+    <None Include="Resources\NSmartProxyNew.png" />
     <Content Include="Resources\servicepaused.ico" />
     <Content Include="Resources\servicerunning.ico" />
     <Content Include="Resources\servicestopped.ico" />
