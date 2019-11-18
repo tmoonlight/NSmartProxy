@@ -15,6 +15,8 @@ using NSmartProxy.Database;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Infrastructure.Interfaces;
 using NSmartProxy.Interfaces;
+using NSmartProxy.Shared;
+
 // ReSharper disable All
 
 namespace NSmartProxy.Infrastructure.Extension
@@ -103,11 +105,12 @@ namespace NSmartProxy.Infrastructure.Extension
 
             var request = context.Request;
             var response = context.Response;
-            //TODO XX 设置该同源策略为了方便调试，真实项目可以确保同源
+            //TODO XX 设置该同源策略为了方便调试，真实项目请确保同源
 
 #if DEBUG
             response.AddHeader("Access-Control-Allow-Origin", "*");
 #endif
+            response.Headers["Server"] = "";
             try
             {
                 //通过request来的值进行接口调用
