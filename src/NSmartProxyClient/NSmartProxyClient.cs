@@ -48,10 +48,10 @@ namespace NSmartProxy
         public static ILog Logger;
         public static IConfigurationRoot Configuration { get; set; }
         private static LoginInfo _currentLoginInfo;
-        private static string appSettingFilePath;
+        private static readonly string ConfigFilePath = ConfigHelper.AppSettingFullPath;
         public void Start(string[] args)
         {
-            appSettingFilePath = Directory.GetCurrentDirectory() + "/appsettings.json";
+            //appSettingFilePath = Directory.GetCurrentDirectory() + "/appsettings.json";
             //log
             var loggerRepository = LogManager.CreateRepository("NSmartClientRouterRepository");
             XmlConfigurator.Configure(loggerRepository, new FileInfo("log4net.config"));
@@ -88,7 +88,7 @@ namespace NSmartProxy
 
             Router clientRouter = new Router(new Log4netLogger());
             //read config from config file.
-            clientRouter.SetConfiguration(ConfigHelper.ReadAllConfig<NSPClientConfig>(appSettingFilePath));
+            clientRouter.SetConfiguration(ConfigHelper.ReadAllConfig<NSPClientConfig>(ConfigFilePath));
             if (_currentLoginInfo != null)
             {
                 clientRouter.SetLoginInfo(_currentLoginInfo);

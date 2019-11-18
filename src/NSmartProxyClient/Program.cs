@@ -15,9 +15,9 @@ namespace NSmartProxy.ServerHost
             ServiceRunner<NSmartProxyClient>.Run(config =>
             {
                 var name = Global.NSPServerServiceName;
-                config.SetDisplayName(Global.NSPServerServiceName);
-                config.SetName(Global.NSPServerDisplayName);
-                config.SetDescription(NSPVersion.NSmartProxyServerName);
+                config.SetDisplayName(Global.NSPClientServiceName);
+                config.SetName(Global.NSPClientServiceDisplayName);
+                config.SetDescription(NSPVersion.NSmartProxyClientName);
 
                 config.Service(serviceConfig =>
                 {

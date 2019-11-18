@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
@@ -216,7 +217,7 @@ namespace NSmartProxy
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static byte[] DecompressInSnappy(byte[] compressed,int offset ,int length)
+        public static byte[] DecompressInSnappy(byte[] compressed, int offset, int length)
         {
             SnappyDecompressor sd = new SnappyDecompressor();
             try
@@ -225,6 +226,7 @@ namespace NSmartProxy
             }
             catch (Exception ex)
             {
+                _ = ex;
                 //啥情況？
                 return null;
             }
