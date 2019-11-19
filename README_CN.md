@@ -7,7 +7,9 @@ release](https://img.shields.io/github/release/tmoonlight/NSmartProxy.svg?logoCo
 [![GitHub](https://img.shields.io/github/license/tmoonlight/NSmartProxy.svg)](https://github.com/tmoonlight/NSmartProxy/blob/master/LICENSE)
 [![Build
 Status](https://dev.azure.com/tmoonlight/NSmartProxy/_apis/build/status/tmoonlight.NSmartProxy?branchName=master)](https://dev.azure.com/tmoonlight/NSmartProxy/_build/latest?definitionId=1&branchName=master)
-
+<br />
+![Docker Pulls](https://img.shields.io/docker/pulls/tmoonlight/nspclient?label=nspclient%20docker%20pulls)
+![Docker Pulls](https://img.shields.io/docker/pulls/tmoonlight/nspserver?label=nspserver%20docker%20pulls)<br />
 中文版 \|
 [English](https://github.com/tmoonlight/NSmartProxy/blob/master/README.md)
 
@@ -187,7 +189,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
     wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspserver_scd_linux_v1.2.zip
 
--   Windows：
+-   Windows：<br />
 下载https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspserver_scd_win_v1.2.zip
 
 -   MacOS：
