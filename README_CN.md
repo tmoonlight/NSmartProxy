@@ -62,7 +62,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 第二种是SCD包（包名带"scd"），无需安装.net环境，用户需要根据自己的平台和架构选择相应的压缩包。第三种是Windows窗体版本（包名带"winform"）：
 #### Windows 
 1. 确保客户端的环境在.NET Framework 4.6.1 以上。 
-2. 下载最新的窗体版本https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2\_final/nspclient\_winform\_v1.2.zip
+2. 下载最新的窗体版本https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspclient_winform_v1.2.zip
 
 #### Linux
 
