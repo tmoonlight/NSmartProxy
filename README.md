@@ -154,10 +154,11 @@ Core环境](https://dotnet.microsoft.com/download)。
 3.  后台运行：<br />
     您还可以将NSmartProxy客户端注册为一个后台服务，方法如下：
 
--   Windows：<br /> 方法一<br />
+-   Windows：<br /> 
+    - 方法一<br />
     <img src="https://github.com/tmoonlight/NSmartProxy/raw/master/imgs/servicecn.png"><br />
 
-方法二<br />
+    - 方法二<br />
 
     rem 注册客户端windows服务
     .\NSmartProxyClient action:install
@@ -258,7 +259,8 @@ Core环境](https://dotnet.microsoft.com/download)。
     rem 卸载服务端windows服务
     .\NSmartProxy.ServerHost action:uninstall
 
--   MacOS/Linux 暂略
+-   MacOS/Linux <br />
+可参考wiki: [How To: 30秒使用Linux搭建一个内网穿透服务端](https://github.com/tmoonlight/NSmartProxy/wiki/How-To:-30%E7%A7%92%E4%BD%BF%E7%94%A8Linux%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%9C%8D%E5%8A%A1%E7%AB%AF)
 
 使用案例
 --------
