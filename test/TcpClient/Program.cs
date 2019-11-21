@@ -31,13 +31,13 @@ namespace TCPTester.Client
                 }
             });
             int x = 0;
-            while (true)
+            int count = 0;
+            //数据传输测试
+            while (count < 6)
             {
-                string str = "testgo ";//Console.ReadLine();
-                if (str == "c")
+                string str = "test" + count;//Console.ReadLine();
+                if (str == "test5")
                 {
-                    tcpClient.Close();
-                    tcpClient.Close();
                     tcpClient.Close();
                     break;
                 }
@@ -45,9 +45,12 @@ namespace TCPTester.Client
                 byte[] allbBytes = ASCIIEncoding.ASCII.GetBytes(str + x);
                 stream.WriteTimeout = 3000;
                 stream.Write(allbBytes, 0, allbBytes.Length);
-                x++;
-                Console.ReadLine();
+                //x++;
+                //Console.ReadLine();
+                Thread.Sleep(1000);
+                count++;
             }
+            //异常数据测试
 
         }
     }

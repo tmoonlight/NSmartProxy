@@ -9,24 +9,20 @@ namespace ConsoleApp15
 {
     class Program
     {
+        const int TargetPort = 30000;
+        
         static async Task Main(string[] args)
         {
             Console.WriteLine("*** client ***");
             UdpClient udpClient = new UdpClient();
-            //IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("192.168.1.1"), 17878);
-            // IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127"), 9999);
-            // udpClient.Client.Bind(ipEndPoint);
-            //udpClient.Client.
-            //_ =
-            //udpClient.ReceiveAsync()
-            //udpClient.Receive(ref new System.Net.IPEndPoint(IPAd));
-
-            udpClient.Connect("127.0.0.1", 33333);
+           
+            udpClient.Connect("127.0.0.1", TargetPort);
             //udpClient.Connect("127.0.0.1", 9999 );
             _ = ReceiveUdpClientAsync(udpClient);
-            while (true)
+            int count = 5;
+            while (count > 0)
             {
-                string str = Console.ReadLine();
+                string str = "test"+count;
 
                 if (str == "0")
                 {
@@ -37,6 +33,8 @@ namespace ConsoleApp15
 
                 var bytes = Encoding.ASCII.GetBytes(str);
                 udpClient.Send(bytes, bytes.Length);
+                System.Threading.Thread.Sleep(1000);
+                count--;
             }
 
 
