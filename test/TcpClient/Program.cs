@@ -13,8 +13,9 @@ namespace TCPTester.Client
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("*** Tcp Client ***");
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect("127.0.0.1", 5944);
+            tcpClient.Connect("127.0.0.1", 64321);
             //tcpClient.Connect("192.168.1.2", 12306);
             var stream = tcpClient.GetStream();
 
@@ -24,10 +25,18 @@ namespace TCPTester.Client
                 byte[] buffer = new byte[4096];
                 while (true)
                 {
-                    int readResultLength = stream.Read(buffer, 0, buffer.Length);
+                    try
+                    {
+                        int readResultLength = stream.Read(buffer, 0, buffer.Length);
 
-                    //if(readResultLength)
-                    Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, readResultLength).Trim());
+                        if (readResultLength == 0) break;
+                        Console.WriteLine(ASCIIEncoding.ASCII.GetString(buffer, 0, readResultLength).Trim());
+                    }
+                    catch
+                    {
+                        Console.WriteLine("stream closed ungracefully");
+                        break;
+                    }
                 }
             });
             int x = 0;
@@ -50,6 +59,8 @@ namespace TCPTester.Client
                 Thread.Sleep(1000);
                 count++;
             }
+
+            Console.WriteLine("*** Test null port ***");
             //异常数据测试
 
         }

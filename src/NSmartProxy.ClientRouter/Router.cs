@@ -379,12 +379,13 @@ namespace NSmartProxy.Client
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
                 //消费端长连接，需要在server端保活
-                try
+                ControlMethod controlMethod;
+                //TODO 5 处理应用级的keepalive
+                while (true)
                 {
-                    ControlMethod controlMethod;
-                    //TODO 5 处理应用级的keepalive
-                    while (true)
+                    try
                     {
+
                         int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length); //双端标记S0001
                         if (readByteCount == 0)
                         {
@@ -393,29 +394,31 @@ namespace NSmartProxy.Client
                             return;
 
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        //反弹连接出错为致命错误
+                        //此处出错后，应用程序需要重置，并重启
+                        _waiter.TrySetResult(ex);
+                        throw;
+                    }
 
-                        //TODO 4 如果是UDP则直接转发，之后返回上层
-                        controlMethod = (ControlMethod)buffer[0];
+                    //TODO 4 如果是UDP则直接转发，之后返回上层
+                    controlMethod = (ControlMethod)buffer[0];
 
-                        switch (controlMethod)
-                        {
-                            case ControlMethod.KeepAlive: continue;
-                            case ControlMethod.UDPTransfer:
-                                await OpenUdpTransmission(appId, providerClient);
-                                continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
-                            case ControlMethod.TCPTransfer:
-                                await OpenTcpTransmission(appId, providerClient, toTargetServer);
-                                return;//tcp 开启隧道，并且不再利用此连接
-                        }
-                    } //while (controlMethod == ControlMethod.KeepAlive) ;
-                }
-                catch (Exception ex)
-                {
-                    //反弹连接出错为致命错误
-                    //此处出错后，应用程序需要重置，并重启
-                    _waiter.TrySetResult(ex);
-                    throw;
-                }
+                    switch (controlMethod)
+                    {
+                        case ControlMethod.KeepAlive: continue;
+                        case ControlMethod.UDPTransfer:
+                            await OpenUdpTransmission(appId, providerClient);
+                            continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
+                        case ControlMethod.TCPTransfer:
+                            await OpenTcpTransmission(appId, providerClient, toTargetServer);
+                            return;//tcp 开启隧道，并且不再利用此连接
+                        default: throw new Exception("非法请求:" + buffer[0]);
+                    }
+                } //while (controlMethod == ControlMethod.KeepAlive) ;
+
             }
             catch (Exception ex)
             {
