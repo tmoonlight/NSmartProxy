@@ -159,13 +159,14 @@ Core环境](https://dotnet.microsoft.com/download)。
     <img src="https://github.com/tmoonlight/NSmartProxy/raw/master/imgs/servicecn.png"><br />
 
     - 方法二<br />
-
+```
     rem 注册客户端windows服务
     .\NSmartProxyClient action:install
-
+```
+```
     rem 卸载客户端windows服务
     .\NSmartProxyClient action:uninstall
-
+```
 -   MacOS/Linux 暂略
 
 -   P.S：
