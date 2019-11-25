@@ -13,9 +13,18 @@ namespace NSmartProxy.Infrastructure
             get
             {
                 var processModule = Process.GetCurrentProcess().MainModule;
-                return Path.GetDirectoryName(processModule?.FileName)
+                var path1 =Path.GetDirectoryName(processModule?.FileName)
                        + Path.DirectorySeparatorChar
                        + "appsettings.json";
+                var path2 = "./appsettings.json";
+                if (File.Exists(path1))
+                {
+                    return path1;
+                }
+                else
+                {
+                    return path2;
+                }
             }
         }
 
