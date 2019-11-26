@@ -170,9 +170,8 @@ namespace NSmartProxy.Client
             }
             await configStream.WriteAndFlushAsync(requestBytes2, 0, requestBytes2.Length);
 
-            //读端口配置，此处数组的长度会限制使用的节点数（targetserver）
-            //如果您的机器够给力，可以调高此值
-            byte[] serverConfig = new byte[256];
+            //高于1500左右需要考虑分帧断包的情况
+            byte[] serverConfig = new byte[1024];
 
             //TODO 任何read都应该设置超时
             int readBytesCount = await configStream.ReadAsync(serverConfig, 0, serverConfig.Length);
