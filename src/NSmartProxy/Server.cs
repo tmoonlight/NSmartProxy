@@ -701,10 +701,12 @@ namespace NSmartProxy
             //port proto option(iscompress)  host         description   
             //2    1     1                   1024         96         
             byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
-            int resultByte2 = await nstream.ReadAsyncEx(consumerPortBytes);
+            int resultByte2 = await nstream.ReadNextSTLengthBytes(consumerPortBytes);
+           // int resultBytetest = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)
             {
+                Server.Logger.Debug("定长包没有正确接收");
                 CloseClient(client);
                 return true;
             }

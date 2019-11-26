@@ -94,6 +94,7 @@ namespace NSmartProxy.Client
             var config = ClientConfig;
             Router.Logger.Debug("Reading Config From Provider..");
             TcpClient configClient = new TcpClient();
+            configClient.NoDelay = true;//配置协议不使用nagle
             bool isConnected = false;
             bool isReconn = (this.ClientID != 0); //TODO XXX如果clientid已经分配到了id 则算作重连
             for (int j = 0; j < 3; j++) //连接服务端
