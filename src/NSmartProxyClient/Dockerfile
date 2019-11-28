@@ -1,6 +1,6 @@
 ﻿
 #need combile 1st.
-FROM microsoft/dotnet:2.2-aspnetcore-runtime AS runtime
+FROM mcr.microsoft.com/dotnet/core/runtime:3.0 AS runtime
 WORKDIR /app
 COPY / /app/
 ENTRYPOINT ["dotnet", "NSmartProxyClient.dll"]
