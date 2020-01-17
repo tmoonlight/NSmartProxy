@@ -148,7 +148,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 -   Windows： 解压后运行NSmartProxyWinform.exe即可:
 
-    <img src="https://github.com/tmoonlight/100lines/raw/master/5.nspclientwinformrunning.gif" />
+    <img src="http://2017studio.oss-accelerate.aliyuncs.com/5.nspclientwinformrunning.gif" />
     <br />
 
 3.  后台运行：<br />
@@ -241,11 +241,11 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 第三步 登陆http://ip:12309 进入web端，出厂用户密码为admin/admin
 
-<img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_1.gif" />
+<img src="http://2017studio.oss-accelerate.aliyuncs.com/6.nspserverrunnning_1.gif" />
 
 第四步 进入服务端对用户进行各种管理操作
 
-<img src="https://github.com/tmoonlight/100lines/raw/master/6.nspserverrunnning_2.gif" />
+<img src="http://2017studio.oss-accelerate.aliyuncs.com/6.nspserverrunnning_2.gif" />
 
 -   注册为后台服务<br />
     NSmartProxy客户端和服务端均可以注册为一个后台服务，方法如下：
