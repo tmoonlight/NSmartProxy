@@ -39,7 +39,7 @@ NSmartProxy是一款免费的内网穿透工具。<br />
 
 1.  跨平台，客户端和服务端均可运行在MacOS，Linux，Windows系统上；<br />
 2.  使用方便，配置简单；<br />
-3.  多端映射，一个NSmartProxy客户端可以同时映射多种服务。
+3.  多端映射，只需安装一个NSmartProxy客户端可映射整个局域网内的多种服务；
 4.  支持TCP协议栈下的所有协议（已经经过测试的有FTP、Telnet、SMTP、HTTP/HTTPS、POP3、SMB、VNC、RDP。），以及相当一部分基于UDP的协议（已经经过测试的有DNS查询、mosh服务）。
 
 运行原理
