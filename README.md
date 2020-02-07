@@ -247,7 +247,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 <img src="http://2017studio.oss-accelerate.aliyuncs.com/6.nspserverrunnning_2.gif" />
 
--   注册为后台服务<br />
+####   注册为后台服务<br />
     NSmartProxy客户端和服务端均可以注册为一个后台服务，方法如下：
 * Windows
     以管理员身份打开命令行后，cd到程序运行目录，运行以下指令进行服务的注册和卸载：
