@@ -267,5 +267,5 @@ Core环境](https://dotnet.microsoft.com/download)。
 --------
 以上已经讲述了将内网的服务映射到外网的方法，还有更多有趣的用法等着你发掘：<br />
 1. 远程开机 
-2. 使用windows远程控制操作办公室电脑 
+2. [使用windows远程控制操作办公室电脑](https://github.com/tmoonlight/NSmartProxy/wiki/How-To:-%E4%BD%BF%E7%94%A8NSmartProxy%E5%AE%9E%E7%8E%B0windows%E4%B8%8A%E7%9A%84%E8%BF%9C%E7%A8%8B%E5%8A%9E%E5%85%AC) 
 3. 告别昂贵的vps，以极低的成本制作一个更强大的服务集群<br />
