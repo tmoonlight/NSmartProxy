@@ -189,15 +189,15 @@ Core环境](https://dotnet.microsoft.com/download)。
 -   Linux：
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspserver_scd_linux_v1.2.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
 
 -   Windows：<br />
-下载https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspserver_scd_win_v1.2.zip
+下载https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
 
 -   MacOS：
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspserver_scd_osx_v1.2.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
 
 #### Docker
 
