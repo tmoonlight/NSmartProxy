@@ -230,11 +230,13 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 3. 运行NSmartProxy <br />
 
-第一步 cd到安装目录 <br /> 第二步 执行以下命令 \* Linux/MacOS：
+第一步 cd到安装目录 <br /> 第二步 执行以下命令 
+* Linux/MacOS：
 
     chomod +x ./NSmartProxy.ServerHost
     ./NSmartProxy.ServerHost
 
+* Windows：
 点击 Win+R 打开运行窗口. 输入 "cmd" 按下Ctrl+Shift+Enter打开管理员身份运行的命令行窗口。cd到安装目录，运行如下指令：
 
     NSmartProxy.ServerHost
