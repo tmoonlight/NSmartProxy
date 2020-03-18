@@ -24,8 +24,7 @@ namespace NSmartProxy.Authorize
         public long TotalSentBytes;//上行
         public long ConnectCount;//连接次数
         public long ClientConnectCount; //客户端连接次数
-        public Dictionary<string, X509Certificate> PortCertMap;//host->证书字典
-        private bool supportAnonymousLogin = true;
+        public Dictionary<string, X509Certificate> PortCertMap;//host->证书字典        
 
         public NSPServerContext()
         {
@@ -39,8 +38,8 @@ namespace NSmartProxy.Authorize
 
         /// <summary>
         /// 支持客户端匿名登录
-        /// </summary>
-        public bool SupportAnonymousLogin { get => supportAnonymousLogin; set => supportAnonymousLogin = value; }
+        /// </summary>        
+        public bool SupportAnonymousLogin { get => ServerConfig.supportAnonymousLogin; set => ServerConfig.supportAnonymousLogin = value; }
 
         public string ServerConfigPath { get; set; }
 

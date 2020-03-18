@@ -158,6 +158,7 @@ namespace NSmartProxy.Extension
             {
                 case AllowAnonymousUser:
                     ServerContext.SupportAnonymousLogin = (value == "1");
+                    ServerContext.SaveConfigChanges();
                     ; break;
                 default: return "";
             }

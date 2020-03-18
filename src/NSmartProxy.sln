@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Infrastructure"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxyWinform", "NSmartProxyWinform\NSmartProxyWinform.csproj", "{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HttpServerStaticFiles", "NSmartProxy\Web\", "{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Web", "NSmartProxy\Web\", "{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_5671"
