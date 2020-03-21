@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -18,7 +19,7 @@ namespace NSmartProxy
     /// </summary>
     public class NSPClientCollection:IEnumerable<NSPClient>
     {
-        private Dictionary<int, NSPClient> ClientMap;
+        private ConcurrentDictionary<int, NSPClient> ClientMap;
 
         public NSPClient this[int index]
         {
@@ -27,7 +28,7 @@ namespace NSmartProxy
         }
         public NSPClientCollection()
         {
-            ClientMap = new Dictionary<int, NSPClient>();
+            ClientMap = new ConcurrentDictionary<int, NSPClient>();
         }
 
         public bool ContainsKey(int key)
@@ -37,19 +38,19 @@ namespace NSmartProxy
 
         public void RegisterNewClient(int key)
         {
-            if (!ClientMap.ContainsKey(key))
-                ClientMap[key] = new NSPClient()
+            
+                ClientMap.TryAdd(key,new NSPClient()
                 {
                     ClientID = key,
                     LastUpdateTime = DateTime.Now
-                };
+                });
         }
 
         public void UnRegisterClient(int key)
         {
             //关闭所有连接
             //int closedClients = ClientMap[key].Close();
-            this.ClientMap.Remove(key);
+            this.ClientMap.TryRemove(key,out _);
             //停止端口侦听
             //return closedClients;
         }
