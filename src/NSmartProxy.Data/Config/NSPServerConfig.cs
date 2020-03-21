@@ -11,6 +11,7 @@ namespace NSmartProxy.Data.Config
         public int WebAPIPort = 12309;    //远端管理端口
         public int ReversePort_Out = 0;
         public int ConfigPort_Out = 0;
+        public bool supportAnonymousLogin = false;
 
         //[]
         public ServerBoundConfig BoundConfig = new ServerBoundConfig();//用户端口绑定列表

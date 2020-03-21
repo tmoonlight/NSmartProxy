@@ -107,7 +107,7 @@ namespace NSmartProxy.ServerHost
                     watch.Start();
                     srv
                        .SetConfiguration(serverConfig)
-                       .SetAnonymousLogin(true)
+                       //.SetAnonymousLogin(false) 从配置文件获取
                        .SetServerConfigPath(ConfigFilePath)
                        .Start()
                        .Wait();
