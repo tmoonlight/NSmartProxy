@@ -188,16 +188,15 @@ Core环境](https://dotnet.microsoft.com/download)。
 2.  下载最新版的NSmartProxy服务端：
 -   Linux：
 <!-- -->
-
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspserver_scd_linux_v1.2_final4.zip
 
 -   Windows：<br />
-下载https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
+下载https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspserver_scd_win_v1.2_final4.zip
 
 -   MacOS：
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspserver_scd_osx_v1.2_final4.zip
 
 #### Docker
 
@@ -215,8 +214,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 <!-- -->
 
-    unzip nspserver_scd_linux_v1.2.zip
-    cd nspserver_scd_linux_v1.2
+    unzip nspserver_scd_linux_v1.2_final4.zip
 
 2.  打开安装目录下的appsettings.json文件，设置反向连接端口和配置服务端口，如果没有特殊需求，默认就好：<br />
 
@@ -233,7 +231,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 第一步 cd到安装目录 <br /> 第二步 执行以下命令 
 * Linux/MacOS：
 
-    chomod +x ./NSmartProxy.ServerHost
+    chmod +x ./NSmartProxy.ServerHost
     ./NSmartProxy.ServerHost
 
 * Windows：
