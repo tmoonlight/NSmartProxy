@@ -91,6 +91,11 @@ namespace NSmartProxy.Database
             return liteCollection.FindAll().Select(kv => kv.Value).ToList();
         }
 
+        public string GetConfig(string userId)
+        {
+            throw new NotImplementedException();
+        }
+
         public string Get(long key)
         {
             return Get(key.ToString());
@@ -207,5 +212,6 @@ namespace NSmartProxy.Database
         [BsonId]
         public string Key { get; set; }
         public string Value { get; set; }
+        public string Config { get; set; }//客户端配置后期指定
     }
 }

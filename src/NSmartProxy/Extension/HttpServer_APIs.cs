@@ -436,6 +436,22 @@ window.location.href='main.html';
 
         }
 
+        [API]
+        [Secure]
+        public NSPClientConfig GetServerClientConfig(string userToken)
+        { 
+            
+            return new NSPClientConfig();
+        }
+
+        [API]
+        [Secure]
+        public void SetServerClientConfig(string userId, NSPClientConfig config)
+        {
+
+            //return new NSPClientConfig();
+        }
+
         #endregion
 
         #region connections

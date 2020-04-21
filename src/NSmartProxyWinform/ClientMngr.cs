@@ -91,7 +91,7 @@ namespace NSmartProxyWinform
             btnAddClient.Text = L("添加");
             btnDuplicate.Text = L("复制");
             btnDelete.Text = L("删除");
-            groupBox2.Text = L("节点配置");
+            grpNodeSettings.Text = L("节点配置");
             //label7.Text = L("* : 外网端口为0或者空则代表端口由服务端自动分派。");
             label4.Text = L("内网地址");
             label5.Text = L("内网端口");
@@ -622,18 +622,20 @@ namespace NSmartProxyWinform
 
         private void RefreshFormFromConfig()
         {
-            NSPClientConfig conf = ConfigHelper.ReadAllConfig<NSPClientConfig>(Program.CONFIG_FILE_PATH);
-            tbxProviderAddr.Text = conf.ProviderAddress;
-            tbxWebPort.Text = conf.ProviderWebPort.ToString();
+            config = ConfigHelper.ReadAllConfig<NSPClientConfig>(Program.CONFIG_FILE_PATH);
+            tbxProviderAddr.Text = config.ProviderAddress;
+            tbxWebPort.Text = config.ProviderWebPort.ToString();
 
             listBox1.Items.Clear();
-            foreach (var confClient in conf.Clients)
+            foreach (var confClient in config.Clients)
             {
                 ListViewItem listViewItem = listBox1.Items.Add(
                     $@"{tbxProviderAddr.Text}:{confClient.ConsumerPort}  => {confClient.IP}:{confClient.TargetServicePort}");
                 listViewItem.Tag = confClient;
                 listViewItem.ImageKey = "stop";
             }
+
+            cbxUseServerControl.Checked = config.UseServerControl;
         }
 
 
@@ -652,6 +654,7 @@ namespace NSmartProxyWinform
             //1.刷新配置
             config.ProviderAddress = tbxProviderAddr.Text;
             config.ProviderWebPort = int.Parse(tbxWebPort.Text);
+            config.UseServerControl = cbxUseServerControl.Checked;
             //解决热心网友提出的bug：空值时无法保存。
 
             //2.保存配置到文件
@@ -698,6 +701,7 @@ namespace NSmartProxyWinform
             RefreshWinServiceState();
             BindDDL();
             RefreshLoginBtnState();
+            RefreshUserServerControlState();
         }
 
         private void RefreshLoginBtnState()
@@ -943,6 +947,23 @@ namespace NSmartProxyWinform
         private void ClientMngr_Activated(object sender, EventArgs e)
         {
             this.ShowInTaskbar = true;
+        }
+
+        private void cbxUseServerControl_CheckedChanged(object sender, EventArgs e)
+        {
+            RefreshUserServerControlState();
+        }
+
+        private void RefreshUserServerControlState()
+        {
+            if (cbxUseServerControl.Checked)
+            {
+                grpNodeSettings.Enabled = false;
+            }
+            else
+            {
+                grpNodeSettings.Enabled = true;
+            }
         }
     }
 }
