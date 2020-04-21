@@ -6,6 +6,7 @@
     selectUsers();
     $(document).ready(function () {
         initValidate();
+        //加载json编辑器
     });
 
 })();
@@ -17,7 +18,7 @@ function addUser() {
     //$("#inputUserName").attr("disabled", "");
     $("#divAddUser").collapse('toggle');
     //$("#btnAddUser").unbind("click").bind("click", function () { addUser_submit(); });
-    document.getElementById("btnAddUser").onclick = function() { addUser_submit(); };
+    document.getElementById("btnAddUser").onclick = function () { addUser_submit(); };
     isEdit = "0";
 }
 
@@ -63,27 +64,31 @@ function addUser_submit() {
 
 function editUser_submit(oldUserName) {
     var newUserName = $("#inputUserName").val();
-        $.get(basepath +
-            "UpdateUser?oldusername=" + oldUserName +
-            "&newusername=" +
-            newUserName +
-            "&userpwd=" +
-            $("#inputPassword").val() +
-            "&isadmin=" +
-            ($("#cbxIsAdmin").prop("checked") ? 1 : 0),
-            function (res) {
-                if (res.State == 0) {
-                    alert("编辑失败：" + res.Msg);
-                    return;
-                }
-                alert('编辑成功');
-                $("#divAddUser").collapse('hide');
-                selectUsers();
-                $("#inputPassword").val("");
-                $("#inputUserName").val("");
+    $.get(basepath +
+        "UpdateUser?oldusername=" + oldUserName +
+        "&newusername=" +
+        newUserName +
+        "&userpwd=" +
+        $("#inputPassword").val() +
+        "&isadmin=" +
+        ($("#cbxIsAdmin").prop("checked") ? 1 : 0),
+        function (res) {
+            if (res.State == 0) {
+                alert("编辑失败：" + res.Msg);
+                return;
             }
-        );
+            alert('编辑成功');
+            $("#divAddUser").collapse('hide');
+            selectUsers();
+            $("#inputPassword").val("");
+            $("#inputUserName").val("");
+        }
+    );
     //}
+}
+
+function formatConfig() {
+    $('#inputConfig').val(formatJson($('#inputConfig').val()));
 }
 
 function delUser() {
@@ -175,8 +180,10 @@ function dropDownButtonHtml(user, userIndex) {
     }
     //user.username user.
     html += "<div class=\"dropdown-divider\"></div>" +
-        "<a class=\"dropdown-item\" href=\"javascript:editUser('" + user.userName + "','" + user.isAdmin + "',)\">编辑用户</a>" +
-        "<a class=\"dropdown-item\" href=\"javascript:delOneUser('" + userIndex + "','" + user.userName + "')\">删除用户</a>" +
+        "<a class=\"dropdown-item\" href=\"javascript:editUser('" + user.userName + "','" + user.isAdmin + "')\">编辑用户</a>" +
+        "<a class=\"dropdown-item\" href=\"javascript:delOneUser('" + userIndex + "','" + user.userName + "')\">删除用户</a>";
+    html += "<div class=\"dropdown-divider\"></div>" +
+        "<a class=\"dropdown-item\" href=\"javascript:expandConfigPanel('" + user.userName + "')\">修改配置</a>" +
         "</div></div>";
     return html;
 }
@@ -323,3 +330,126 @@ function unBanOneUser(userId) {
         selectUsers();
     });
 }
+
+function expandConfigPanel(userId) {
+    $(hidUserId).val(userId);
+    $('#lblConfig').html("<span style='color:#007bff'>" + userId + "</span>/appsettings.json");
+    $('#divConfig').collapse('show');
+    $('#inputConfig').val("");
+    getServerClientConfig(userId);//异步
+}
+
+function setClientConfig() {
+    var userId = $('#hidUserId').val();
+    var config = $("#inputConfig").val();
+    $.get(basepath +
+        "SetServerClientConfig?userid=" + userId +
+        "&config=" +
+        config,
+        function (res) {
+            if (res.State == 0) {
+                alert("配置失败：" + res.Msg);
+                return;
+            }
+            alert('配置成功');
+            $("#divConfig").collapse('hide');
+            selectUsers();
+            $("#inputConfig").val("");
+            //$("#inputUserName").val("");
+        }
+    );
+}
+
+function getServerClientConfig(userId) {
+    $.get(basepath + "GetServerClientConfig?userId=" + userId, function (res) {
+        if (res.State == 0) {
+            alert("操作失败：" + res.Msg);
+            return;
+        }
+        if (res.Data) {
+            $('#inputConfig').val(JSON.stringify(res.Data, null, 2));
+        }
+
+        //显示用户配置
+
+    });
+}
+
+//格式化json
+function formatJson(json, options) {
+    var reg = null,
+        formatted = '',
+        pad = 0,
+        PADDING = '    '; // one can also use '\t' or a different number of spaces
+    // optional settings
+    options = options || {};
+    // remove newline where '{' or '[' follows ':'
+    options.newlineAfterColonIfBeforeBraceOrBracket = (options.newlineAfterColonIfBeforeBraceOrBracket === true) ? true : false;
+    // use a space after a colon
+    options.spaceAfterColon = (options.spaceAfterColon === false) ? false : true;
+
+    // begin formatting...
+
+    // make sure we start with the JSON as a string
+    if (typeof json !== 'string') {
+        json = JSON.stringify(json);
+    }
+    // parse and stringify in order to remove extra whitespace
+    json = JSON.parse(json);
+    json = JSON.stringify(json);
+
+    // add newline before and after curly braces
+    reg = /([\{\}])/g;
+    json = json.replace(reg, '\r\n$1\r\n');
+
+    // add newline before and after square brackets
+    reg = /([\[\]])/g;
+    json = json.replace(reg, '\r\n$1\r\n');
+
+    // add newline after comma
+    reg = /(\,)/g;
+    json = json.replace(reg, '$1\r\n');
+
+    // remove multiple newlines
+    reg = /(\r\n\r\n)/g;
+    json = json.replace(reg, '\r\n');
+
+    // remove newlines before commas
+    reg = /\r\n\,/g;
+    json = json.replace(reg, ',');
+
+    // optional formatting...
+    if (!options.newlineAfterColonIfBeforeBraceOrBracket) {
+        reg = /\:\r\n\{/g;
+        json = json.replace(reg, ':{');
+        reg = /\:\r\n\[/g;
+        json = json.replace(reg, ':[');
+    }
+    if (options.spaceAfterColon) {
+        reg = /\:/g;
+        json = json.replace(reg, ': ');
+    }
+
+    $.each(json.split('\r\n'), function (index, node) {
+        var i = 0,
+            indent = 0,
+            padding = '';
+
+        if (node.match(/\{$/) || node.match(/\[$/)) {
+            indent = 1;
+        } else if (node.match(/\}/) || node.match(/\]/)) {
+            if (pad !== 0) {
+                pad -= 1;
+            }
+        } else {
+            indent = 0;
+        }
+
+        for (i = 0; i < pad; i++) {
+            padding += PADDING;
+        }
+        formatted += padding + node + '\r\n';
+        pad += indent;
+    });
+    return formatted;
+};

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -24,6 +25,7 @@ namespace NSmartProxy.Extension
     {
         public const string SUPER_VARIABLE_INDEX_ID = "$index_id$";
         private NSPServerContext ServerContext;
+        private HttpListenerContext HttpContext;
         private IDbOperator Dbop;
         private string baseLogFilePath;
 
@@ -223,13 +225,13 @@ namespace NSmartProxy.Extension
             return string.Format(@"
 <html>
 <head><script>
-document.cookie='NSPTK={0}; path=/;';
+document.cookie='{0}={1}; path=/;';
 document.write('Redirecting...');
 window.location.href='main.html';
 </script>
 </head>
 </html>
-            ", token);
+            ", Global.TOKEN_COOKIE_NAME, token);
         }
 
         /// <summary>
@@ -438,17 +440,18 @@ window.location.href='main.html';
 
         [API]
         [Secure]
-        public NSPClientConfig GetServerClientConfig(string userToken)
-        { 
-            
-            return new NSPClientConfig();
+        public NSPClientConfig GetServerClientConfig(string userId)
+        {
+            //var claims = StringUtil.ConvertStringToTokenClaims(HttpContext.Request.Cookies[Global.TOKEN_COOKIE_NAME].Value);
+            var config = Dbop.GetConfig(userId)?.ToObject<NSPClientConfig>();
+            return config;
         }
 
         [API]
         [Secure]
-        public void SetServerClientConfig(string userId, NSPClientConfig config)
+        public void SetServerClientConfig(string userId, string config)
         {
-
+            Dbop.SetConfig(userId, config);
             //return new NSPClientConfig();
         }
 
@@ -855,7 +858,13 @@ window.location.href='main.html';
         #endregion
 
 
-
-
+        /// <summary>
+        /// 设置上下文
+        /// </summary>
+        /// <param name="context"></param>
+        public void SetContext(HttpListenerContext context)
+        {
+            HttpContext = context;
+        }
     }
 }

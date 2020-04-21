@@ -105,6 +105,8 @@ namespace NSmartProxy.Infrastructure.Extension
 
             var request = context.Request;
             var response = context.Response;
+            ControllerInstance.SetContext(context);
+            //context上下文设置给WebContext
             //TODO XX 设置该同源策略为了方便调试，真实项目请确保同源
 
 #if DEBUG

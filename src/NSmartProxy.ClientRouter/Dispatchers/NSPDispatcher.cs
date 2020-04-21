@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -71,10 +72,23 @@ namespace NSmartProxy.ClientRouter.Dispatchers
         /// 当允许服务端端修改客户端时，从服务端获取配置
         /// </summary>
         /// <returns></returns>
-        public async Task<HttpResult<NSPClientConfig>> GetServerClientConfig()
+        public async Task<HttpResult<NSPClientConfig>> GetServerClientConfig(string token)
         {
             string url = $"http://{BaseUrl}/GetServerClientConfig";
-            var httpmsg = await Client.GetAsync(url).ConfigureAwait(false);
+
+            CookieContainer cookieContainer = new CookieContainer();
+            Cookie cookie = new Cookie("NSPTK", token);
+            cookie.Domain = BaseUrl;
+            cookieContainer.Add(cookie);   // 加入Cookie
+            HttpClientHandler httpClientHandler = new HttpClientHandler()
+            {
+                CookieContainer = cookieContainer,
+                AllowAutoRedirect = true,
+                UseCookies = true
+            };
+         
+            HttpClient cookieClient = new HttpClient(httpClientHandler);
+            var httpmsg = await cookieClient.GetAsync(url).ConfigureAwait(false);
             var httpstr = await httpmsg.Content.ReadAsStringAsync().ConfigureAwait(false);
             return JsonConvert.DeserializeObject<HttpResult<NSPClientConfig>>(httpstr);
         }

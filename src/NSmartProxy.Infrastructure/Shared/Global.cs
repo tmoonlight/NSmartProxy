@@ -6,6 +6,8 @@
     public sealed class Global
     {
         public const string NO_TOKEN_STRING = "notoken";
+
+        public const string TOKEN_COOKIE_NAME = "NSPTK";
         //public const string NSmartProxyClientName = "NSmartProxy Client v1.1.1028";
         //public const string NSmartProxyServerName = "NSmartProxy Server v1.1.1028";
 

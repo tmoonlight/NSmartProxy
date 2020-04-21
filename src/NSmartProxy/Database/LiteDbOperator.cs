@@ -60,6 +60,7 @@ namespace NSmartProxy.Database
             );
         }
 
+        //TODO 如下update方法可能会把config覆盖掉，之后再考虑怎么做
         public void Update(long key, string value)
         {
             keyCache.TryRemove(key.ToString(), out _);
@@ -93,7 +94,20 @@ namespace NSmartProxy.Database
 
         public string GetConfig(string userId)
         {
-            throw new NotImplementedException();
+            var obj = liteCollection.FindById(userId);
+            if (obj != null)
+            {
+                return obj.Config;
+            }
+
+            return null;
+        }
+
+        public void SetConfig(string userId, string config)
+        {
+            var obj = liteCollection.FindById(userId);
+            obj.Config = config;
+            liteCollection.Update(obj);
         }
 
         public string Get(long key)

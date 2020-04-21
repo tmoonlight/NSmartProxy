@@ -1,4 +1,12 @@
-﻿<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+﻿<style>
+    pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+    .string { color: green; }
+    .number { color: darkorange; }
+    .boolean { color: blue; }
+    .null { color: magenta; }
+    .key { color: red; }
+</style>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h3">用户</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <!--<div class="btn-group mr-2">-->
@@ -15,6 +23,22 @@
 
     </div>
     </div>
+
+<div class="mb-2 collapse" id="divConfig">
+    <form class="bv-form" id="frmConfig">
+        <div class="form-group">
+            <label id="lblConfig" for="inputConfig">appsettings.json</label>
+            <input type="hidden" id ="hidUserId" />
+            <!--<div id='editor' class='form-control' style="font-size: 10px; height: 500px;overflow: scroll" rows="10" contenteditable>
+               
+            </div>-->
+            <textarea class="form-control" style="font-size:10px" rows="10" data-bv-field="inputConfig" name="inputConfig" id="inputConfig" placeholder="请在此输入配置内容，默认情况会采用客户端配置" />
+            <!--<small id="emailHelp" class="form-text text-muted">请输入1~65535之间的数字.</small>-->
+        </div>
+        <button type="button" id="btnFormat" class="btn btn-primary" onclick="formatConfig()">格式化</button>
+        <button type="button" id="btnSetConfig" class="btn btn-primary" onclick="setClientConfig()">提交</button>
+    </form>
+</div>
 
 <div class="mb-2 collapse" id="divAddUser">
     <form class="bv-form" id="frmAddUser">

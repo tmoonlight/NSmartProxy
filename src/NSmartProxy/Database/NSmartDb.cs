@@ -137,6 +137,11 @@ namespace NSmartProxy.Database
             throw new NotImplementedException();
         }
 
+        public void SetConfig(string userId, string config)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// 通过序列删除数据，并且返回id
         /// </summary>
