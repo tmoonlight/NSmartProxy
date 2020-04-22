@@ -140,23 +140,8 @@ namespace NSmartProxy.Client
                 var appIdIpPortConfig = ClientConfig.Clients;
                 int clientId = 0;
 
-                //0 获取服务器端口配置
-                try
-                {
-                    await InitServerPorts();
-                }
-                catch (Exception ex)//出错 重连
-                {
-                    if (IsStarted == false)
-                    { StatusChanged(ClientStatus.LoginError, null); return; }
-                    else
-                    {
-                        Logger.Error("获取服务器端口失败：" + ex.Message, ex);
 
-                        await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
-                        continue;
-                    }
-                }
+              
 
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
@@ -204,7 +189,55 @@ namespace NSmartProxy.Client
                         continue;
                     }
                 }
-                //1.获取配置
+
+                //0.6 从服务端获取配置
+                if (ClientConfig.UseServerControl)
+                {
+                    try
+                    {
+                        var configResult = await ClientDispatcher.GetServerClientConfig(arrangedToken);
+                        if (configResult.State == 1)
+                        {
+                            if (configResult.Data == null)
+                            {
+                                Logger.Info("客户端请求服务端配置，但服务端没有对客户端设置配置，将继续使用客户端配置。");
+                            }
+                            else
+                            {
+                                ClientConfig = configResult.Data;
+                            }
+                        }
+                        else
+                        {
+                            Logger.Error("获取配置失败，远程错误：" + configResult.Msg, null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("获取配置失败，本地错误：" + ex.ToString(), null);
+                    }
+
+                }
+
+                //0 获取服务器端口配置
+                try
+                {
+                    await InitServerPorts();
+                }
+                catch (Exception ex)//出错 重连
+                {
+                    if (IsStarted == false)
+                    { StatusChanged(ClientStatus.LoginError, null); return; }
+                    else
+                    {
+                        Logger.Error("获取服务器端口失败：" + ex.Message, ex);
+
+                        await Task.Delay(Global.ClientReconnectInterval, ONE_LIVE_TOKEN_SRC.Token);
+                        continue;
+                    }
+                }
+
+                //1.获取服务端分配的端口
                 ConnectionManager = ServerConnectionManager.Create(clientId);
                 ConnectionManager.CurrentToken = arrangedToken;
                 ConnectionManager.ClientGroupConnected += ServerConnnectionManager_ClientGroupConnected;

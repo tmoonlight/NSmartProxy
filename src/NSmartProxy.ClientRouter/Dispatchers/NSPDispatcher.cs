@@ -16,11 +16,12 @@ namespace NSmartProxy.ClientRouter.Dispatchers
         private string BaseUrl;
         //TODO httpclient的一种解决方案：定时对象
         private static HttpClient _client;
-        private static Timer _timer = new Timer(obj=> {
+        private static Timer _timer = new Timer(obj =>
+        {
             _client?.Dispose();
             _client = null;
         });
-       
+
         //_client.Dispose();_client = null
 
         public NSPDispatcher(string baseUrl)
@@ -78,7 +79,8 @@ namespace NSmartProxy.ClientRouter.Dispatchers
 
             CookieContainer cookieContainer = new CookieContainer();
             Cookie cookie = new Cookie("NSPTK", token);
-            cookie.Domain = BaseUrl;
+            cookie.Domain = BaseUrl.Substring(0, BaseUrl.IndexOf(':'));
+
             cookieContainer.Add(cookie);   // 加入Cookie
             HttpClientHandler httpClientHandler = new HttpClientHandler()
             {
@@ -86,9 +88,9 @@ namespace NSmartProxy.ClientRouter.Dispatchers
                 AllowAutoRedirect = true,
                 UseCookies = true
             };
-         
+
             HttpClient cookieClient = new HttpClient(httpClientHandler);
-            var httpmsg = await cookieClient.GetAsync(url).ConfigureAwait(false);
+            var httpmsg = await cookieClient.GetAsync($"{url}?userid=").ConfigureAwait(false);
             var httpstr = await httpmsg.Content.ReadAsStringAsync().ConfigureAwait(false);
             return JsonConvert.DeserializeObject<HttpResult<NSPClientConfig>>(httpstr);
         }

@@ -440,9 +440,15 @@ window.location.href='main.html';
 
         [API]
         [Secure]
-        public NSPClientConfig GetServerClientConfig(string userId)
+        public NSPClientConfig GetServerClientConfig(string userId = null)
         {
-            //var claims = StringUtil.ConvertStringToTokenClaims(HttpContext.Request.Cookies[Global.TOKEN_COOKIE_NAME].Value);
+            if (String.IsNullOrWhiteSpace(userId))
+            {
+                var claims =
+                    StringUtil.ConvertStringToTokenClaims(HttpContext.Request.Cookies[Global.TOKEN_COOKIE_NAME].Value);
+                userId = claims.UserKey;
+            }
+
             var config = Dbop.GetConfig(userId)?.ToObject<NSPClientConfig>();
             return config;
         }
@@ -451,7 +457,27 @@ window.location.href='main.html';
         [Secure]
         public void SetServerClientConfig(string userId, string config)
         {
-            Dbop.SetConfig(userId, config);
+            NSPClientConfig nspClientConfig = null;
+            try
+            {
+                nspClientConfig = config.ToObject<NSPClientConfig>();
+                nspClientConfig.UseServerControl = true;
+                nspClientConfig.ProviderAddress = HttpContext.Request.Url.Host;
+                nspClientConfig.ProviderWebPort = ServerContext.ServerConfig.WebAPIPort;
+               // nspClientConfig.ConfigPort = ServerContext.ServerConfig.ConfigPort;
+               // nspClientConfig.ReversePort = ServerContext.ServerConfig.ReversePort;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("配置格式不正确。");
+            }
+
+            Dbop.SetConfig(userId, nspClientConfig.ToJsonString());
+            //重置客户端(给客户端发送重定向请求让客户端主动重启)
+            //var userid = Dbop.Get(userId)?.ToObject<User>().userId;
+            //ServerContext.CloseAllSourceByClient(int.Parse(userid));
+
+            //ServerContext.CloseAllSourceByClient();
             //return new NSPClientConfig();
         }
 

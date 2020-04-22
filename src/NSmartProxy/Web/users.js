@@ -342,6 +342,11 @@ function expandConfigPanel(userId) {
 function setClientConfig() {
     var userId = $('#hidUserId').val();
     var config = $("#inputConfig").val();
+    var checkResult = isJSON(config);
+    if (checkResult!="") {
+        alert("JSON格式不正确，请检查后重试。\n详细错误: "+checkResult);
+        return;
+    }
     $.get(basepath +
         "SetServerClientConfig?userid=" + userId +
         "&config=" +
@@ -452,4 +457,21 @@ function formatJson(json, options) {
         pad += indent;
     });
     return formatted;
-};
+}
+
+function isJSON(str) {
+    if (typeof str == 'string') {
+        try {
+            var obj = JSON.parse(str);
+            if (typeof obj == 'object' && obj) {
+                return "";
+            } else {
+                return "无法转换";
+            }
+
+        } catch (e) {
+            console.log('error：' + str + '!!!' + e);
+            return e;
+        }
+    }
+}
