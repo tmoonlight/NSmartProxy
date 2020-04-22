@@ -137,11 +137,11 @@ namespace NSmartProxy.Client
                 _waiter = new TaskCompletionSource<object>();
                 Router.TimeStamp = Guid.NewGuid();
 
-                var appIdIpPortConfig = ClientConfig.Clients;
+
                 int clientId = 0;
 
 
-              
+
 
                 //0.5 处理登录/重登录/匿名登录逻辑
                 try
@@ -204,7 +204,11 @@ namespace NSmartProxy.Client
                             }
                             else
                             {
+                                //ip地址和端口还原，服务端给的配置里的端口和ip地址需要作废。
+                                var originConfig = ClientConfig;
                                 ClientConfig = configResult.Data;
+                                ClientConfig.ProviderAddress = originConfig.ProviderAddress;
+                                ClientConfig.ProviderWebPort = originConfig.ProviderWebPort;
                             }
                         }
                         else
@@ -219,6 +223,7 @@ namespace NSmartProxy.Client
 
                 }
 
+                //var appIdIpPortConfig = ClientConfig.Clients;
                 //0 获取服务器端口配置
                 try
                 {
@@ -262,7 +267,7 @@ namespace NSmartProxy.Client
                     int counter = 0;
 
                     //2.从服务端返回的appid上分配客户端的appid TODO 3 appid逻辑需要重新梳理
-                    foreach (var app in appIdIpPortConfig)
+                    foreach (var app in ClientConfig.Clients)
                     {
                         //if (app.AppId == 0)
                         //{
@@ -274,7 +279,7 @@ namespace NSmartProxy.Client
                     List<string> tunnelstrs = new List<string>();
                     foreach (var ap in clientModel.AppList)
                     {
-                        var cApp = appIdIpPortConfig.First(obj => obj.AppId == ap.AppId);
+                        var cApp = ClientConfig.Clients.First(obj => obj.AppId == ap.AppId);
                         //var cApp = appIdIpPortConfig[ap.AppId];
                         var tunnelStr = $@"{ap.AppId}:({cApp.Protocol}){ClientConfig.ProviderAddress}:{ap.Port}=>{cApp.IP}:{cApp.TargetServicePort}";
 

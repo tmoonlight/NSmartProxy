@@ -455,27 +455,37 @@ window.location.href='main.html';
 
         [API]
         [Secure]
-        public void SetServerClientConfig(string userId, string config)
+        public void SetServerClientConfig(string userName, string config)
         {
             NSPClientConfig nspClientConfig = null;
-            try
+            if (String.IsNullOrWhiteSpace(config))//用户如果清空了配置则客户端会自行使用自己的配置文件
             {
-                nspClientConfig = config.ToObject<NSPClientConfig>();
-                nspClientConfig.UseServerControl = true;
-                nspClientConfig.ProviderAddress = HttpContext.Request.Url.Host;
-                nspClientConfig.ProviderWebPort = ServerContext.ServerConfig.WebAPIPort;
-               // nspClientConfig.ConfigPort = ServerContext.ServerConfig.ConfigPort;
-               // nspClientConfig.ReversePort = ServerContext.ServerConfig.ReversePort;
+                Dbop.SetConfig(userName, "");
             }
-            catch (Exception e)
+            else
             {
-                throw new Exception("配置格式不正确。");
+                try
+                {
+                    nspClientConfig = config.ToObject<NSPClientConfig>();
+                    nspClientConfig.UseServerControl = true;
+                    //nspClientConfig.ProviderAddress = HttpContext.Request.Url.Host;
+                    // nspClientConfig.ProviderWebPort = ServerContext.ServerConfig.WebAPIPort;
+                    // nspClientConfig.ConfigPort = ServerContext.ServerConfig.ConfigPort;
+                    // nspClientConfig.ReversePort = ServerContext.ServerConfig.ReversePort;
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("配置格式不正确。");
+                }
+
+                Dbop.SetConfig(userName, nspClientConfig.ToJsonString());
             }
 
-            Dbop.SetConfig(userId, nspClientConfig.ToJsonString());
             //重置客户端(给客户端发送重定向请求让客户端主动重启)
-            //var userid = Dbop.Get(userId)?.ToObject<User>().userId;
-            //ServerContext.CloseAllSourceByClient(int.Parse(userid));
+            var userid = Dbop.Get(userName)?.ToObject<User>().userId;
+            //var popClientAsync = await ServerContext.Clients[userid].AppMap.First().Value.PopClientAsync();
+            
+            ServerContext.CloseAllSourceByClient(int.Parse(userid));
 
             //ServerContext.CloseAllSourceByClient();
             //return new NSPClientConfig();

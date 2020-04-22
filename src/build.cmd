@@ -1,8 +1,8 @@
 rem windows only
-rem NSP v1.2
+rem NSP v1.3
 @ECHO off
 
-set Ver=v1.2_final5
+set Ver=v1.3_alpha
 set BuildPath=%~dp0../build
 
 set nsp_client_path=%BuildPath%/nspclient_%Ver%

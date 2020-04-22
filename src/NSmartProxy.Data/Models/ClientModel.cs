@@ -38,7 +38,7 @@ namespace NSmartProxy.Data
             int appCount = (totalLength - 2) / 3;
             if (((totalLength - 2) % 3) > 0)
             {
-                throw new Exception("error format");
+                throw new Exception("格式错误：获取客户端对象失败");
             }
             for (int i = 0; i < appCount; i++)
             {

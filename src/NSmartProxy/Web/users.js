@@ -460,6 +460,8 @@ function formatJson(json, options) {
 }
 
 function isJSON(str) {
+    if (str == "") return "";
+
     if (typeof str == 'string') {
         try {
             var obj = JSON.parse(str);
