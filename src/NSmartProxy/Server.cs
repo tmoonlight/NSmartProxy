@@ -316,7 +316,7 @@ namespace NSmartProxy
                             //传回连接 (异步)
                             nspAppGroup.UdpTransmissionTask = OpenUdpTransmission(receiveResult.RemoteEndPoint, tunnelStream, nspAppGroup, ct);
                         }
-                    //int x = 1;
+                        //int x = 1;
                     }
                 }
                 catch (Exception ex)
@@ -681,7 +681,8 @@ namespace NSmartProxy
                 return false;
             }
 
-            ServerContext.CloseAllSourceByClient(clientIdFromToken);
+            //强制下线其他客户端
+            ServerContext.CloseAllSourceByClient(clientIdFromToken, isForceClose: true);
 
             //1.3 获取客户端请求数
             int configRequestLength = 3;
@@ -702,7 +703,7 @@ namespace NSmartProxy
             //2    1     1                   1024         96         
             byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
             int resultByte2 = await nstream.ReadNextSTLengthBytes(consumerPortBytes);
-           // int resultBytetest = await nstream.ReadAsyncEx(consumerPortBytes);
+            // int resultBytetest = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)
             {

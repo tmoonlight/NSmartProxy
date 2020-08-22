@@ -18,7 +18,7 @@
         UDPTransfer = 0x04,
         // Control = 0x05, //控制协议，用来让服务端控制客户端的配置
         Reconnect = 0x05, //重置协议，服务端发送此信号让客户端重新连接
-
+        ForceClose = 0x6, //抢登则强制下线
     }
 
 }

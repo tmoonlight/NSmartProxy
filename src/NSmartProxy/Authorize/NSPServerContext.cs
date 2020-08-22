@@ -74,7 +74,7 @@ namespace NSmartProxy.Authorize
         /// 上下文中删除特定客户端
         /// </summary>
         /// <param name="clientId"></param>
-        public void CloseAllSourceByClient(int clientId, bool addToBanlist = false)
+        public void CloseAllSourceByClient(int clientId, bool addToBanlist = false, bool isForceClose = false)
         {
             if (Clients.ContainsKey(clientId))
             {
@@ -102,7 +102,7 @@ namespace NSmartProxy.Authorize
                             {
                                 if (app.ClientId == clientId)
                                 {
-                                    app.Close();
+                                    app.Close(isForceClose);
                                 }
                             }
 

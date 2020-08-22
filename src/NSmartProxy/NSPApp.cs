@@ -69,7 +69,7 @@ namespace NSmartProxy
         /// <summary>
         /// 关闭整个App
         /// </summary>
-        public int Close()
+        public int Close(bool isForceClose = false)
         {
             if (!_closed)
             {
@@ -107,7 +107,19 @@ namespace NSmartProxy
                     //弹出TcpClientBlocks
                     while (TcpClientBlocks.Count > 0)
                     {
-                        TcpClientBlocks.Receive().Close();
+                        TcpClient tcpClient = TcpClientBlocks.Receive();
+                        if (isForceClose)
+                        {
+                            try
+                            {
+                                tcpClient.GetStream().Write(new byte[] { (byte)ControlMethod.ForceClose }, 0, 1);
+                            }
+                            catch (Exception ex)
+                            {
+                                Server.Logger.Debug("尝试抢登强制关闭失败：" + ex.ToString());
+                            }
+                        }
+                        tcpClient.Close();
                     }
                     _closed = true;
                     return closedCount;

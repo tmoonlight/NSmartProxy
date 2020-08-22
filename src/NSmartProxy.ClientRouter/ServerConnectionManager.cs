@@ -434,8 +434,8 @@ namespace NSmartProxy.Client
                 //TODO 重启 需要进一步关注
                 if (Router.TimeStamp == timeStamp)
                 {
-                    Router.Logger.Debug("心跳异常导致客户端重启");
-                    waiter.TrySetResult("心跳异常导致客户端重启");
+                    Router.Logger.Debug("心跳循环异常");
+                    waiter.TrySetResult("心跳循环异常");
                 }
             }
 

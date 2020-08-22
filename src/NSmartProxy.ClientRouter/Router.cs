@@ -453,6 +453,10 @@ namespace NSmartProxy.Client
                         case ControlMethod.TCPTransfer:
                             await OpenTcpTransmission(appId, providerClient, toTargetServer);
                             return;//tcp 开启隧道，并且不再利用此连接
+                        case ControlMethod.ForceClose:
+                            Logger.Info("客户端在别处被抢登，当前被强制下线。");
+                            Close();
+                            return;
                         default: throw new Exception("非法请求:" + buffer[0]);
                     }
                 } //while (controlMethod == ControlMethod.KeepAlive) ;
