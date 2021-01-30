@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="litedb" Version="4.1.4" />
+    <PackageReference Include="litedb" Version="5.0.10" />
   </ItemGroup>
 
   <ItemGroup>
