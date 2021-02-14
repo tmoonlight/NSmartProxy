@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.Infrastructure"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxyWinform", "NSmartProxyWinform\NSmartProxyWinform.csproj", "{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HttpServerStaticFiles", "NSmartProxy\Web\", "{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Web", "NSmartProxy\Web\", "{0AD8E5B3-E7DE-456D-A5BA-5CB937DAC10D}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_5671"
@@ -43,6 +43,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxyWinService", "NSmartProxyWinService\NSmartProxyWinService.csproj", "{D5488369-60D1-47E5-880D-8D5F49A0D777}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxyClient", "NSmartProxyClient\NSmartProxyClient.csproj", "{9ADE2698-A6B3-46EE-AE17-E553F168FF04}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestBed", "TestBed", "{9C608D62-296C-4CB3-A2F3-599118DACF97}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.P2PClient", "TestBed\NSmartProxy.P2PClient\NSmartProxy.P2PClient.csproj", "{49851ECC-3720-4734-92ED-87612DA64128}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSmartProxy.ConsoleTest", "TestBed\NSmartProxy.ConsoleTest\NSmartProxy.ConsoleTest.csproj", "{DB615C5A-8288-4A4F-9025-7198D5F8E0AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.P2PClient46", "NSmartProxy.P2PClient46\NSmartProxy.P2PClient46.csproj", "{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -90,6 +98,18 @@ Global
 		{9ADE2698-A6B3-46EE-AE17-E553F168FF04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9ADE2698-A6B3-46EE-AE17-E553F168FF04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9ADE2698-A6B3-46EE-AE17-E553F168FF04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49851ECC-3720-4734-92ED-87612DA64128}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49851ECC-3720-4734-92ED-87612DA64128}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49851ECC-3720-4734-92ED-87612DA64128}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49851ECC-3720-4734-92ED-87612DA64128}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +119,9 @@ Global
 		{B55F3DF3-6657-4204-AEEB-B2360FC5FAB1} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
 		{D5488369-60D1-47E5-880D-8D5F49A0D777} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
 		{9ADE2698-A6B3-46EE-AE17-E553F168FF04} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
+		{49851ECC-3720-4734-92ED-87612DA64128} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
+		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
+		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CBECE17A-7F2B-4821-843B-65DCE2A768C2}
