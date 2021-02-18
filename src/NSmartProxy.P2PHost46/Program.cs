@@ -59,7 +59,7 @@ namespace NSmartProxy.P2PClient46
             client.NatPunchModule.Init(netPunchListener);
             //client.LocalPort;
             client.Start();
-            client.NatPunchModule.SendNatIntroduceRequest(NetUtils.MakeEndPoint("2017studio.imwork.net", ServerPort), "token2", clientByte);
+            client.NatPunchModule.SendNatIntroduceRequest(NetUtils.MakeEndPoint("2017studio.imwork.net", ServerPort), "token2", hostByte);
             while (true)
             {
                 if (Console.KeyAvailable)
