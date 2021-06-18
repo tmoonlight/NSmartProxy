@@ -90,7 +90,7 @@ namespace NSmartProxy.Infrastructure
             try
             {
                 SslStream sslStream = new SslStream(clientStream);
-                sslStream.AuthenticateAsServer(cert, false, SslProtocols.Tls, true);
+                sslStream.AuthenticateAsServer(cert, false, SslProtocols.Tls12, true);
                 sslStream.ReadTimeout = 10000;
                 sslStream.WriteTimeout = 10000;
                 return sslStream;
