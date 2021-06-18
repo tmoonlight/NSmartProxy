@@ -1,5 +1,5 @@
 ﻿//TODO 调试用
-var basepath = "/";//api根地址,这里需要和配置文件一致
+var basepath = location.origin +"/";//api根地址,这里需要和配置文件一致
 //var basepath = "http://localhost:12309/"; //调试时请把地址改成这个
 
 //hashchange事件，路由是如此实现的
