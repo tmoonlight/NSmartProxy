@@ -62,7 +62,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 第二种是SCD包（包名带"scd"），无需安装.net环境，用户需要根据自己的平台和架构选择相应的压缩包。第三种是Windows窗体版本（包名带"winform"）：
 #### Windows 
 1. 确保客户端的环境在.NET Framework 4.6.1 以上。 
-2. 下载最新的窗体版本https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspclient_winform_v1.2.zip
+2. 下载最新的窗体版本https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_winform_v1.2_final4.zip
 
 #### Linux
 
@@ -70,7 +70,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspclient_scd_linux_v1.2.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspserver_scd_linux_v1.2_final4.zip
 
 #### MacOS
 
@@ -78,7 +78,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final/nspclient_scd_osx_v1.2.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_scd_osx_v1.2_final4.zip
 
 #### Docker
 
@@ -230,13 +230,13 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 第一步 cd到安装目录 <br /> 第二步 执行以下命令 
 * Linux/MacOS：
-
+<!-- -->
     chmod +x ./NSmartProxy.ServerHost
     ./NSmartProxy.ServerHost
 
 * Windows：
 点击 Win+R 打开运行窗口. 输入 "cmd" 按下Ctrl+Shift+Enter打开管理员身份运行的命令行窗口。cd到安装目录，运行如下指令：
-
+<!-- -->
     NSmartProxy.ServerHost
 
 第三步 登陆http://ip:12309 进入web端，出厂用户密码为admin/admin
@@ -248,7 +248,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 <img src="http://2017studio.oss-accelerate.aliyuncs.com/6.nspserverrunnning_2.gif" />
 
 ####   注册为后台服务<br />
-    NSmartProxy客户端和服务端均可以注册为一个后台服务，方法如下：
+NSmartProxy客户端和服务端均可以注册为一个后台服务，方法如下：
 * Windows
     以管理员身份打开命令行后，cd到程序运行目录，运行以下指令进行服务的注册和卸载：
 
