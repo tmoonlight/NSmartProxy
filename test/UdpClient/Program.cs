@@ -17,10 +17,10 @@ namespace ConsoleApp15
             Console.WriteLine("*** Udp Client ***");
             UdpClient udpClient = new UdpClient();
            
-            udpClient.Connect("127.0.0.1", TargetPort);
+            udpClient.Connect("116.30.193.55", TargetPort);
             //udpClient.Connect("127.0.0.1", 9999 );
             _ = ReceiveUdpClientAsync(udpClient);
-            int count = 5;
+            int count = 5000;
             while (count > 0)
             {
                 string str = "test"+count;

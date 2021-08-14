@@ -41,6 +41,7 @@ namespace NSmartProxy.ConsoleTest
         //private NetManager _c2;
 
         //用这个token标识服务器和客户端？
+        //接收到客户端第一次想要加入的请求
         void INatPunchListener.OnNatIntroductionRequest(IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, string token,byte HostOrClient)
         {
             WaitPeer wpeer;

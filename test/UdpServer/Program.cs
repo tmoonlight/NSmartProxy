@@ -14,7 +14,7 @@ namespace UdpServer
             Console.WriteLine("*** Udp Sever ***");
             UdpClient udpClient = new UdpClient(listenPort);
             //UdpClient udpClient = new UdpClient(9999);
-            int count = 5;
+            int count = 5000;
             while (count > 0)
             {
                 var udpReceiveResult = await udpClient.ReceiveAsync();
