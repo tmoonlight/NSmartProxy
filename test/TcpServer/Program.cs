@@ -25,7 +25,7 @@ namespace TCPTester.Server
 
             // var thread = new Thread(() =>
             // {
-            int count = 5;
+            int count = 1000000;
             //while (count > 0)
             //{
             client = tcpListener.AcceptTcpClient();

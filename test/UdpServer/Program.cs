@@ -7,14 +7,15 @@ namespace UdpServer
 {
     class Program
     {
-        const int listenPort = 30001;
+        const int listenPort = 30002;
 
         static async Task Main(string[] args)
         {
             Console.WriteLine("*** Udp Sever ***");
+            Console.WriteLine("listened on 30002");
             UdpClient udpClient = new UdpClient(listenPort);
             //UdpClient udpClient = new UdpClient(9999);
-            int count = 5;
+            int count = 1000000;
             while (count > 0)
             {
                 var udpReceiveResult = await udpClient.ReceiveAsync();

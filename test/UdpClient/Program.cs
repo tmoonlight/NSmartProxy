@@ -9,18 +9,20 @@ namespace ConsoleApp15
 {
     class Program
     {
-        const int TargetPort = 30001;
+        const int TargetPort = 30002;
         
         static async Task Main(string[] args)
         {
+            string sourceip = "192.168.0.168";
             await Task.Delay(2000);//慢点启动，以防服务端还没起来消息就发出去了
             Console.WriteLine("*** Udp Client ***");
-            UdpClient udpClient = new UdpClient();
+            UdpClient udpClient = new UdpClient(new IPEndPoint(IPAddress.Parse(sourceip),20996));
            
-            udpClient.Connect("127.0.0.1", TargetPort);
+            udpClient.Connect(sourceip, TargetPort);
             //udpClient.Connect("127.0.0.1", 9999 );
             _ = ReceiveUdpClientAsync(udpClient);
-            int count = 5;
+            int count = 1000000;
+
             while (count > 0)
             {
                 string str = "test"+count;

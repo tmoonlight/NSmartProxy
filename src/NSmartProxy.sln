@@ -54,6 +54,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.P2PClient46", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSmartProxy.P2PHost46", "NSmartProxy.P2PHost46\NSmartProxy.P2PHost46.csproj", "{422507C5-3C57-4526-A028-8C2E5B213813}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NsmartProxyAvalonia", "NsmartProxyAvalonia\NsmartProxyAvalonia.csproj", "{7FC7036D-5D03-4340-AEC7-68730A644E05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +118,10 @@ Global
 		{422507C5-3C57-4526-A028-8C2E5B213813}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{422507C5-3C57-4526-A028-8C2E5B213813}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{422507C5-3C57-4526-A028-8C2E5B213813}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FC7036D-5D03-4340-AEC7-68730A644E05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FC7036D-5D03-4340-AEC7-68730A644E05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FC7036D-5D03-4340-AEC7-68730A644E05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FC7036D-5D03-4340-AEC7-68730A644E05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -129,6 +135,7 @@ Global
 		{DB615C5A-8288-4A4F-9025-7198D5F8E0AA} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
 		{DA8FC4D6-FC4E-4761-B337-F2AD166B07B3} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
 		{422507C5-3C57-4526-A028-8C2E5B213813} = {9C608D62-296C-4CB3-A2F3-599118DACF97}
+		{7FC7036D-5D03-4340-AEC7-68730A644E05} = {30378AB8-F008-4AB6-8DB7-71B7C706C604}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CBECE17A-7F2B-4821-843B-65DCE2A768C2}
