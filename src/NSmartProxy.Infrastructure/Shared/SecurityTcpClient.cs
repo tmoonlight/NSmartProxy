@@ -178,7 +178,7 @@ namespace NSmartProxy.Authorize
                 try
                 {
                     var clamClaims = StringUtil.ConvertStringToTokenClaims(token);
-                    //TODO !!!!!!尚未增加时间戳规则，日后再加。
+                    //TODO 尚未增加时间戳规则，日后再加。
                     if (DbOp.Exist(clamClaims.UserKey))
                         return new AuthResult()
                         {

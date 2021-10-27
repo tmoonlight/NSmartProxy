@@ -20,10 +20,10 @@ namespace NSmartProxy.P2PClient
             NetPeer peer = null;
             netPunchListener.NatIntroductionRequest += NetPunchListener_NatIntroductionRequest1;
 
-            netPunchListener.NatIntroductionSuccess += (point, token) =>
+            netPunchListener.NatIntroductionSuccess += (point, addrType,token) =>
            {
                peer = client.Connect(point, ConnectionKey);//peer必须马上用 否则就没了？
-               Console.WriteLine("Success . Connecting to : {0}, connection created: {1}", point, peer != null);
+               Console.WriteLine($"NatIntroductionSuccess C1. Connecting to C2: {point}, type: {addrType}, connection created: {peer != null}");
                //peer.Send(Encoding.UTF8.GetBytes("hello1"), DeliveryMethod.ReliableOrdered);
            };
 
@@ -51,8 +51,14 @@ namespace NSmartProxy.P2PClient
                     Console.WriteLine("Disconnect data: " + disconnectInfo.AdditionalData.GetInt());
                 }
             };
-
-            client.NatPunchEnabled = true;
+            //client.NatPunchEnabled = true;
+            //client.IPv6Enabled = IPv6Mode.DualMode;
+            //client.NatPunchModule.Init(netPunchListener);
+            client = new NetManager(netListener)
+            {
+                IPv6Enabled = IPv6Mode.Disabled,
+                NatPunchEnabled = true
+            };
             client.NatPunchModule.Init(netPunchListener);
             //client.LocalPort;
             client.Start();

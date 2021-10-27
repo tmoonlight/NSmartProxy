@@ -121,7 +121,10 @@ namespace NSmartProxy
             Logger.Debug("SSL CA Generating...");
             ServerContext.InitCertificates();
             Logger.Debug("SSL CA Generated.");
-            //4.开启配置服务(常开)
+
+            //4.开启UDP服务(常开)
+            //TODO !P2P
+            //5.开启配置服务(常开)
             try
             {
                 await StartConfigService(ctsConfig);
@@ -663,8 +666,8 @@ namespace NSmartProxy
             int clientIdFromToken = 0;
 
             //1.读取配置请求1
-            //TODO !!!!获取Token，截取clientID，校验
-            //TODO !!!!这里的校验逻辑和httpserver_api存在太多重复，需要重构
+            //TODO 获取Token，截取clientID，校验
+            //TODO 这里的校验逻辑和httpserver_api存在太多重复，需要重构
             clientIdFromToken = await GetClientIdFromNextTokenBytes(client);
             if (clientIdFromToken == 0)
             {
