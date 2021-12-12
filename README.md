@@ -170,7 +170,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 -   MacOS/Linux 暂略
 
 #### 客户端登陆
-默认情况下，客户端以<b>匿名登陆</b>，这种方式会在NSmartProxyServer端创建一个随机匿名用户（前提是服务端配置了允许<b>匿名登陆</b>的话），如果想显式使用特定用户登陆，需要在第一次运行时增加-u 用户名 -p 密码参数，程序会在当前目录生成一份凭据（.usercache）方便下次自动登陆。
+默认情况下，客户端以<b>匿名登陆</b>，这种方式会在NSmartProxyServer端创建一个随机匿名用户（前提是服务端配置了允许<b>匿名登陆</b>），如果想显式使用特定用户登陆，需要在第一次运行时增加-u 用户名 -p 密码参数，程序会在当前目录生成一份凭据（.usercache）方便下次自动登陆。
 例如输入以下指令来生成一个用户名admin，密码admin123的凭据：
 ```
 ./NSmartProxyClient -u admin -p admin123
