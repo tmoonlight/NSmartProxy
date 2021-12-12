@@ -169,6 +169,18 @@ Core环境](https://dotnet.microsoft.com/download)。
 ```
 -   MacOS/Linux 暂略
 
+#### 客户端登陆
+默认情况下，客户端以匿名登陆，如果想显式使用特定用户登陆，需要在第一次运行时增加-u 用户名 -p 密码参数，程序会在当前目录生成一份凭据（.usercache）方便下次自动登陆。
+例如输入以下指令来生成一个用户名admin，密码admin123的凭据：
+```
+./NSmartProxyClient -u admin -p admin123
+```
+下次仅需使用：
+```
+./NSmartProxyClient
+```
+自动采用上次的admin用户登陆，如需恢复匿名登陆，则需要删除当前目录下的.usercache文件。
+
 -   P.S：
     以上是客户端的配置方法，一般情况下，只要用我的免费服务（2017studio.imwork.net）即可进行内网映射了，如果你还想自己搭建服务端，请接着往下看。
 
