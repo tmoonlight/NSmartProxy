@@ -413,7 +413,7 @@ namespace NSmartProxy.Client
             //事件循环2
             try
             {
-                byte[] buffer = new byte[1];
+                byte[] buffer = new byte[10];
                 NetworkStream providerClientStream = providerClient.GetStream();
                 //接收首条消息，首条消息中返回的是appid和客户端
                 //消费端长连接，需要在server端保活
@@ -451,7 +451,8 @@ namespace NSmartProxy.Client
                             await OpenUdpTransmission(appId, providerClient);
                             continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
                         case ControlMethod.TCPTransfer:
-                            await OpenTcpTransmission(appId, providerClient, toTargetServer);
+                            var tranferTokenId = BitConverter.ToInt32(buffer.Skip(1).Take(4).ToArray(), 0);
+                            await OpenTcpTransmission(appId, providerClient, toTargetServer, tranferTokenId);
                             return;//tcp 开启隧道，并且不再利用此连接
                         case ControlMethod.ForceClose:
                             Logger.Info("客户端在别处被抢登，当前被强制下线。");
@@ -563,7 +564,7 @@ namespace NSmartProxy.Client
             }
         }
 
-        private async Task OpenTcpTransmission(int appId, TcpClient providerClient, TcpClient toTargetServer)
+        private async Task OpenTcpTransmission(int appId, TcpClient providerClient, TcpClient toTargetServer, int tranferTokenId)
         {
             //连接后设置client为null 
             if (!ClearOldClient(appId, providerClient)) return;
@@ -576,7 +577,7 @@ namespace NSmartProxy.Client
 
 
             //向服务端再发起另一次长连接
-            await ConnectionManager.ConnectAppToServer(appId);
+            await ConnectionManager.ConnectAppToServer(appId);   //缓存到服务器的连接池里，下次请求使用
             Router.Logger.Debug("已建立反向连接:" + appId);
             // item1:app编号，item2:ip地址，item3:目标服务端口
             try
@@ -591,9 +592,9 @@ namespace NSmartProxy.Client
             string epString = item.IP.ToString() + ":" + item.TargetServicePort.ToString();
             Router.Logger.Debug("已连接目标服务:" + epString);
 
-            NetworkStream targetServerStream = toTargetServer.GetStream();
-            NetworkStream providerClientStream = providerClient.GetStream();
-            _ = TcpTransferAsync(providerClientStream, targetServerStream, providerClient, toTargetServer, epString, item);
+            //NetworkStream targetServerStream = toTargetServer.GetStream();
+            //NetworkStream providerClientStream = providerClient.GetStream();
+            _ = TcpTransferAsync(providerClient, toTargetServer, epString, item, tranferTokenId);
         }
 
         private bool ClearOldClient(int appId, TcpClient providerClient)
@@ -617,22 +618,26 @@ namespace NSmartProxy.Client
         }
 
 
-        private async Task TcpTransferAsync(NetworkStream providerStream, NetworkStream targetServceStream,
-            TcpClient providerClient, TcpClient toTargetServer, string epString, ClientApp item)
+        private async Task TcpTransferAsync(TcpClient providerClient, TcpClient toTargetServer, string epString, ClientApp item, int tranferTokenId)
         {
+            NetworkStream targetServerStream = toTargetServer.GetStream();
+            NetworkStream providerStream = providerClient.GetStream();
             try
             {
-                Router.Logger.Debug("Looping start.");
+                string localEndPoint = providerClient.Client.LocalEndPoint.ToString();
+                Router.Logger.Debug("Looping start.(" + localEndPoint + ")");
                 //创建相互转发流
-                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServceStream, providerStream, epString, item);
-                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServceStream, epString, item);
-
+                var taskT2PLooping = ToStaticTransfer(TRANSFERING_TOKEN_SRC.Token, targetServerStream, providerStream, epString, item);
+                var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServerStream, epString, item);
                 //close connnection,whether client or server stopped transferring.
                 var completedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
                 providerClient.Close();
-                Router.Logger.Debug("已关闭toProvider连接。");
+                Router.Logger.Debug("已关闭toProvider(" + localEndPoint + ")连接。");
                 toTargetServer.Close();
-                Router.Logger.Debug("已关闭toTargetServer连接。");
+                Router.Logger.Debug("已关闭toTargetServer(" + localEndPoint + ")连接。");
+                //通知服务端关闭该连接，该消息不必等待，正常来说上面的操作已经让服务器断开了，但不排除某些网络情况，下面的操作是确保服务器断开
+                Router.Logger.Debug("通知服务端关闭该连接：" + tranferTokenId.ToString());
+                _ = NetworkUtil.ConnectAndSend(ClientConfig.ProviderAddress, ClientConfig.ConfigPort, ServerProtocol.Disconnet, BitConverter.GetBytes(tranferTokenId)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
