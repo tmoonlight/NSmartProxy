@@ -5,7 +5,8 @@
         Heartbeat = 0x01,
         ClientNewAppRequest = 0x02,
         Reconnect = 0x03,
-        CloseClient = 0x04
+        CloseClient = 0x04,
+        Disconnet = 0x05
     }
 
     /// <summary>
@@ -16,7 +17,7 @@
         TCPTransfer = 0x01,
         KeepAlive = 0x03,
         UDPTransfer = 0x04,
-       
+
     }
 
 }

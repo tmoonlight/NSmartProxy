@@ -22,6 +22,7 @@ using NSmartProxy.Shared;
 using static NSmartProxy.Server;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure.Extension;
+using System.Collections.Concurrent;
 
 namespace NSmartProxy
 {
@@ -54,6 +55,7 @@ namespace NSmartProxy
         protected ClientConnectionManager ConnectionManager = null;
         protected IDbOperator DbOp;
         protected NSPServerContext ServerContext;
+        private ConcurrentDictionary<int, CancellationTokenSource> transferTokenDic = new ConcurrentDictionary<int, CancellationTokenSource>();
 
         internal static INSmartLogger Logger; //inject
 
@@ -316,7 +318,7 @@ namespace NSmartProxy
                             //传回连接 (异步)
                             nspAppGroup.UdpTransmissionTask = OpenUdpTransmission(receiveResult.RemoteEndPoint, tunnelStream, nspAppGroup, ct);
                         }
-                    //int x = 1;
+                        //int x = 1;
                     }
                 }
                 catch (Exception ex)
@@ -469,7 +471,9 @@ namespace NSmartProxy
             //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
             //II.弹出先前已经准备好的socket
             tunnel.ClientServerClient = s2pClient;
-            CancellationTokenSource transfering = new CancellationTokenSource();
+            CancellationTokenSource transfering = new CancellationTokenSource(); 
+            transferTokenDic.TryAdd(transfering.GetHashCode(), transfering);
+            Server.Logger.Debug("记录一个连接的中断控制token：" + transfering.Token.GetHashCode().ToString());
             //✳关键过程✳
             //III.发送一个字节过去促使客户端建立转发隧道，至此隧道已打通
             //客户端接收到此消息后，会另外分配一个备用连接
@@ -479,7 +483,10 @@ namespace NSmartProxy
             //TODO 5 这里会出错导致无法和客户端通信
             try
             {
-                await providerStream.WriteAndFlushAsync(new byte[] { (byte)ControlMethod.TCPTransfer }, 0, 1);//双端标记S0001
+                var bytes = new List<byte> { (byte)ControlMethod.TCPTransfer };
+                bytes.AddRange(BitConverter.GetBytes(transfering.GetHashCode()));
+                //向客户端发送一个主动建立TCP连接的标记
+                await providerStream.WriteAndFlushAsync(bytes.ToArray(), 0, 5);//双端标记S0001
             }
             catch
             {
@@ -564,6 +571,9 @@ namespace NSmartProxy
                     case ServerProtocol.Reconnect:
                         await ProcessAppRequestProtocol(client, true);
                         break;
+                    case ServerProtocol.Disconnet:
+                        await ProcessDisconnetClientProtocol(client);
+                        break;
                     default:
                         throw new Exception("接收到异常请求。");
                 }
@@ -575,6 +585,32 @@ namespace NSmartProxy
                 throw;
             }
 
+        }
+
+        private async Task ProcessDisconnetClientProtocol(TcpClient client)
+        {
+            Server.Logger.Debug("Now processing Disconnet Client protocol....");
+            NetworkStream nstream = client.GetStream();
+            byte[] appRequestBytes = new byte[4];
+            int resultByte = await nstream.ReadAsync(appRequestBytes, 0, appRequestBytes.Length, Global.DefaultConnectTimeout);
+            //Server.Logger.Debug("appRequestBytes received.");
+            if (resultByte < 1)
+            {
+                Server.Logger.Debug("服务端read失败，关闭连接");
+                client.Client.Close();
+                return;
+            }
+            int tokenId = BitConverter.ToInt32(appRequestBytes, 0);
+            try
+            {
+                transferTokenDic[tokenId].Cancel();
+                Server.Logger.Debug($"执行断开用户链接{tokenId}成功。");
+            }
+            catch (Exception ex)
+            {
+                Server.Logger.Error($"执行断开用户链接{tokenId}失败！！！", ex);
+            }
+            client.Close();
         }
 
         private async Task ProcessCloseClientProtocol(TcpClient client)
@@ -659,6 +695,7 @@ namespace NSmartProxy
         private async Task<bool> ProcessAppRequestProtocol(TcpClient client, bool IsReconnect = false)
         {
             Server.Logger.Debug("Now processing request protocol....");
+            Logger.Debug("The client ip address is:" + client.Client.RemoteEndPoint.ToString());
             NetworkStream nstream = client.GetStream();
             int clientIdFromToken = 0;
 
@@ -702,7 +739,7 @@ namespace NSmartProxy
             //2    1     1                   1024         96         
             byte[] consumerPortBytes = new byte[appCount * (2 + 1 + 1 + 1024 + 96)];//TODO 2 暂时这么写，亟需修改
             int resultByte2 = await nstream.ReadNextSTLengthBytes(consumerPortBytes);
-           // int resultBytetest = await nstream.ReadAsyncEx(consumerPortBytes);
+            // int resultBytetest = await nstream.ReadAsyncEx(consumerPortBytes);
             //Server.Logger.Debug("consumerPortBytes received.");
             if (resultByte2 < 1)
             {
@@ -893,9 +930,18 @@ namespace NSmartProxy
         {
             if (client.Connected)
             {
-                Logger.Debug("invalid request,Closing client:" + client.Client.RemoteEndPoint.ToString());
+                string remote = "unknown";
+                try
+                {
+                    remote = client.Client.RemoteEndPoint.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("get client remote address fail:", ex);
+                }
+                Logger.Debug("invalid request,Closing client:" + remote);
                 client.Close();
-                Logger.Debug("Closed client:" + client.Client.RemoteEndPoint.ToString());
+                Logger.Debug("Closed client:" + remote);
             }
         }
 
