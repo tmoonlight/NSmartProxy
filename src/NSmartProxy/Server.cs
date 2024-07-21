@@ -23,6 +23,7 @@ using static NSmartProxy.Server;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure.Extension;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 
 namespace NSmartProxy
 {
@@ -62,7 +63,7 @@ namespace NSmartProxy
         public Server(INSmartLogger logger)
         {
             //initialize
-            Logger = logger;//TODO  重复了，后面要去掉，待优化
+            Logger = logger;
             ServerContext = new NSPServerContext();
             Global.Logger = logger;
         }
@@ -863,67 +864,94 @@ namespace NSmartProxy
 
         }
 
+
         private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-            using (fromStream)
+            //if (nspApp.IsCompress)
+            //{
+            //    await StringUtil.DecompressInSnappierAsync(fromStream, toStream, ct);
+            //}
+            //else
             {
-                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-                try
+                using (fromStream)
                 {
-                    int bytesRead;
-                    while ((bytesRead =
-                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                    byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                    if (nspApp.IsCompress)
                     {
-                        if (nspApp.IsCompress)
+                        //gzip
+                        using (var gzipStream = new GZipStream(fromStream, CompressionMode.Decompress))
                         {
-                            var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
-                            bytesRead = compressBuffer.Length;
-                            await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                            int bytesRead;
+                            while ((bytesRead = await gzipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                            {
+                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                                ServerContext.TotalReceivedBytes += bytesRead; //下行
+                            }
                         }
-                        else
-                        {
-                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                        }
-                        ServerContext.TotalSentBytes += bytesRead; //上行
                     }
-                }
-                catch (Exception ioe)
-                {
-                    if (ioe is IOException) { return; } //Suppress this exception.
-                    throw;
+                    else
+                    {
+                        try
+                        {
+                            int bytesRead;
+                            while ((bytesRead =
+                                       await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                            {
+                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                                ServerContext.TotalSentBytes += bytesRead; //上行
+                            }
+                        }
+                        catch (Exception ioe)
+                        {
+                            if (ioe is IOException) { return; } //Suppress this exception.
+                            throw;
+                        }
+                    }
                 }
             }
         }
 
+
         private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-            using (fromStream)
+
+
             {
-                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-                try
+                using (fromStream)
                 {
-                    int bytesRead;
-                    while ((bytesRead =
-                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                    if (nspApp.IsCompress)
                     {
-                        if (nspApp.IsCompress)
+                        //gzip
+                        using (var gzipStream = new GZipStream(fromStream, CompressionMode.Compress))
                         {
-                            var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
-                            var compressedBuffer = compressInSnappy.ContentBytes;
-                            bytesRead = compressInSnappy.Length;
-                            await toStream.WriteAsync(compressedBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                            byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                            int bytesRead;
+                            while ((bytesRead = await gzipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                            {
+                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                                ServerContext.TotalReceivedBytes += bytesRead; //下行
+                            }
                         }
-                        else
-                        {
-                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                        }
-                        ServerContext.TotalReceivedBytes += bytesRead; //下行
                     }
-                }
-                catch (Exception ioe)
-                {
-                    if (ioe is IOException) { return; } //Suppress this exception.
-                    throw;
+                    else
+                    {
+                        byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                        try
+                        {
+                            int bytesRead;
+                            while ((bytesRead =
+                                       await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                            {
+                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                                ServerContext.TotalReceivedBytes += bytesRead; //下行
+                            }
+                        }
+                        catch (Exception ioe)
+                        {
+                            if (ioe is IOException) { return; } //Suppress this exception.
+                            throw;
+                        }
+                    }
                 }
             }
         }

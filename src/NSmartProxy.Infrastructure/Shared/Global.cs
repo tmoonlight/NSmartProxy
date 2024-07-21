@@ -27,7 +27,7 @@ namespace NSmartProxy.Shared
 
         public const int ClientUdpReceiveTimeout = 3000;//客户端udp接收超时时长（毫秒）
 
-        public const int ClientTunnelBufferSize = 81920; //客户端数据包大小
+        public const int ClientTunnelBufferSize = 1024 * 1024 * 1024; //客户端数据包大小
         public const int ClientUdpBufferSize = 65535;//服务端udp数据包大小
         #region 服务端配置
 
@@ -35,7 +35,7 @@ namespace NSmartProxy.Shared
         public const string NSPServerDisplayName = "NSPServer";//windows服务显示名
         public const string NSPServerServiceName = "NSPServer";//windows服务名
 
-        public const int ServerTunnelBufferSize = 81920;//服务端数据包大小
+        public const int ServerTunnelBufferSize = 1024 * 1024 * 1024;//服务端数据包大小
         public const int ServerUdpBufferSize = 65535;//服务端udp数据包大小
 
 

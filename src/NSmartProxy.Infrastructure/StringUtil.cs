@@ -7,13 +7,18 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
-using Snappy.Sharp;
-using NSmartProxy.Shared;
+using EasyCompressor;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NSmartProxy
 {
     public static class StringUtil
     {
+        //Lazy初始化一个snappier
+        private static Lazy<SnappierCompressor> _snappyCompressor = new Lazy<SnappierCompressor>(() => SnappierCompressor.Shared);
+
+
         /// <summary>
         /// 整型转双字节
         /// </summary>
@@ -218,19 +223,20 @@ namespace NSmartProxy
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static byte[] DecompressInSnappy(byte[] compressed, int offset, int length)
-        {
-            SnappyDecompressor sd = new SnappyDecompressor();
-            try
-            {
-                return sd.Decompress(compressed, offset, length);
-            }
-            catch (Exception ex)
-            {
-                Global.Logger.Error("snappy解压缩失败", ex);
-                return null;
-            }
-        }
+        //public static byte[] DecompressInSnappy(byte[] compressed, int offset, int length)
+        //{
+        //    SnappyDecompressor sd = new SnappyDecompressor();
+        //    try
+        //    {
+        //        return sd.Decompress(compressed, offset, length);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _ = ex;
+        //        //啥情況？
+        //        return null;
+        //    }
+        //}
 
         /// <summary>
         /// 使用snappy算法压缩
@@ -239,24 +245,31 @@ namespace NSmartProxy
         /// <param name="offset"></param>
         /// <param name="uncompressedLength"></param>
         /// <returns></returns>
-        public static CompressedBytes CompressInSnappy(byte[] uncompressed, int offset, int uncompressedLength)
+        //public static CompressedBytes CompressInSnappy(byte[] uncompressed, int offset, int uncompressedLength)
+        //{
+        //    SnappyCompressor sc = new SnappyCompressor();
+
+        //    //var bytes = Encoding.ASCII.GetBytes("HelloWor134ertegsdfgsfdgsdfgsdfgsfdgsdfgsdfgsdfgsdfgdsfgsdfgdsfgdfgdsfgld");
+        //    byte[] outBytes = new byte[sc.MaxCompressedLength(uncompressed.Length)];
+
+        //    int actualLength = sc.Compress(uncompressed, 0, uncompressedLength, outBytes);
+        //    return new CompressedBytes() { ContentBytes = outBytes, Length = actualLength };
+        //}
+
+      
+        public async static Task CompressInSnappierAsync(Stream inputStream, Stream outputStream, CancellationToken ct)
         {
-            try
-            {
-                SnappyCompressor sc = new SnappyCompressor();
-
-                //var bytes = Encoding.ASCII.GetBytes("HelloWor134ertegsdfgsfdgsdfgsdfgsfdgsdfgsdfgsdfgsdfgdsfgsdfgdsfgdfgdsfgld");
-                byte[] outBytes = new byte[sc.MaxCompressedLength(uncompressed.Length)];
-
-                int actualLength = sc.Compress(uncompressed, 0, uncompressedLength, outBytes);
-                return new CompressedBytes() { ContentBytes = outBytes, Length = actualLength };
-            }
-            catch (Exception ex)
-            {
-                Global.Logger.Error("snappy压缩失败", ex);
-                return null;
-            }
+            await _snappyCompressor.Value.CompressAsync(inputStream, outputStream,ct);
         }
+
+        public async static Task DecompressInSnappierAsync(Stream inputStream, Stream outputStream, CancellationToken ct)
+        {
+            await _snappyCompressor.Value.DecompressAsync(inputStream, outputStream, ct);
+        }
+
+
+
+
 
         /// <summary>
         /// 压缩专用对象

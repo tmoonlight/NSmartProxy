@@ -15,6 +15,7 @@ using NSmartProxy.Client.Authorize;
 using NSmartProxy.ClientRouter.Dispatchers;
 using NSmartProxy.Data.Models;
 using NSmartProxy.Infrastructure;
+using System.IO.Compression;
 
 namespace NSmartProxy.Client
 {
@@ -95,8 +96,7 @@ namespace NSmartProxy.Client
 
         public Router(INSmartLogger logger) : this()
         {
-            Logger = logger;//TODO  重复了,待优化
-
+            Logger = logger;
             Global.Logger = logger;
         }
 
@@ -458,7 +458,7 @@ namespace NSmartProxy.Client
                             return;//tcp 开启隧道，并且不再利用此连接
                         case ControlMethod.ForceClose:
                             Logger.Info("客户端在别处被抢登，当前被强制下线。");
-                            Close();
+                            await Close();
                             return;
                         default: throw new Exception("非法请求:" + buffer[0]);
                     }
@@ -651,26 +651,36 @@ namespace NSmartProxy.Client
         private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
-            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
-            using (fromStream)
+            //if (item.IsCompress)
+            //{
+            //    await StringUtil.DecompressInSnappierAsync(fromStream, toStream, ct);
+            //}
+            //else
             {
-                int bytesRead;
-                while ((bytesRead =
-                           await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                byte[] buffer = new byte[Global.ClientTunnelBufferSize];
+                if (item.IsCompress)
                 {
-                    if (item.IsCompress)
+                    using (GZipStream gZipStream = new GZipStream(fromStream, CompressionMode.Decompress))
                     {
-                        var compressBuffer = StringUtil.DecompressInSnappy(buffer, 0, bytesRead);
-                        bytesRead = compressBuffer.Length;
-                        await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        int bytesRead;
+                        while ((bytesRead = await gZipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    using (fromStream)
                     {
-                        //bytesRead = buffer.Length;
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                    }
+                        int bytesRead;
+                        while ((bytesRead =
+                                   await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
 
-                    // await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
+                    }
                 }
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
@@ -682,23 +692,35 @@ namespace NSmartProxy.Client
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
-            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
-            using (fromStream)
+            //if (item.IsCompress)
+            //{
+            //    await StringUtil.CompressInSnappierAsync(fromStream, toStream, ct);
+            //}
+            //else
             {
-                int bytesRead;
-                while ((bytesRead =
-                           await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                byte[] buffer = new byte[Global.ClientTunnelBufferSize];
+                if (item.IsCompress)
                 {
-                    if (item.IsCompress)
+                    using(GZipStream gZipStream = new GZipStream(fromStream, CompressionMode.Compress))
                     {
-                        var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
-                        var compressedBuffer = compressInSnappy.ContentBytes;
-                        bytesRead = compressInSnappy.Length;
-                        await toStream.WriteAsync(compressedBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        int bytesRead;
+                        while ((bytesRead =await gZipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    using (fromStream)
                     {
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        int bytesRead;
+                        while ((bytesRead =
+                                   await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                        {
+
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                     }
                 }
             }
