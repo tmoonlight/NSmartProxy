@@ -8,6 +8,7 @@ using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
 using Snappy.Sharp;
+using NSmartProxy.Shared;
 
 namespace NSmartProxy
 {
@@ -226,8 +227,7 @@ namespace NSmartProxy
             }
             catch (Exception ex)
             {
-                _ = ex;
-                //啥情況？
+                Global.Logger.Error("snappy解压缩失败", ex);
                 return null;
             }
         }
@@ -241,13 +241,21 @@ namespace NSmartProxy
         /// <returns></returns>
         public static CompressedBytes CompressInSnappy(byte[] uncompressed, int offset, int uncompressedLength)
         {
-            SnappyCompressor sc = new SnappyCompressor();
+            try
+            {
+                SnappyCompressor sc = new SnappyCompressor();
 
-            //var bytes = Encoding.ASCII.GetBytes("HelloWor134ertegsdfgsfdgsdfgsdfgsfdgsdfgsdfgsdfgsdfgdsfgsdfgdsfgdfgdsfgld");
-            byte[] outBytes = new byte[sc.MaxCompressedLength(uncompressed.Length)];
+                //var bytes = Encoding.ASCII.GetBytes("HelloWor134ertegsdfgsfdgsdfgsdfgsfdgsdfgsdfgsdfgsdfgdsfgsdfgdsfgdfgdsfgld");
+                byte[] outBytes = new byte[sc.MaxCompressedLength(uncompressed.Length)];
 
-            int actualLength = sc.Compress(uncompressed, 0, uncompressedLength, outBytes);
-            return new CompressedBytes() { ContentBytes = outBytes, Length = actualLength };
+                int actualLength = sc.Compress(uncompressed, 0, uncompressedLength, outBytes);
+                return new CompressedBytes() { ContentBytes = outBytes, Length = actualLength };
+            }
+            catch (Exception ex)
+            {
+                Global.Logger.Error("snappy压缩失败", ex);
+                return null;
+            }
         }
 
         /// <summary>

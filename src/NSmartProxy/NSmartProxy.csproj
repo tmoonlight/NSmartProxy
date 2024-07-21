@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
     <LangVersion>7.2</LangVersion>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="litedb" Version="4.1.4" />
+    <PackageReference Include="litedb" Version="5.0.21" />
   </ItemGroup>
 
   <ItemGroup>

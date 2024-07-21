@@ -95,7 +95,9 @@ namespace NSmartProxy.Client
 
         public Router(INSmartLogger logger) : this()
         {
-            Logger = logger;
+            Logger = logger;//TODO  重复了,待优化
+
+            Global.Logger = logger;
         }
 
         //public Router SetConfiguration(string configstr)

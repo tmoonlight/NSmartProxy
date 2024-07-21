@@ -38,7 +38,7 @@ namespace NSmartProxy.Database
             if (isClosed)
             {
                 liteDb = new LiteDatabase(filePath);
-                liteCollection = liteDb.GetCollection<KV>("users");
+                liteCollection = (LiteCollection<KV>)liteDb.GetCollection<KV>("users");
             }
 
             return this;

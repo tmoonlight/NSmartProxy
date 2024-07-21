@@ -62,8 +62,9 @@ namespace NSmartProxy
         public Server(INSmartLogger logger)
         {
             //initialize
-            Logger = logger;
+            Logger = logger;//TODO  重复了，后面要去掉，待优化
             ServerContext = new NSPServerContext();
+            Global.Logger = logger;
         }
 
         /// <summary>

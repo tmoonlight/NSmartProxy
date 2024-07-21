@@ -1,4 +1,6 @@
-﻿namespace NSmartProxy.Shared
+﻿using NSmartProxy.Interfaces;
+
+namespace NSmartProxy.Shared
 {
     /// <summary>
     /// 放一些全局公用的静态变量
@@ -36,6 +38,8 @@
         public const int ServerTunnelBufferSize = 81920;//服务端数据包大小
         public const int ServerUdpBufferSize = 65535;//服务端udp数据包大小
 
+
+        public static INSmartLogger Logger;
         #endregion
     }
 }
