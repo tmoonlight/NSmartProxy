@@ -267,8 +267,20 @@ namespace NSmartProxy
             await _snappyCompressor.Value.DecompressAsync(inputStream, outputStream, ct);
         }
 
+        public static byte[] CompressInSnappier(byte[] inputBytes)
+        {
+            return _snappyCompressor.Value.Compress(inputBytes);
+        }
 
+        public static byte[] DecompressInSnappier(byte[] inputBytes)
+        {
+            return _snappyCompressor.Value.Decompress(inputBytes);
+        }
 
+        internal static byte[] IntTo4Bytes(int length)
+        {
+            return BitConverter.GetBytes(length);
+        }
 
 
         /// <summary>

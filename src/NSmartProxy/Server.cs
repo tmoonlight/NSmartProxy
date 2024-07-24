@@ -23,7 +23,6 @@ using static NSmartProxy.Server;
 using NSmartProxy.Database;
 using NSmartProxy.Infrastructure.Extension;
 using System.Collections.Concurrent;
-using System.IO.Compression;
 
 namespace NSmartProxy
 {
@@ -473,7 +472,7 @@ namespace NSmartProxy
             //TODO 如果NSPApp中是http，则需要进一步分离，通过GetHTTPClient来分出对应的client以建立隧道
             //II.弹出先前已经准备好的socket
             tunnel.ClientServerClient = s2pClient;
-            CancellationTokenSource transfering = new CancellationTokenSource(); 
+            CancellationTokenSource transfering = new CancellationTokenSource();
             transferTokenDic.TryAdd(transfering.GetHashCode(), transfering);
             Server.Logger.Debug("记录一个连接的中断控制token：" + transfering.Token.GetHashCode().ToString());
             //✳关键过程✳
@@ -864,94 +863,78 @@ namespace NSmartProxy
 
         }
 
-
         private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-            //if (nspApp.IsCompress)
-            //{
-            //    await StringUtil.DecompressInSnappierAsync(fromStream, toStream, ct);
-            //}
-            //else
+            using (fromStream)
             {
-                using (fromStream)
+                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                try
                 {
-                    byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                    int bytesRead;
                     if (nspApp.IsCompress)
                     {
-                        //gzip
-                        using (var gzipStream = new GZipStream(fromStream, CompressionMode.Decompress))
+                        while (!ct.IsCancellationRequested)
                         {
-                            int bytesRead;
-                            while ((bytesRead = await gzipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
-                            {
-                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                                ServerContext.TotalReceivedBytes += bytesRead; //下行
-                            }
+                            //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
+                            byte[] bufferCompressed = await fromStream.ReadNextQLengthBytes();
+                            if (bufferCompressed.Length == 0) break;
+                            var compressBuffer = StringUtil.DecompressInSnappier(bufferCompressed);
+                            bytesRead = compressBuffer.Length;
+                            await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
                         }
                     }
                     else
                     {
-                        try
+                        while ((bytesRead =
+                                   await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                         {
-                            int bytesRead;
-                            while ((bytesRead =
-                                       await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
-                            {
-                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                                ServerContext.TotalSentBytes += bytesRead; //上行
-                            }
-                        }
-                        catch (Exception ioe)
-                        {
-                            if (ioe is IOException) { return; } //Suppress this exception.
-                            throw;
+
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+
+                            ServerContext.TotalSentBytes += bytesRead; //上行
                         }
                     }
+                }
+                catch (Exception ioe)
+                {
+                    if (ioe is IOException) { return; } //Suppress this exception.
+                    throw;
                 }
             }
         }
 
-
         private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-
-
+            using (fromStream)
             {
-                using (fromStream)
+                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                try
                 {
-                    if (nspApp.IsCompress)
+                    int bytesRead;
+                    while ((bytesRead =
+                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
-                        //gzip
-                        using (var gzipStream = new GZipStream(fromStream, CompressionMode.Compress))
+                        if (nspApp.IsCompress)
                         {
-                            byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-                            int bytesRead;
-                            while ((bytesRead = await gzipStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
-                            {
-                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                                ServerContext.TotalReceivedBytes += bytesRead; //下行
-                            }
+                            Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
+                            var compressInSnappy = StringUtil.CompressInSnappier(buffer);
+                            //var compressedBuffer = compressInSnappy.ContentBytes;
+                            bytesRead = compressInSnappy.Length;
+                            //TODO 封包传送
+                            if (ct.IsCancellationRequested) { Global.Logger.Info("=传输外部中止="); return; }
+                            await toStream.WriteQLengthBytes(compressInSnappy).ConfigureAwait(false);
                         }
+                        else
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
+                        ServerContext.TotalReceivedBytes += bytesRead; //下行
                     }
-                    else
-                    {
-                        byte[] buffer = new byte[Global.ServerTunnelBufferSize];
-                        try
-                        {
-                            int bytesRead;
-                            while ((bytesRead =
-                                       await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
-                            {
-                                await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                                ServerContext.TotalReceivedBytes += bytesRead; //下行
-                            }
-                        }
-                        catch (Exception ioe)
-                        {
-                            if (ioe is IOException) { return; } //Suppress this exception.
-                            throw;
-                        }
-                    }
+                }
+                catch (Exception ioe)
+                {
+                    if (ioe is IOException) { return; } //Suppress this exception.
+                    throw;
                 }
             }
         }

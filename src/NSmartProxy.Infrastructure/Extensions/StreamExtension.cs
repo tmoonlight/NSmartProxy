@@ -134,6 +134,18 @@ namespace NSmartProxy.Infrastructure
         }
 
         /// <summary>
+        /// 写入动态长度的字节，头四字节存放长度
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static async Task WriteQLengthBytes(this Stream stream, byte[] bytes)
+        {
+            stream.Write(StringUtil.IntTo4Bytes(bytes.Length), 0, 4);
+            await stream.WriteAsync(bytes);
+        }
+
+        /// <summary>
         /// 读取动态长度的字节，头两字节存放长度
         /// </summary>
         /// <param name="stream"></param>
@@ -147,9 +159,49 @@ namespace NSmartProxy.Infrastructure
             var readByte = await stream.ReadAsync(bt2, 0, 2);
             byte[] bytes = null;
             if (readByte > 0)
-            {//TODO 7这种写法会不会有问题
-                bytes = new byte[StringUtil.DoubleBytesToInt(bt2)];
-                await stream.ReadAsync(bytes, 0, StringUtil.DoubleBytesToInt(bt2));
+            {
+                int length = BitConverter.ToInt16(bt2, 0);
+                bytes = new byte[length];
+                await stream.ReadAsync(bytes, 0, length);
+            }
+            return bytes;
+        }
+
+        /// <summary>
+        /// 读取动态长度的字节,头四字节存放长度,这种方式最大支持2G的数据
+        /// 这种比ReadNextDLengthBytes支持更大数据，但是读取时候会造成中断，需要多次读取
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static async Task<byte[]> ReadNextQLengthBytes(this Stream stream)
+        {
+            byte[] bt2 = new byte[4];
+            var readByte = await stream.ReadAsync(bt2, 0, 4);
+            byte[] bytes = null;
+            if (readByte > 0)
+            {
+                int length = BitConverter.ToInt32(bt2, 0);
+                bytes = new byte[length];
+                int readedByteCount = await stream.ReadAsync(bytes, 0, length);
+                if (readedByteCount == 0)
+                {
+                    return new byte[0];
+                }
+                int restLength = length - readedByteCount;
+                while (restLength > 0)
+                {
+                    readedByteCount += await stream.ReadAsync(bytes, readedByteCount, restLength);
+                    if (readedByteCount == 0)
+                    {
+                        return new byte[0];
+                    }
+                    restLength = length - readedByteCount;
+                }
+            }
+            else
+            {
+                return new byte[0];
             }
             return bytes;
         }
