@@ -660,7 +660,7 @@ namespace NSmartProxy.Client
                         //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
                         byte[] bufferCompressed = await fromStream.ReadNextQLengthBytes();
                         if (bufferCompressed.Length == 0) break;
-                        var compressBuffer = StringUtil.DecompressInSnappier(bufferCompressed);
+                        var compressBuffer = StringUtil.DecompressInSnappy(bufferCompressed,0, bufferCompressed.Length);
                         bytesRead = compressBuffer.Length;
                         await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
                     }
@@ -692,13 +692,13 @@ namespace NSmartProxy.Client
                 {
                     if (item.IsCompress)
                     {
-                        Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
-                        var compressInSnappy = StringUtil.CompressInSnappier(buffer);
+                        //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
+                        var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
                         //var compressedBuffer = compressInSnappy.ContentBytes;
-                        bytesRead = compressInSnappy.Length;
+                        //bytesRead = compressInSnappy.Length;
                         //TODO 封包传送
                         if (ct.IsCancellationRequested) { Global.Logger.Info("=传输外部中止="); return; }
-                        await toStream.WriteQLengthBytes(compressInSnappy).ConfigureAwait(false);
+                        await toStream.WriteQLengthBytes(compressInSnappy.ContentBytes, compressInSnappy.Length).ConfigureAwait(false);
                     }
                     else
                     {

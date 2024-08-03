@@ -139,10 +139,19 @@ namespace NSmartProxy.Infrastructure
         /// <param name="stream"></param>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static async Task WriteQLengthBytes(this Stream stream, byte[] bytes)
+        public static async Task WriteQLengthBytes(this Stream stream, byte[] bytes,int forceLength = -1)
         {
-            stream.Write(StringUtil.IntTo4Bytes(bytes.Length), 0, 4);
-            await stream.WriteAsync(bytes);
+            if (forceLength > 0)
+            {
+                stream.Write(StringUtil.IntTo4Bytes(forceLength), 0, 4);
+                await stream.WriteAsync(bytes,0,forceLength);
+            }
+            else
+            {
+                stream.Write(StringUtil.IntTo4Bytes(bytes.Length), 0, 4);
+                await stream.WriteAsync(bytes);
+            }
+            
         }
 
         /// <summary>
