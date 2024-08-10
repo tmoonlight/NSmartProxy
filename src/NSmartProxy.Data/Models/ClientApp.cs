@@ -32,21 +32,18 @@ namespace NSmartProxy.Data
 
         public object Clone()
         {
-
-            // Don't serialize a null object, simply return the default for that object
-            if (Object.ReferenceEquals(this, null))
+            //返回深拷贝（不使用BinaryFormatter）
+            return new ClientApp
             {
-                return null;
-            }
-
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new MemoryStream();
-            using (stream)
-            {
-                formatter.Serialize(stream, this);
-                stream.Seek(0, SeekOrigin.Begin);
-                return formatter.Deserialize(stream);
-            }
+                AppId = AppId,
+                IP = IP,
+                TargetServicePort = TargetServicePort,
+                ConsumerPort = ConsumerPort,
+                IsCompress = IsCompress,
+                Protocol = Protocol,
+                Host = Host,
+                Description = Description
+            };
         }
     }
 }
