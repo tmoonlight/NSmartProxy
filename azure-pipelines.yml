@@ -50,7 +50,7 @@ steps:
     command: 'publish'
     publishWebProjects: false
     projects: './src/NSmartProxy.ServerHost/NSmartProxy.ServerHost.csproj'
-    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspserver'
+    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspserver /p:PublishTrimmed=false'
     workingDirectory: '$(System.DefaultWorkingDirectory)/'
     zipAfterPublish: false
 
@@ -59,7 +59,7 @@ steps:
     command: 'publish'
     publishWebProjects: false
     projects: './src/NSmartProxyClient/NSmartProxyClient.csproj'
-    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspclient'
+    arguments: ' --output $(System.DefaultWorkingDirectory)/build/nspclient /p:PublishTrimmed=false'
     workingDirectory: '$(System.DefaultWorkingDirectory)/'
     zipAfterPublish: false
 
