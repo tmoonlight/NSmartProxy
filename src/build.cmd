@@ -1,12 +1,12 @@
 rem windows only
-rem NSP v1.4.0
+rem NSP v1.4.1
 @ECHO on
 
-set Ver=v1.4.0
+set Ver=v1.4.1
 set BuildPath=%~dp0../build
 
-set nsp_client_path=%BuildPath%/nspclient_%Ver%
-set nsp_server_path=%BuildPath%/nspserver_%Ver%
+set nsp_client_path=%BuildPath%/nspclient_unity_%Ver%
+set nsp_server_path=%BuildPath%/nspserver_unity_%Ver%
 
 set nsp_client_scd_linux_path=%BuildPath%/nspclient_scd_linux_%Ver%
 set nsp_client_scd_win_path=%BuildPath%/nspclient_scd_win_x86_%Ver%
@@ -25,10 +25,10 @@ set nsp_client_winfform_path=%BuildPath%/nspclient_winform_%Ver%
 
 rem del %~dp0/../build/*.*
 rem NSPClient
-dotnet publish .\NSmartProxyClient\NSmartProxyClient.csproj -c release -o %nsp_client_path%
+dotnet publish .\NSmartProxyClient\NSmartProxyClient.csproj -c release -o %nsp_client_path%  /p:PublishTrimmed=false
 
 rem NSPServer
-dotnet publish .\NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj -c release -o %nsp_server_path%
+dotnet publish .\NSmartProxy.ServerHost\NSmartProxy.ServerHost.csproj -c release -o %nsp_server_path%  /p:PublishTrimmed=false
 
 rem NSPClient_SCD
 dotnet publish .\NSmartProxyClient\NSmartProxyClient.csproj -r linux-x64 -c Release /p:PublishSingleFile=true   -o %nsp_client_scd_linux_path%

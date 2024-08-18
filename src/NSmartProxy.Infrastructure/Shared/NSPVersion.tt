@@ -11,6 +11,6 @@
 public sealed class NSPVersion
 {
         public const string NO_TOKEN_STRING = "notoken";
-        public const string NSmartProxyClientName = "NSmartProxy Client v1.3.<#=v1#>.<#=v2#>";
-        public const string NSmartProxyServerName = "NSmartProxy Server v1.3.<#=v1#>.<#=v2#>";
+        public const string NSmartProxyClientName = "NSmartProxy Client v1.4.<#=v1#>.<#=v2#>";
+        public const string NSmartProxyServerName = "NSmartProxy Server v1.4.<#=v1#>.<#=v2#>";
 }

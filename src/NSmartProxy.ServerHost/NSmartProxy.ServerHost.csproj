@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <PublishTrimmed>True</PublishTrimmed>
+    <TargetFramework>net6.0</TargetFramework>
+ 
   </PropertyGroup>
 
   <ItemGroup>

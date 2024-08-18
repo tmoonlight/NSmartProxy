@@ -7,7 +7,6 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using NSmartProxy.Data;
 using NSmartProxy.Infrastructure;
-using EasyCompressor;
 using System.Threading;
 using System.Threading.Tasks;
 using Snappy.Sharp;
@@ -16,10 +15,6 @@ namespace NSmartProxy
 {
     public static class StringUtil
     {
-        //Lazy初始化一个snappier
-        private static Lazy<SnappierCompressor> _snappyCompressor = new Lazy<SnappierCompressor>(() => SnappierCompressor.Shared);
-
-
         /// <summary>
         /// 整型转双字节
         /// </summary>
