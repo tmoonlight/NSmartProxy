@@ -70,7 +70,7 @@ Core环境](https://dotnet.microsoft.com/download)。
 
 <!-- -->
 
-    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspserver_scd_linux_v1.2_final4.zip
+    wget https://github.com/tmoonlight/NSmartProxy/releases/download/v1.2_final4/nspclient_scd_linux_v1.2_final4.zip
 
 #### MacOS
 
