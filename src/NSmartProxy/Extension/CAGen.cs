@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using NSmartProxy.Infrastructure;
 
 namespace NSmartProxy.Extension
 {
@@ -14,8 +15,9 @@ namespace NSmartProxy.Extension
         /// </summary>
         /// <param name="CertificateName"></param>
         /// <param name="hosts"></param>
+        /// <param name="password">证书密码，如果为空则生成随机密码</param>
         /// <returns></returns>
-        public static X509Certificate2 GenerateCA(string CertificateName,string hosts = null)
+        public static X509Certificate2 GenerateCA(string CertificateName, string hosts = null, string password = null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
             sanBuilder.AddIpAddress(IPAddress.Loopback);
@@ -52,8 +54,15 @@ namespace NSmartProxy.Extension
                 //certificate.FriendlyName = CertificateName;
                 //return certificate;
 
-                return new X509Certificate2(certificate.Export(X509ContentType.Pfx, "WeNeedASaf3rPassword"),
-                    "WeNeedASaf3rPassword", X509KeyStorageFlags.Exportable);
+            // 使用提供的密码或生成安全的随机密码
+            if (string.IsNullOrEmpty(password))
+            {
+                password = RandomHelper.NextString(32, true); // 生成32位强密码
+                Server.Logger?.Debug($"Generated secure random password for certificate: {CertificateName}");
+            }
+
+            return new X509Certificate2(certificate.Export(X509ContentType.Pfx, password),
+                password, X509KeyStorageFlags.Exportable);
 
             }
         }
