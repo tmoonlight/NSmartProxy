@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using System.IO.Pipelines;
 using NSmartProxy.Data;
 using NSmartProxy.Extension;
 using NSmartProxy.Infrastructure;
@@ -431,7 +432,7 @@ namespace NSmartProxy
                     { Server.Logger.Debug("未在请求中找到主机名"); return; }
 
                     string host = tp.Item1;
-                    restBytes = Encoding.UTF8.GetBytes(tp.Item2); //预发送bytes，因为这部分用来抓host消费掉了
+                    restBytes = tp.Item2; //预发送bytes，因为这部分用来抓host消费掉了
                     //restBytesLength = tp.Item3;
                     s2pClient = await ConnectionManager.GetClientForTcp(consumerPort, host);
                     if (nspAppGroup.ContainsKey(host))
@@ -962,28 +963,142 @@ namespace NSmartProxy
         #endregion
 
         #region http
-        private async Task<Tuple<string, string>> ReadHostName(Stream consumerStream)
+        private async Task<Tuple<string, byte[]>> ReadHostName(Stream consumerStream)
         {
-            //需要进一步截包 TODO 2 待优化1.内存优化 2.查询优化
-            const int BUFFER_SIZE = 1024 * 1024 * 2;
-            var length = 0;
-            var data = string.Empty;
-            var bytes = new byte[BUFFER_SIZE];
+            const int MaxHeaderBytes = 32 * 1024;
 
-            do
-            {//item2:data item1:host
-                length = await consumerStream.ReadAsync(bytes, 0, BUFFER_SIZE);
-                data += Encoding.UTF8.GetString(bytes, 0, length);
-            } while (length > 0 && !data.Contains("\r\n\r\n"));
+            var reader = PipeReader.Create(consumerStream);
+            try
+            {
+                while (true)
+                {
+                    ReadResult result = await reader.ReadAsync().ConfigureAwait(false);
+                    ReadOnlySequence<byte> buffer = result.Buffer;
 
-            if (length == 0) return null;
-            Regex reg = new Regex("\r\nhost: (.*?)\r\n");
+                    SequencePosition? headerEndPosition = buffer.PositionOf((byte)'\r');
+                    int headerEndIndex = -1;
 
-            return new Tuple<string, string>(
-                reg.Match(data.ToLower()).Groups[1].Value,//需要进一步优化，使用list<byte[]>
-                data
+                    if (!buffer.IsEmpty)
+                    {
+                        var span = buffer.ToArray();
+                        headerEndIndex = IndexOfHeaderTerminator(span);
 
-                );
+                        if (headerEndIndex >= 0)
+                        {
+                            // Header includes the final "\r\n\r\n"
+                            int headerLength = headerEndIndex + 4;
+                            string host = TryParseHostFromHeader(span, headerLength);
+                            if (string.IsNullOrEmpty(host))
+                            {
+                                // consume what we have so far to avoid infinite loop
+                                reader.AdvanceTo(buffer.End);
+                                return null;
+                            }
+
+                            // We already read some bytes beyond Host parsing; forward them all.
+                            reader.AdvanceTo(buffer.End);
+                            return new Tuple<string, byte[]>(host, span);
+                        }
+
+                        if (span.Length > MaxHeaderBytes)
+                        {
+                            reader.AdvanceTo(buffer.End);
+                            return null;
+                        }
+                    }
+
+                    // Not enough data yet; keep everything buffered and ask for more
+                    reader.AdvanceTo(buffer.Start, buffer.End);
+
+                    if (result.IsCompleted)
+                    {
+                        return null;
+                    }
+                }
+            }
+            finally
+            {
+                await reader.CompleteAsync().ConfigureAwait(false);
+            }
+        }
+
+        private static int IndexOfHeaderTerminator(byte[] data)
+        {
+            // Find "\r\n\r\n" and return index of the first '\r' in that sequence
+            for (int i = 0; i <= data.Length - 4; i++)
+            {
+                if (data[i] == (byte)'\r' && data[i + 1] == (byte)'\n' && data[i + 2] == (byte)'\r' && data[i + 3] == (byte)'\n')
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static string TryParseHostFromHeader(byte[] data, int headerLength)
+        {
+            // Parse lines until "\r\n\r\n". Look for "host:" (case-insensitive)
+            int i = 0;
+            while (i < headerLength)
+            {
+                int lineEnd = FindCrlf(data, i, headerLength);
+                if (lineEnd < 0) break;
+
+                int lineLength = lineEnd - i;
+                if (lineLength == 0)
+                {
+                    // empty line
+                    break;
+                }
+
+                if (StartsWithHostHeader(data, i, lineLength))
+                {
+                    int valueStart = i + 5; // after "host:"
+                    // skip spaces/tabs
+                    while (valueStart < lineEnd && (data[valueStart] == (byte)' ' || data[valueStart] == (byte)'\t'))
+                        valueStart++;
+
+                    int valueEnd = lineEnd;
+                    while (valueEnd > valueStart && (data[valueEnd - 1] == (byte)' ' || data[valueEnd - 1] == (byte)'\t'))
+                        valueEnd--;
+
+                    if (valueEnd <= valueStart) return null;
+                    return Encoding.ASCII.GetString(data, valueStart, valueEnd - valueStart).ToLowerInvariant();
+                }
+
+                i = lineEnd + 2; // skip CRLF
+            }
+
+            return null;
+        }
+
+        private static int FindCrlf(byte[] data, int start, int limit)
+        {
+            for (int i = start; i + 1 < limit; i++)
+            {
+                if (data[i] == (byte)'\r' && data[i + 1] == (byte)'\n')
+                    return i;
+            }
+            return -1;
+        }
+
+        private static bool StartsWithHostHeader(byte[] data, int lineStart, int lineLength)
+        {
+            // "Host:" is 5 chars
+            if (lineLength < 5) return false;
+
+            return (ToLowerAscii(data[lineStart + 0]) == (byte)'h')
+                && (ToLowerAscii(data[lineStart + 1]) == (byte)'o')
+                && (ToLowerAscii(data[lineStart + 2]) == (byte)'s')
+                && (ToLowerAscii(data[lineStart + 3]) == (byte)'t')
+                && (data[lineStart + 4] == (byte)':');
+        }
+
+        private static byte ToLowerAscii(byte b)
+        {
+            if (b >= (byte)'A' && b <= (byte)'Z')
+                return (byte)(b + 32);
+            return b;
         }
         #endregion
 
