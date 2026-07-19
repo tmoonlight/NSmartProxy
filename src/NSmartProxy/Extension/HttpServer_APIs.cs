@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NSmartProxy.Authorize;
@@ -38,7 +39,13 @@ namespace NSmartProxy.Extension
             //如果库中没有任何记录，则增加默认用户
             if (Dbop.GetLength() < 1)
             {
-                AddUserV2("admin", "admin", "1");
+                // 生成随机管理员密码以提高安全性
+                var randomPassword = RandomHelper.NextString(16, true);
+                AddUserV2("admin", randomPassword, "1");
+                
+                // 记录默认凭据到日志（仅记录用户名，不记录密码）
+                Server.Logger.Info($"创建了默认管理员账户: admin，密码已随机生成。请立即登录并修改密码！");
+                Server.Logger.Info($"Default admin account created with random password. Please login and change password immediately!");
             }
         }
 
@@ -348,7 +355,8 @@ window.location.href='main.html';
             User user = Dbop.Get(oldUserName)?.ToObject<User>();
             user.isAdmin = isAdmin;
             user.userName = newUserName;
-            if (userPwd != "XXXXXXXX")
+            // 使用更安全的密码检查逻辑：只有在密码非空且不是特殊标记时才更新
+            if (!string.IsNullOrEmpty(userPwd) && userPwd != "XXXXXXXX" && userPwd.Trim().Length > 0)
             {
                 user.userPwd = EncryptHelper.SHA256(userPwd);
             }
@@ -795,11 +803,23 @@ window.location.href='main.html';
         public string GenerateCA(string hosts)
         {
             var caName = RandomHelper.NextString(10, false);
-            X509Certificate2 ca = CAGen.GenerateCA(caName, hosts);
-            var export = ca.Export(X509ContentType.Pfx);
+            // 生成安全的随机密码
+            var certificatePassword = RandomHelper.NextString(32, true);
+            X509Certificate2 ca = CAGen.GenerateCA(caName, hosts, certificatePassword);
+            var export = ca.Export(X509ContentType.Pfx, certificatePassword);
             string baseLogPath = "./temp";
-            string fileName = "_" + caName + ".pfx";
-            string targetPath = baseLogPath + "/" + fileName;
+            // 防止路径遍历攻击：仅使用文件名，移除目录路径
+            string safeFileName = "_" + Path.GetFileName(caName) + ".pfx";
+            string targetPath = Path.Combine(baseLogPath, safeFileName);
+            
+            // 确保目标路径在安全目录内
+            string fullBasePath = Path.GetFullPath(baseLogPath);
+            string fullTargetPath = Path.GetFullPath(targetPath);
+            if (!fullTargetPath.StartsWith(fullBasePath))
+            {
+                throw new SecurityException("Invalid file path detected - potential directory traversal attack");
+            }
+            
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
@@ -808,7 +828,7 @@ window.location.href='main.html';
 
             // File.Move(fileInfo.FullName, baseLogPath + "/" + port + ".pfx");
             File.WriteAllBytes(targetPath, export);
-            return fileName;
+            return safeFileName;
         }
 
         [FileUpload]
@@ -816,7 +836,18 @@ window.location.href='main.html';
         public string UploadTempFile(FileInfo fileInfo)
         {
             string baseLogPath = "./temp";
-            string targetPath = baseLogPath + "/" + fileInfo.Name;
+            // 防止路径遍历攻击：仅使用文件名，移除目录路径
+            string safeFileName = Path.GetFileName(fileInfo.Name);
+            string targetPath = Path.Combine(baseLogPath, safeFileName);
+            
+            // 确保目标路径在安全目录内
+            string fullBasePath = Path.GetFullPath(baseLogPath);
+            string fullTargetPath = Path.GetFullPath(targetPath);
+            if (!fullTargetPath.StartsWith(fullBasePath))
+            {
+                throw new SecurityException("Invalid file path detected - potential directory traversal attack");
+            }
+            
             DirectoryInfo dir = new DirectoryInfo(baseLogPath);
             if (!dir.Exists)
             {
