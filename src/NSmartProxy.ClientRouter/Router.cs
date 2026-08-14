@@ -408,6 +408,23 @@ namespace NSmartProxy.Client
             }
         }
 
+        /// <summary>
+        /// 精确读满count个字节，读不满（对端关闭）返回false。
+        /// 不能用带超时的ReadAsyncEx：这里的数据紧跟在控制字节之后，
+        /// 但停在这里等待任务的反弹连接本身是可以长时间空闲的。
+        /// </summary>
+        private static async Task<bool> ReadExactlyAsync(Stream stream, byte[] buffer, int offset, int count)
+        {
+            int read = 0;
+            while (read < count)
+            {
+                int n = await stream.ReadAsync(buffer, offset + read, count - read).ConfigureAwait(false);
+                if (n <= 0) return false;
+                read += n;
+            }
+            return true;
+        }
+
         private async Task OpenTransmission(int appId, TcpClient providerClient)
         {
             TcpClient toTargetServer = new TcpClient();
@@ -424,8 +441,13 @@ namespace NSmartProxy.Client
                 {
                     try
                     {
-
-                        int readByteCount = await providerClientStream.ReadAsync(buffer, 0, buffer.Length); //双端标记S0001
+                        //控制消息必须按帧精确读取，只能读1个字节。
+                        //服务端发完控制消息后会紧接着写业务数据（TCP下是之前为解析Host而
+                        //消费掉的HTTP头，UDP下是数据包），这两次写入可能被TCP合并进同一个报文。
+                        //原先一次性读10字节会把后面的业务数据一起吞掉然后丢弃，
+                        //表现为首个请求丢失开头的几个字节（例如"GET /"被吃掉，
+                        //后端收到" HTTP/1.1"直接400，或者一直等不到完整请求行而挂住）。
+                        int readByteCount = await providerClientStream.ReadAsync(buffer, 0, 1); //双端标记S0001
                         if (readByteCount == 0)
                         {
                             //抛出错误以便上层重启客户端。
@@ -452,7 +474,13 @@ namespace NSmartProxy.Client
                             await OpenUdpTransmission(appId, providerClient);
                             continue;//udp 发送后继续循环，方法里的ConnectAppToServer会再拉起一个新连接
                         case ControlMethod.TCPTransfer:
-                            var tranferTokenId = BitConverter.ToInt32(buffer.Skip(1).Take(4).ToArray(), 0);
+                            //TCPTransfer的控制帧是 1字节方法 + 4字节token，把剩下的4字节精确读满
+                            if (!await ReadExactlyAsync(providerClientStream, buffer, 1, 4))
+                            {
+                                _waiter.TrySetResult(new Exception($"连接{appId}读取传输标记时被切断"));
+                                return;
+                            }
+                            var tranferTokenId = BitConverter.ToInt32(buffer, 1);
                             await OpenTcpTransmission(appId, providerClient, toTargetServer, tranferTokenId);
                             return;//tcp 开启隧道，并且不再利用此连接
                         case ControlMethod.ForceClose:
@@ -632,6 +660,16 @@ namespace NSmartProxy.Client
                 var taskP2TLooping = StreamTransfer(TRANSFERING_TOKEN_SRC.Token, providerStream, targetServerStream, epString, item);
                 //close connnection,whether client or server stopped transferring.
                 var completedTask = await Task.WhenAny(taskT2PLooping, taskP2TLooping);
+
+                //请求方向（服务端->目标服务）先结束是常态，此时目标服务的响应
+                //往往还在往回写。以前这里WhenAny一返回就直接Close，
+                //响应会被截断（浏览器拿到响应头却没有正文）。
+                //所以要先给回程方向一点时间把在途数据写完。
+                if (completedTask == taskP2TLooping)
+                {
+                    await Task.WhenAny(taskT2PLooping, Task.Delay(Global.TransferDrainTimeout));
+                }
+
                 providerClient.Close();
                 Router.Logger.Debug("已关闭toProvider(" + localEndPoint + ")连接。");
                 toTargetServer.Close();
@@ -653,7 +691,9 @@ namespace NSmartProxy.Client
             byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ClientTunnelBufferSize);
             try
             {
-                using (fromStream)
+                //不要 using (fromStream)：两个方向共用同一对流，
+                //先结束的一方会把另一方还在用的流Dispose掉，导致响应被截断。
+                //流的关闭统一交给TcpTransferAsync。
                 {
                     int bytesRead;
                     if (item.IsCompress)
@@ -694,7 +734,7 @@ namespace NSmartProxy.Client
             byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ClientTunnelBufferSize);
             try
             {
-                using (fromStream)
+                //同StreamTransfer：不要在这里Dispose共用的流
                 {
                     int bytesRead;
                     while ((bytesRead =

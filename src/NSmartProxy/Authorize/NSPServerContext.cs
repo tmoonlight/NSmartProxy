@@ -18,8 +18,10 @@ namespace NSmartProxy.Authorize
     public class NSPServerContext : IServerContext
     {
         public NSPClientCollection Clients;
-        public Dictionary<int, NSPAppGroup> PortAppMap;//“地址:端口”和app的映射关系
-        public Dictionary<int, NSPAppGroup> UDPPortAppMap;//UDP “地址:端口”和app的映射关系
+        //端口->app组。客户端上下线时写入，同时被每一个外部连接读取，
+        //必须用ConcurrentDictionary，理由同PortCertMap。
+        public ConcurrentDictionary<int, NSPAppGroup> PortAppMap;//“地址:端口”和app的映射关系
+        public ConcurrentDictionary<int, NSPAppGroup> UDPPortAppMap;//UDP “地址:端口”和app的映射关系
         public NSPServerConfig ServerConfig;
         public HashSet<string> TokenCaches; //服务端会话池，登录后的会话都在这里，每天需要做定时清理
         public long TotalReceivedBytes; //TODO 统计进出数据 下行
@@ -36,8 +38,8 @@ namespace NSmartProxy.Authorize
         {
             TokenCaches = new HashSet<string>();
             Clients = new NSPClientCollection();
-            PortAppMap = new Dictionary<int, NSPAppGroup>();
-            UDPPortAppMap = new Dictionary<int, NSPAppGroup>();
+            PortAppMap = new ConcurrentDictionary<int, NSPAppGroup>();
+            UDPPortAppMap = new ConcurrentDictionary<int, NSPAppGroup>();
             PortCertMap = new ConcurrentDictionary<string, X509Certificate2>();
             //ServerConfig = new NSPServerConfig();
         }
@@ -128,7 +130,7 @@ namespace NSmartProxy.Authorize
                                     nspAppGroup.UdpClient.Close();
                                 }
 
-                                appMap.Remove(port);
+                                appMap.TryRemove(port, out _);
                             }
                         }
 

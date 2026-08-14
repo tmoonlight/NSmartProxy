@@ -30,6 +30,12 @@ namespace NSmartProxy.Shared
         public const int SslHandshakeTimeout = 15000;//SSL/TLS握手超时时间（毫秒），超时后直接断开连接
 
         /// <summary>
+        /// 一个方向的传输结束后，留给另一个方向把在途数据写完的时间（毫秒）。
+        /// 超过这个时间还没写完就直接拆连接。
+        /// </summary>
+        public const int TransferDrainTimeout = 5000;
+
+        /// <summary>
         /// 单个转发帧的最大长度，用于约束按长度前缀读取时的内存分配，
         /// 防止畸形长度头导致一次性分配超大数组。
         /// </summary>

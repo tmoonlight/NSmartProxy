@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Sockets;
@@ -13,14 +14,17 @@ namespace NSmartProxy
     /// 按host区分的app组，ActivateApp始终是最后一个进来的app。
     /// 一个app组中所有的app的协议必须相同。
     /// </summary>
-    public class NSPAppGroup : Dictionary<string, NSPApp>
+    //基类改为ConcurrentDictionary：这个字典在客户端上下线时被写入，
+    //同时被每一个外部连接读取，普通Dictionary并发读写可能损坏内部结构、
+    //导致查找陷入死循环（表现为CPU 100%且所有请求卡死）。
+    public class NSPAppGroup : ConcurrentDictionary<string, NSPApp>
     {
         public new void Add(string key, NSPApp value)
         {
             key = key.Replace(" ", "");
             _activateApp = value;
             ProtocolInGroup = value.AppProtocol;
-            base.Add(key, value);
+            base[key] = value;
         }
 
         public new NSPApp this[string key]
@@ -50,10 +54,10 @@ namespace NSmartProxy
 
         public bool IsAllClosed()
         {
-
-            foreach (var key in base.Keys)
+            //直接遍历Values：先取Keys再按key回查，在并发移除时会抛KeyNotFoundException
+            foreach (var app in base.Values)
             {
-                if (!this[key].IsClosed)
+                if (!app.IsClosed)
                 {
                     return false;
                 }

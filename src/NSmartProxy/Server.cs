@@ -212,7 +212,7 @@ namespace NSmartProxy
         {
             Server.Logger.Debug("AppTcpClientMapConfigConnected");
             int port = 0;
-            Dictionary<int, NSPAppGroup> appMap = null;
+            ConcurrentDictionary<int, NSPAppGroup> appMap = null;
             if (e.App.AppProtocol == Protocol.UDP)
             {
                 appMap = ServerContext.UDPPortAppMap;
@@ -242,7 +242,7 @@ namespace NSmartProxy
         /// <param name="consumerPort"></param>
         /// <param name="appMap"></param>
         /// <returns></returns>
-        async Task ListenConsumeAsync(int consumerPort, Dictionary<int, NSPAppGroup> appMap)
+        async Task ListenConsumeAsync(int consumerPort, ConcurrentDictionary<int, NSPAppGroup> appMap)
         {
             //TODO 区分http请求
             var cts = new CancellationTokenSource();
@@ -410,7 +410,14 @@ namespace NSmartProxy
         private async Task ProcessConsumeTcpRequestAsync(int consumerPort, TcpClient consumerClient, CancellationToken ct)
         {
             TcpTunnel tunnel = new TcpTunnel { ConsumerClient = consumerClient };
-            var nspAppGroup = ServerContext.PortAppMap[consumerPort];
+            //这一句原先在try外面：客户端刚好在这条连接进来时下线，端口已从字典里移除，
+            //抛出的KeyNotFoundException会从fire-and-forget的调用里漏出去，消费端连接永远不被回收。
+            if (!ServerContext.PortAppMap.TryGetValue(consumerPort, out var nspAppGroup))
+            {
+                Server.Logger.Debug($"端口{consumerPort}已无对应的app，关闭本次连接。");
+                consumerClient.Close();
+                return;
+            }
             NSPApp nspApp = null;
             TcpClient s2pClient = null;
             Stream consumerStream = consumerClient.GetStream();
@@ -432,20 +439,28 @@ namespace NSmartProxy
                     if (tp == null)
                     { Server.Logger.Debug("未在请求中找到主机名"); consumerClient.Close(); return; }
 
-                    string host = tp.Item1;
+                    //Host头里带着端口（如 name:20001），而客户端注册进来的host是不带端口的，
+                    //所以要先按原值查，查不到再去掉端口重试，否则非80/443端口上的多host路由
+                    //永远命中不了，会静默回退到ActivateApp（转发到错误的后端）。
+                    string host = ResolveHostKey(nspAppGroup, tp.Item1);
                     restBytes = tp.Item2; //预发送bytes，因为这部分用来抓host消费掉了
                     //restBytesLength = tp.Item3;
                     s2pClient = await ConnectionManager.GetClientForTcp(consumerPort, host);
-                    if (nspAppGroup.ContainsKey(host))
+                    if (nspAppGroup.TryGetValue(host, out nspApp))
                     {
-                        nspAppGroup[host].Tunnels.Add(tunnel); //bug修改：建立隧道
+                        nspApp.Tunnels.Add(tunnel); //bug修改：建立隧道
                     }
                     else
                     {
+                        //这里不能再直接用 nspAppGroup[host] 取值：那样会抛KeyNotFoundException，
+                        //而此时s2pClient（一条已经从池里弹出的反弹连接）还没有被关闭，
+                        //反复用未知Host访问会把客户端的反弹连接池抽干，隧道彻底不可用。
+                        //改成与GetClientForTcp内部一致的回退逻辑。
                         Server.Logger.Debug($"不存在host为“{host}”的主机名，但访问端依然以此主机名访问。");
+                        nspApp = nspAppGroup.ActivateApp;
+                        if (nspApp == null) throw new KeyNotFoundException($"端口{consumerPort}下没有任何可用的app");
+                        nspApp.Tunnels.Add(tunnel);
                     }
-
-                    nspApp = nspAppGroup[host];
                 }
                 else if (nspAppGroup.ProtocolInGroup == Protocol.TCP) //TCP
                 {
@@ -525,6 +540,9 @@ namespace NSmartProxy
             }
             finally
             {
+                //两个传输方向共用这对流，所以统一在这里收尾（pump内部不再Dispose）
+                try { consumerStream.Dispose(); } catch { }
+                try { providerStream.Dispose(); } catch { }
                 consumerClient.Close();
                 s2pClient.Close();
                 transfering.Cancel();
@@ -623,8 +641,17 @@ namespace NSmartProxy
             int tokenId = BitConverter.ToInt32(appRequestBytes, 0);
             try
             {
-                transferTokenDic[tokenId].Cancel();
-                Server.Logger.Debug($"执行断开用户链接{tokenId}成功。");
+                //客户端在传输结束后才发来断开通知，此时服务端往往已经自行清理过这个token，
+                //属于正常情况，不按错误处理。
+                if (transferTokenDic.TryGetValue(tokenId, out var transferCts))
+                {
+                    transferCts.Cancel();
+                    Server.Logger.Debug($"执行断开用户链接{tokenId}成功。");
+                }
+                else
+                {
+                    Server.Logger.Debug($"链接{tokenId}已结束，无需再断开。");
+                }
             }
             catch (Exception ex)
             {
@@ -871,6 +898,17 @@ namespace NSmartProxy
 
                 //任何一端传输中断或者故障，则关闭所有连接
                 var comletedTask = await Task.WhenAny(taskC2PLooping, taskP2CLooping);
+
+                //但是不能立刻就拆连接：消费端->客户端这个方向先结束是很常见的
+                //（浏览器发完请求就不再发数据了），此时客户端->消费端方向往往还在把响应写回去。
+                //以前这里WhenAny一返回就在finally里把两个socket都关掉，
+                //响应会被拦腰截断，并发越高越明显（浏览器看到的就是空白页或者卡住）。
+                //所以这里要给回程方向一个有限的排空时间。
+                if (comletedTask == taskC2PLooping)
+                {
+                    await Task.WhenAny(taskP2CLooping, Task.Delay(Global.TransferDrainTimeout));
+                }
+
                 Logger.Debug($"Transferring ({nspApp.ClientId}-{nspApp.AppId}) STOPPED");
 
             }
@@ -884,7 +922,9 @@ namespace NSmartProxy
 
         private async Task StreamTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-            using (fromStream)
+            //这里不能 using (fromStream)：两个方向共用同一对流，
+            //先结束的一方会把另一方还在用的流Dispose掉，导致响应被截断。
+            //流的关闭统一交给ProcessConsumeTcpRequestAsync的finally。
             {
                 byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ServerTunnelBufferSize);
                 try
@@ -916,7 +956,10 @@ namespace NSmartProxy
                 }
                 catch (Exception ioe)
                 {
-                    if (ioe is IOException) { return; } //Suppress this exception.
+                    //连接被另一方向或上层拆掉时这几种异常都是正常收尾，
+                    //而且这两个pump里总有一个是不被await的，抛出去只会变成未观测异常。
+                    if (ioe is IOException || ioe is ObjectDisposedException ||
+                        ioe is OperationCanceledException) { return; } //Suppress this exception.
                     throw;
                 }
                 finally
@@ -928,7 +971,7 @@ namespace NSmartProxy
 
         private async Task ToStaticTransfer(CancellationToken ct, Stream fromStream, Stream toStream, NSPApp nspApp)
         {
-            using (fromStream)
+            //同StreamTransfer：不要在这里Dispose共用的流
             {
                 byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ServerTunnelBufferSize);
                 try
@@ -956,7 +999,10 @@ namespace NSmartProxy
                 }
                 catch (Exception ioe)
                 {
-                    if (ioe is IOException) { return; } //Suppress this exception.
+                    //连接被另一方向或上层拆掉时这几种异常都是正常收尾，
+                    //而且这两个pump里总有一个是不被await的，抛出去只会变成未观测异常。
+                    if (ioe is IOException || ioe is ObjectDisposedException ||
+                        ioe is OperationCanceledException) { return; } //Suppress this exception.
                     throw;
                 }
                 finally
@@ -1050,6 +1096,28 @@ namespace NSmartProxy
             {
                 await reader.CompleteAsync().ConfigureAwait(false);
             }
+        }
+
+        /// <summary>
+        /// 把Host头的值解析成app组里实际使用的key。
+        /// 优先精确匹配（兼容把端口一起写进配置的用法），
+        /// 匹配不到再剥掉端口后重试，都不中则原样返回，交给上层回退。
+        /// </summary>
+        private static string ResolveHostKey(NSPAppGroup nspAppGroup, string hostHeader)
+        {
+            if (string.IsNullOrEmpty(hostHeader)) return hostHeader;
+            if (nspAppGroup.ContainsKey(hostHeader)) return hostHeader;
+
+            //IPv6字面量形如 [::1]:8080，端口冒号在右括号之后
+            int closingBracket = hostHeader.LastIndexOf(']');
+            int colon = hostHeader.LastIndexOf(':');
+            if (colon > closingBracket && colon > 0)
+            {
+                string withoutPort = hostHeader.Substring(0, colon);
+                if (nspAppGroup.ContainsKey(withoutPort)) return withoutPort;
+            }
+
+            return hostHeader;
         }
 
         private static int IndexOfHeaderTerminator(byte[] data)

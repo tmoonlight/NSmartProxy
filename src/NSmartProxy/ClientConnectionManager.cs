@@ -306,20 +306,14 @@ namespace NSmartProxy
 
                     if (protocol == Protocol.UDP)
                     {
-                        if (!ServerContext.UDPPortAppMap.ContainsKey(port))
-                        {
-                            ServerContext.UDPPortAppMap[port] = new NSPAppGroup();
-                        }
-                        ServerContext.UDPPortAppMap[port][host] = app;
+                        //GetOrAdd：先ContainsKey再赋值存在竞争，两个客户端同时注册同一端口时
+                        //后者会把前者刚建好的组整个覆盖掉
+                        ServerContext.UDPPortAppMap.GetOrAdd(port, _ => new NSPAppGroup())[host] = app;
                     }
                     else
                     {
                         //TODO 设置app的host和protocoltype(TCP Only)
-                        if (!ServerContext.PortAppMap.ContainsKey(port))
-                        {
-                            ServerContext.PortAppMap[port] = new NSPAppGroup();
-                        }
-                        ServerContext.PortAppMap[port][host] = app;
+                        ServerContext.PortAppMap.GetOrAdd(port, _ => new NSPAppGroup())[host] = app;
                     }
 
                     clientModel.AppList.Add(new App
