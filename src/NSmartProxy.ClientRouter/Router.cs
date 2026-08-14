@@ -1,6 +1,7 @@
 ﻿using NSmartProxy.Data;
 using NSmartProxy.Interfaces;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -649,30 +650,37 @@ namespace NSmartProxy.Client
         private async Task StreamTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
-            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
-            using (fromStream)
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ClientTunnelBufferSize);
+            try
             {
-                int bytesRead;
-                if (item.IsCompress)
+                using (fromStream)
                 {
-                    while (!ct.IsCancellationRequested)
+                    int bytesRead;
+                    if (item.IsCompress)
                     {
-                        //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
-                        byte[] bufferCompressed = await fromStream.ReadNextQLengthBytes();
-                        if (bufferCompressed.Length == 0) break;
-                        var compressBuffer = StringUtil.DecompressInSnappy(bufferCompressed,0, bufferCompressed.Length);
-                        bytesRead = compressBuffer.Length;
-                        await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        while (!ct.IsCancellationRequested)
+                        {
+                            //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
+                            byte[] bufferCompressed = await fromStream.ReadNextQLengthBytes();
+                            if (bufferCompressed.Length == 0) break;
+                            var compressBuffer = StringUtil.DecompressInSnappy(bufferCompressed, 0, bufferCompressed.Length);
+                            bytesRead = compressBuffer.Length;
+                            await toStream.WriteAsync(compressBuffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        while ((bytesRead =
+                                   await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                     }
                 }
-                else
-                {
-                    while ((bytesRead =
-                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
-                    {
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
-                    }
-                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
             Router.Logger.Debug($"{epString}对节点传输关闭。");
 
@@ -683,28 +691,35 @@ namespace NSmartProxy.Client
         private async Task ToStaticTransfer(CancellationToken ct, NetworkStream fromStream, NetworkStream toStream,
             string epString, ClientApp item)
         {
-            byte[] buffer = new byte[Global.ClientTunnelBufferSize];
-            using (fromStream)
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ClientTunnelBufferSize);
+            try
             {
-                int bytesRead;
-                while ((bytesRead =
-                           await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
+                using (fromStream)
                 {
-                    if (item.IsCompress)
+                    int bytesRead;
+                    while ((bytesRead =
+                               await fromStream.ReadAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false)) != 0)
                     {
-                        //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
-                        var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
-                        //var compressedBuffer = compressInSnappy.ContentBytes;
-                        //bytesRead = compressInSnappy.Length;
-                        //TODO 封包传送
-                        if (ct.IsCancellationRequested) { Global.Logger.Info("=传输外部中止="); return; }
-                        await toStream.WriteQLengthBytes(compressInSnappy.ContentBytes, compressInSnappy.Length).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        if (item.IsCompress)
+                        {
+                            //Array.Resize(array: ref buffer, newSize: bytesRead);//此处存在copy，需要看看snappy是否支持偏移量数组
+                            var compressInSnappy = StringUtil.CompressInSnappy(buffer, 0, bytesRead);
+                            //var compressedBuffer = compressInSnappy.ContentBytes;
+                            //bytesRead = compressInSnappy.Length;
+                            //TODO 封包传送
+                            if (ct.IsCancellationRequested) { Global.Logger.Info("=传输外部中止="); return; }
+                            await toStream.WriteQLengthBytes(compressInSnappy.ContentBytes, compressInSnappy.Length).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await toStream.WriteAsync(buffer, 0, bytesRead, ct).ConfigureAwait(false);
+                        }
                     }
                 }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
             Router.Logger.Debug($"{epString}反向链接传输关闭。");
         }

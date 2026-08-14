@@ -761,9 +761,8 @@ window.location.href='main.html';
         {
             List<CertDTO> caList = new List<CertDTO>();
 
-            foreach (var (port, cert) in ServerContext.PortCertMap)
+            foreach (var (port, cert2) in ServerContext.PortCertMap)
             {
-                var cert2 = new X509Certificate2(cert);
                 caList.Add(new CertDTO()
                 {
                     CreateTime = cert2.GetEffectiveDateString(),
@@ -842,10 +841,23 @@ window.location.href='main.html';
             }
             filename = Path.GetFileName(filename);//安全起见取一下文件名
             string destPath = baseCAPath + "/" + filename;
-            File.Move("./temp/" + filename, destPath);
-            ServerContext.PortCertMap[portInt.ToString()] = X509Certificate2.CreateFromCertFile(destPath);
-            // ServerContext.PortCertMap[port] = new X509Certificate2,
-            //     "WeNeedASaf3rPassword", X509KeyStorageFlags.MachineKeySet);
+            string tempPath = "./temp/" + filename;
+
+            //先校验再落地：证书没有私钥（例如上传了cer/crt）时服务端TLS根本无法握手，
+            //如果放任它绑定上去，绑定的端口会变成每个请求都卡到超时，这里直接拒绝掉。
+            X509Certificate2 cert;
+            try
+            {
+                cert = CAGen.LoadServerCertificate(tempPath);
+            }
+            catch (Exception ex)
+            {
+                if (File.Exists(tempPath)) File.Delete(tempPath);
+                throw new Exception("证书不可用：" + ex.Message);
+            }
+
+            File.Move(tempPath, destPath);
+            ServerContext.PortCertMap[portInt.ToString()] = cert;
             ServerContext.ServerConfig.CABoundConfig[portInt.ToString()] = destPath;
             ServerContext.SaveConfigChanges();
             return "";
@@ -885,7 +897,7 @@ window.location.href='main.html';
             {
                 File.Delete(filePath);
             }
-            ServerContext.PortCertMap.Remove(port);
+            ServerContext.PortCertMap.TryRemove(port, out _);
             ServerContext.ServerConfig.CABoundConfig.Remove(port);
             ServerContext.SaveConfigChanges();
             return "success";

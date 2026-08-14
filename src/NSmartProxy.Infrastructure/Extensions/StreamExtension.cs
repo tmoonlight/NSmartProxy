@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NSmartProxy.Shared;
 
@@ -50,11 +51,30 @@ namespace NSmartProxy.Infrastructure
         /// <returns></returns>
         public static async Task<int> ReadAsync(this Stream stream, byte[] buffer, int offset, int count, int timeOut)
         {
-            var receiveCount = 0;
-            var receiveTask = Task.Run(async () => { receiveCount = await stream.ReadAsync(buffer, offset, count); });
-            var isReceived = await Task.WhenAny(receiveTask, Task.Delay(timeOut)) == receiveTask;
-            if (!isReceived) return -1;
-            return receiveCount;
+            //超时后必须让底层的读操作真正结束，否则这个读会一直挂在流上：
+            //下一次读会和它并发（SslStream 会直接抛 NotSupportedException，
+            //NetworkStream 则会造成数据交错），同时被丢弃的 Task 和定时器也会不断堆积。
+            //这里通过关闭流来强制中止读操作——读超时本身就意味着这条连接已经不可用了。
+            using (var timeoutCts = new CancellationTokenSource(timeOut))
+            using (timeoutCts.Token.Register(s => SafeDispose((Stream)s), stream))
+            {
+                try
+                {
+                    return await stream.ReadAsync(buffer, offset, count, timeoutCts.Token).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (timeoutCts.IsCancellationRequested &&
+                                           (ex is OperationCanceledException || ex is IOException ||
+                                            ex is ObjectDisposedException))
+                {
+                    return -1;//超时
+                }
+            }
+        }
+
+        private static void SafeDispose(Stream stream)
+        {
+            try { stream.Dispose(); }
+            catch { /* 关闭失败无需处理 */ }
         }
 
         /// <summary>
@@ -85,23 +105,71 @@ namespace NSmartProxy.Infrastructure
             return await stream.ReadAsyncEx(buffer, 0, buffer.Length);
         }
 
-        public static Stream ProcessSSL(this Stream clientStream, X509Certificate cert)
+        /// <summary>
+        /// 以服务端身份完成TLS握手。
+        /// 握手必须是异步的：TLS握手需要多个网络往返，用同步的AuthenticateAsServer
+        /// 会把线程池线程一直占住，并发上来以后线程池被耗尽，
+        /// 表现就是整个服务端（包括侦听循环和其他隧道）一起卡死。
+        /// 同时握手必须有超时：底层NetworkStream默认永不超时，
+        /// 一个连上来却不发ClientHello的连接会永久占住这条连接的资源。
+        /// </summary>
+        public static async Task<Stream> ProcessSSLAsync(this Stream clientStream, X509Certificate2 cert,
+            int handshakeTimeout = 0)
         {
-            try
-            {
-                SslStream sslStream = new SslStream(clientStream);
-                sslStream.AuthenticateAsServer(cert, false, SslProtocols.Tls12, true);
-                sslStream.ReadTimeout = 10000;
-                sslStream.WriteTimeout = 10000;
-                return sslStream;
-            }
-            catch (Exception ex)
+            if (cert == null) throw new ArgumentNullException(nameof(cert));
+            if (!cert.HasPrivateKey)
             {
                 clientStream.Close();
-                throw ex;
+                throw new InvalidOperationException(
+                    $"证书“{cert.Subject}”不包含私钥，无法用于服务端TLS。请上传带私钥的pfx/p12证书。");
             }
 
-            //return null;
+            if (handshakeTimeout <= 0) handshakeTimeout = Global.SslHandshakeTimeout;
+
+            SslStream sslStream = new SslStream(clientStream, false);
+            try
+            {
+                //握手超时后关闭底层流，强制中止握手
+                using (var timeoutCts = new CancellationTokenSource(handshakeTimeout))
+                using (timeoutCts.Token.Register(s => SafeDispose((Stream)s), clientStream))
+                {
+                    try
+                    {
+#if NET6_0_OR_GREATER
+                        var sslOptions = new SslServerAuthenticationOptions
+                        {
+                            ServerCertificate = cert,
+                            ClientCertificateRequired = false,
+                            //SslProtocols.None表示交给操作系统协商（TLS 1.2/1.3），
+                            //TLS 1.3比写死的1.2少一个握手往返。
+                            EnabledSslProtocols = SslProtocols.None,
+                            //服务端不做客户端证书校验，开启吊销检查只会引入一次
+                            //可能长时间阻塞的CRL/OCSP网络请求。
+                            CertificateRevocationCheckMode = X509RevocationMode.NoCheck
+                        };
+                        await sslStream.AuthenticateAsServerAsync(sslOptions, timeoutCts.Token).ConfigureAwait(false);
+#else
+                        await sslStream.AuthenticateAsServerAsync(cert, false, SslProtocols.Tls12, false)
+                            .ConfigureAwait(false);
+#endif
+                    }
+                    catch (Exception ex) when (timeoutCts.IsCancellationRequested)
+                    {
+                        throw new TimeoutException($"TLS握手超时（{handshakeTimeout}ms）。", ex);
+                    }
+                }
+
+                //注意：这里刻意不设置Read/WriteTimeout。
+                //这是一条长连接隧道，浏览器的keep-alive连接可以长时间空闲，
+                //给它加一个固定的读超时会把正常的空闲连接打断。
+                return sslStream;
+            }
+            catch
+            {
+                SafeDispose(sslStream);
+                SafeDispose(clientStream);
+                throw;
+            }
         }
 
         public static async Task WriteAsync(this Stream stream, byte[] bytes)
@@ -191,6 +259,12 @@ namespace NSmartProxy.Infrastructure
             if (readByte > 0)
             {
                 int length = BitConverter.ToInt32(bt2, 0);
+                //长度头来自对端，必须校验，否则一个畸形的长度就会造成一次超大内存分配
+                if (length < 0 || length > Global.MaxTransferFrameSize)
+                {
+                    throw new IOException($"非法的数据帧长度：{length}");
+                }
+                if (length == 0) return new byte[0];
                 bytes = new byte[length];
                 int readedByteCount = await stream.ReadAsync(bytes, 0, length);
                 if (readedByteCount == 0)

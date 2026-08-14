@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NSmartProxy.Data;
+using NSmartProxy.Extension;
 using NSmartProxy.Data.Config;
 using NSmartProxy.Infrastructure;
 using NSmartProxy.Infrastructure.Interfaces;
@@ -24,7 +26,11 @@ namespace NSmartProxy.Authorize
         public long TotalSentBytes;//上行
         public long ConnectCount;//连接次数
         public long ClientConnectCount; //客户端连接次数
-        public Dictionary<string, X509Certificate> PortCertMap;//host->证书字典        
+        //端口->证书字典。
+        //这个字典由Web管理接口线程写入（上传/删除证书），同时被每一个外部连接读取，
+        //普通Dictionary在并发读写时可能损坏内部结构并导致查找死循环（表现为CPU 100%且请求全部卡住），
+        //所以这里必须用ConcurrentDictionary。
+        public ConcurrentDictionary<string, X509Certificate2> PortCertMap;
 
         public NSPServerContext()
         {
@@ -32,7 +38,7 @@ namespace NSmartProxy.Authorize
             Clients = new NSPClientCollection();
             PortAppMap = new Dictionary<int, NSPAppGroup>();
             UDPPortAppMap = new Dictionary<int, NSPAppGroup>();
-            PortCertMap = new Dictionary<string, X509Certificate>();
+            PortCertMap = new ConcurrentDictionary<string, X509Certificate2>();
             //ServerConfig = new NSPServerConfig();
         }
 
@@ -157,14 +163,24 @@ namespace NSmartProxy.Authorize
         {
             foreach (var (port, path) in ServerConfig.CABoundConfig)
             {
-                if (File.Exists(path))
-                {
-                    //从文件里加载证书
-                    PortCertMap[port] = X509Certificate2.CreateFromCertFile(path);
-                }
-                else
+                if (!File.Exists(path))
                 {
                     Server.Logger.Debug($"未加载位于{port}的证书。");
+                    continue;
+                }
+
+                try
+                {
+                    //从文件里加载证书
+                    PortCertMap[port] = CAGen.LoadServerCertificate(path);
+                }
+                catch (Exception ex)
+                {
+                    //证书加载失败时不要把它放进字典：否则每一个连接都会在握手时抛异常，
+                    //端口看上去是通的，但所有请求都会卡住直到超时。
+                    PortCertMap.TryRemove(port, out _);
+                    Server.Logger.Error(
+                        $"端口{port}的证书“{path}”加载失败，该端口将以明文(HTTP)方式提供服务：{ex.Message}", ex);
                 }
             }
 

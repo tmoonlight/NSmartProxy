@@ -4,8 +4,10 @@
 
 ## P0：安全与稳定性
 
-- 将单连接 1 M 缓冲区改为 32–64 KiB 池化缓冲区。
-- 为所有协议帧增加长度上限，并使用完整读取，防止异常分配和短读。
+- [x] 将单连接缓冲区改为 64 KiB 池化缓冲区（原为 1 GiB/条/方向）。
+- [x] 为按长度前缀读取的数据帧增加长度上限，防止畸形长度头造成超大分配。
+- [x] 修复 HTTPS（挂证书）场景下的连接阻塞：见下方“HTTPS 阻塞问题”。
+- 为所有协议帧使用完整读取，防止短读。
 - 管理端与控制链路启用 TLS；移除默认 `admin/admin`，默认关闭匿名登录。
 - 使用标准密码哈希、短期令牌和角色权限；Debug/Release 保持相同鉴权。
 - 统一连接生命周期、取消和超时处理，修复未回收任务、连接及传输状态。
@@ -26,6 +28,26 @@
 - 封装为反代库供社区使用
 - 增加多平台gui
 - 升级框架到最新.net版本
+
+## HTTPS 阻塞问题（已修复记录）
+
+挂证书之后请求经常卡住，是下面几个问题叠加造成的：
+
+1. `ReadHostName` 用 `PipeReader.Create(stream)` 读请求头，该重载默认 `leaveOpen = false`，
+   `CompleteAsync()` 会把底层流 Dispose 掉。结果是 Host 刚解析完、隧道还没开始转发，
+   消费端的 `SslStream` 就已经被关闭了。已改为 `StreamPipeReaderOptions(leaveOpen: true)`。
+2. TLS 握手用的是同步的 `AuthenticateAsServer`，会占住线程池线程；线程池扩容很慢，
+   并发一上来就会饥饿，连带侦听循环和其他隧道一起卡死。已改为 `AuthenticateAsServerAsync`。
+3. 握手没有超时，底层 `NetworkStream` 默认永不超时，
+   连上来不发 ClientHello 的连接（扫描器、误发的明文 HTTP）会永久占住资源。已加握手超时。
+4. `checkCertificateRevocation` 为 `true`，会引入可能长时间阻塞的 CRL/OCSP 网络请求；
+   服务端并不校验客户端证书，已关闭。同时协议放开为由系统协商（支持 TLS 1.3，少一个握手往返）。
+5. 证书用 `X509Certificate2.CreateFromCertFile` 加载，不支持带密码的 pfx，
+   上传只含公钥的 cer/crt 也不报错，于是每个连接都在握手时抛异常、连接一直挂到超时。
+   已改为加载时即校验私钥并给出明确错误。
+6. `PortCertMap` 是普通 `Dictionary`，被 Web 管理接口写入的同时被每个连接读取，
+   并发读写可能损坏内部结构导致查找死循环（CPU 100% 且请求全部卡住）。已改为 `ConcurrentDictionary`。
+7. 握手失败、未解析出 Host 等分支没有关闭消费端连接，socket 持续泄漏。已统一回收。
 
 ## 验收基线
 

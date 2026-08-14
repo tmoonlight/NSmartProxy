@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -56,6 +58,37 @@ namespace NSmartProxy.Extension
                     "WeNeedASaf3rPassword", X509KeyStorageFlags.Exportable);
 
             }
+        }
+
+        /// <summary>
+        /// 从文件加载服务端证书。
+        /// 服务端TLS必须使用带私钥的证书，X509Certificate2.CreateFromCertFile
+        /// 不支持带密码的pfx，遇到只含公钥的cer/crt也不会报错，
+        /// 结果是每一个进来的连接都在握手时抛异常，表现为访问一直卡住。
+        /// 这里在加载阶段就把问题暴露出来。
+        /// </summary>
+        /// <param name="path">证书文件路径（pfx/p12）</param>
+        /// <param name="password">证书密码，无密码传null</param>
+        public static X509Certificate2 LoadServerCertificate(string path, string password = null)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException("证书文件不存在。", path);
+
+            var flags = X509KeyStorageFlags.Exportable;
+            //避免在Windows上把私钥写入用户密钥容器（容器/服务账户下经常没有可写的用户配置目录）
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                flags |= X509KeyStorageFlags.MachineKeySet;
+            }
+
+            var cert = new X509Certificate2(File.ReadAllBytes(path), password, flags);
+            if (!cert.HasPrivateKey)
+            {
+                cert.Dispose();
+                throw new InvalidOperationException(
+                    $"证书文件“{path}”不包含私钥，无法用于服务端TLS。请上传pfx/p12格式（含私钥）的证书。");
+            }
+
+            return cert;
         }
     }
 }

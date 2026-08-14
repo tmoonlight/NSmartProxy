@@ -99,7 +99,9 @@ namespace NSmartProxy.Client
             bool isReconn = (this.ClientID != 0); //TODO XXX如果clientid已经分配到了id 则算作重连
             for (int j = 0; j < 3; j++) //连接服务端
             {
-                var delayDispose = Task.Delay(TimeSpan.FromSeconds(Global.DefaultConnectTimeout)).ContinueWith(_ => configClient.Dispose());
+                //DefaultConnectTimeout的单位是毫秒，这里之前当成秒用，
+                //连接超时实际变成了8小时多，超时分支形同虚设，连接也迟迟不会被释放。
+                var delayDispose = Task.Delay(Global.DefaultConnectTimeout).ContinueWith(_ => configClient.Dispose());
                 var connectAsync = configClient.ConnectAsync(config.ProviderAddress, config.ConfigPort);
                 //超时则dispose掉
                 var comletedTask = await Task.WhenAny(delayDispose, connectAsync);

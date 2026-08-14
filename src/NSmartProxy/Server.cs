@@ -422,14 +422,15 @@ namespace NSmartProxy
 
                 if (nspAppGroup.ProtocolInGroup == Protocol.HTTP /*|| nspAppGroup.ProtocolInGroup == Protocol.HTTPS*/)
                 {//不论是http协议还是https协议，有证书就加密
-                    if (ServerContext.PortCertMap.TryGetValue(consumerPort.ToString(), out X509Certificate cert2))
+                    if (ServerContext.PortCertMap.TryGetValue(consumerPort.ToString(), out X509Certificate2 cert2))
                     {
-                        consumerStream = consumerStream.ProcessSSL(cert2);
+                        //必须await：同步握手会占住线程池线程，并发一上来整个服务端都会卡死
+                        consumerStream = await consumerStream.ProcessSSLAsync(cert2);
                     }
                     var tp = await ReadHostName(consumerStream);
 
                     if (tp == null)
-                    { Server.Logger.Debug("未在请求中找到主机名"); return; }
+                    { Server.Logger.Debug("未在请求中找到主机名"); consumerClient.Close(); return; }
 
                     string host = tp.Item1;
                     restBytes = tp.Item2; //预发送bytes，因为这部分用来抓host消费掉了
@@ -458,6 +459,7 @@ namespace NSmartProxy
                 Logger.Debug($"端口{consumerPort}获取反弹连接超时，关闭传输。=>" + ex.Message);
                 //获取clientid
                 //关闭本次连接
+                consumerClient.Close();
                 ServerContext.CloseAllSourceByClient(ServerContext.PortAppMap[consumerPort].ActivateApp.ClientId);
                 return;
             }
@@ -465,6 +467,15 @@ namespace NSmartProxy
             {
                 Server.Logger.Debug("未绑定此host：=>" + ex.Message);
                 consumerClient.Close();
+                return;
+            }
+            catch (Exception ex)
+            {
+                //这里是fire-and-forget调用的，任何漏出去的异常都会让消费端连接一直挂着不被回收，
+                //TLS握手失败（证书无私钥、握手超时、对端发的不是TLS流量等）就属于这一类。
+                Server.Logger.Debug($"端口{consumerPort}建立隧道失败：{ex.Message}");
+                consumerClient.Close();
+                s2pClient?.Close();
                 return;
             }
 
@@ -493,25 +504,32 @@ namespace NSmartProxy
             catch
             {
                 Logger.Debug($"client:{nspApp.ClientId} app:{nspApp.AppId}写入失败,尝试切断该客户端");
+                consumerClient.Close();
                 ServerContext.CloseAllSourceByClient(nspApp.ClientId);
                 return;
             }
-
-            //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
-            if (restBytes != null)
-                await providerStream.WriteAsync(restBytes, 0, restBytes.Length, transfering.Token);
 
             //TODO 4 TCP则打通隧道进行转发，UDP直接转发
             // if tcp
             try
             {
+                //预发送bytes，因为这部分用来抓host消费掉了,所以直接转发
+                if (restBytes != null)
+                    await providerStream.WriteAsync(restBytes, 0, restBytes.Length, transfering.Token);
+
                 await OpenTcpTransmission(consumerStream, providerStream, nspApp, transfering.Token);
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug($"client:{nspApp.ClientId} app:{nspApp.AppId}隧道传输异常终止：{ex.Message}");
             }
             finally
             {
                 consumerClient.Close();
                 s2pClient.Close();
                 transfering.Cancel();
+                //之前这里只往字典里加不删，每来一个连接就多一个永久残留的CancellationTokenSource
+                transferTokenDic.TryRemove(transfering.GetHashCode(), out _);
             }
         }
 
@@ -868,7 +886,7 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ServerTunnelBufferSize);
                 try
                 {
                     int bytesRead;
@@ -901,6 +919,10 @@ namespace NSmartProxy
                     if (ioe is IOException) { return; } //Suppress this exception.
                     throw;
                 }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
         }
 
@@ -908,7 +930,7 @@ namespace NSmartProxy
         {
             using (fromStream)
             {
-                byte[] buffer = new byte[Global.ServerTunnelBufferSize];
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(Global.ServerTunnelBufferSize);
                 try
                 {
                     int bytesRead;
@@ -936,6 +958,10 @@ namespace NSmartProxy
                 {
                     if (ioe is IOException) { return; } //Suppress this exception.
                     throw;
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
         }
@@ -967,7 +993,11 @@ namespace NSmartProxy
         {
             const int MaxHeaderBytes = 32 * 1024;
 
-            var reader = PipeReader.Create(consumerStream);
+            //leaveOpen必须为true！PipeReader.Create默认leaveOpen=false，
+            //CompleteAsync()会顺手把底层的流Dispose掉，
+            //于是刚解析完Host、隧道还没开始转发，消费端的流（HTTPS下是SslStream）就已经被关了，
+            //浏览器侧表现为请求一直挂着直到超时。
+            var reader = PipeReader.Create(consumerStream, new StreamPipeReaderOptions(leaveOpen: true));
             try
             {
                 while (true)
